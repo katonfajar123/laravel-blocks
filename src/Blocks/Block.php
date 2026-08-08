@@ -56,6 +56,11 @@ abstract class Block
         return null;
     }
 
+    public function schema(): BlockSchema
+    {
+        return new BlockSchema;
+    }
+
     final public function metadata(): BlockMetadata
     {
         return $this->metadata ??= BlockMetadata::from($this);

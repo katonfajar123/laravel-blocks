@@ -66,7 +66,7 @@ class HeroBlock extends Block
 }
 ```
 
-The abstract `Block` base class and method-based metadata surface are implemented. `name()`, `label()`, and `view()` are required; `description()`, `category()`, `keywords()`, `icon()`, `fields()`, `supports()`, and `editorComponent()` provide shared defaults. The final `metadata()` method returns one immutable descriptive snapshot per block instance.
+The abstract `Block` base class and method-based metadata surface are implemented. `name()`, `label()`, and `view()` are required; `description()`, `category()`, `keywords()`, `icon()`, `fields()`, `supports()`, `schema()`, and `editorComponent()` provide shared defaults. The final `metadata()` method returns one immutable descriptive snapshot per block instance.
 
 Registration accepts an instance, a container-resolved block class, or an array of either. Stable names use lower-camel identifiers, array registration is atomic, and duplicate or unknown names fail through typed exceptions. Field validation, manifest generation, and rendering are delivered by their respective package layers rather than the registry.
 
@@ -116,6 +116,42 @@ LaravelBlocks::register([
 ```
 
 Registration MUST fail clearly when two blocks claim the same stable node name. Replacing a built-in block, if supported, must use a separate explicit API.
+
+## Server schema
+
+Every block exposes an executable validation schema. The default `schema()` is deliberately a leaf block with no declared attributes, children, or marks. A block opts into stored values and nesting explicitly:
+
+```php
+use KatonFajar\LaravelBlocks\Blocks\BlockSchema;
+use KatonFajar\LaravelBlocks\Validation\AttributeRule;
+
+public function schema(): BlockSchema
+{
+    return new BlockSchema(
+        attributes: [
+            'heading' => AttributeRule::string(
+                required: true,
+                maximumLength: 150,
+            ),
+            'buttonUrl' => AttributeRule::url(
+                allowedSchemes: ['https', 'http'],
+                nullable: true,
+            ),
+            'design' => AttributeRule::object([
+                'tone' => AttributeRule::string(
+                    allowedValues: ['primary', 'dark'],
+                ),
+            ]),
+        ],
+        allowedParents: ['doc', 'column'],
+        allowedChildren: ['text'],
+        allowedMarks: ['bold', 'italic', 'link'],
+        maximumChildren: null,
+    );
+}
+```
+
+The schema is the server security contract for stored node data. The later Field Engine maps higher-level PHP fields into editor controls and declarative manifest hints; it does not replace or weaken server validation. Unknown node and mark types, undeclared attributes, invalid values, and disallowed nesting raise typed validation failures before rendering.
 
 ## Field engine
 

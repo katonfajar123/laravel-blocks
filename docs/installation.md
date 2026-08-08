@@ -143,7 +143,7 @@ The component MUST accept an associative array, non-blank JSON string, or `null`
 
 The component MUST mount the complete package-owned canvas, toolbars, overlays, Inserter, Inspector, List View, media UI, and accessible interaction layer defined by the [Editor UX contract](editor-ux-contract.md). No consumer frontend assembly is part of the quick start.
 
-The package's document validator MUST run before accepted content is rendered, even if the field contains syntactically valid JSON. Core ships a `BlockDocument` Laravel validation rule. A future Eloquent cast MAY be offered as convenience, but it is not required and does not own application persistence.
+The implemented `LaravelBlocks::validate(...)` boundary MUST run before accepted content is rendered, even if the field contains syntactically valid JSON. The planned `BlockDocument` Laravel rule will adapt that same validator to form-request validation. A future Eloquent cast MAY be offered as convenience, but it is not required and does not own application persistence.
 
 ## Render content
 

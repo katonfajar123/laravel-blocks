@@ -201,6 +201,11 @@ abstract class Block
         return [];
     }
 
+    public function schema(): BlockSchema
+    {
+        return new BlockSchema;
+    }
+
     public function editorComponent(): ?string
     {
         return null;
@@ -208,11 +213,13 @@ abstract class Block
 }
 ```
 
-`editorComponent()` returns `null` by default. The registry resolves block instances from the Laravel container, rejects duplicate stable names, and never persists a PHP class name in document JSON.
+`schema()` returns a safe leaf `BlockSchema` by default, and `editorComponent()` returns `null`. The registry resolves block instances from the Laravel container, rejects duplicate stable names, and never persists a PHP class name in document JSON.
 
 The implementation lives under `KatonFajar\LaravelBlocks\Blocks`. Every block also exposes a final `metadata()` method that captures its immutable `BlockMetadata` once per instance. Metadata contains descriptive PHP-side values; manifest serialization and filtering remain a separate boundary.
 
 `BlockRegistry::register(...)` accepts one block instance, one `class-string<Block>`, or an array of either. Class strings resolve through Laravel's container, names must be non-empty lower-camel identifiers, bulk registration is atomic, insertion order is deterministic, and duplicate or unknown names raise typed exceptions carrying `blockName()` context.
+
+`BlockSchema`, `AttributeRule`, and `MarkSchema` are the implemented executable server-validation declarations. They constrain attributes, nesting, child counts, and inline marks independently of the future Field Engine and editor manifest. `LaravelBlocks::validate(...)` returns an immutable validated `Document`; failures expose a machine-readable reason and document path through `DocumentValidationException`.
 
 ## Editor manifest v1
 

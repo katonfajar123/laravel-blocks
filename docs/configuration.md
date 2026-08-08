@@ -2,13 +2,18 @@
 
 ## Status
 
-The B01 package foundation merges and publishes a small serializable configuration. Registered values whose consuming subsystem has not been implemented yet remain inert defaults, not claims that the renderer, assets, or optional persistence exist.
+The package merges and publishes a small serializable configuration. Document validation limits are active; values whose consuming subsystem has not been implemented yet remain inert defaults, not claims that the renderer, assets, or optional persistence exist.
 
 The implemented file is:
 
 ```php
 return [
     'document' => [
+        'max_bytes' => 1_048_576,
+        'max_nodes' => 10_000,
+        'max_depth' => 32,
+        'max_text_bytes' => 262_144,
+        'max_attribute_bytes' => 65_536,
         'unknown_blocks' => 'throw',
     ],
 
@@ -30,7 +35,7 @@ return [
 ];
 ```
 
-Testbench verifies merge behavior, serialization, and the `laravel-blocks-config` publish group. The `document.unknown_blocks` values/default and precompiled asset-loading boundary are frozen B00 contracts; their runtime consumers arrive in later batches.
+Testbench verifies merge behavior, serialization, active document limits, and the `laravel-blocks-config` publish group. The `document.unknown_blocks` values/default and precompiled asset-loading boundary are frozen contracts; their runtime consumers arrive with the renderer and asset-distribution work.
 
 ## Planned expanded configuration
 
@@ -39,7 +44,6 @@ Keys below are target configuration, not implemented B01 behavior. Non-frozen ke
 ```php
 return [
     'document' => [
-        'max_bytes' => 1_048_576,
         'unknown_blocks' => 'throw',
     ],
 
@@ -114,7 +118,17 @@ Tiptap JSON is the canonical Laravel Blocks document format. It is not a databas
 
 The host application chooses where documents live: JSON/JSONB, `TEXT`/`LONGTEXT`, existing models, an external API, or custom persistence. Core configuration does not name an application content model, table, column, or database connection.
 
-When its owning batches are implemented, the `document` configuration controls validation and rendering behavior only. It does not cause Laravel Blocks to persist content.
+The active positive-integer validation limits are:
+
+| Key | Default | Enforced boundary |
+| --- | ---: | --- |
+| `document.max_bytes` | 1,048,576 | Serialized input/canonical document bytes |
+| `document.max_nodes` | 10,000 | All non-root block and text nodes |
+| `document.max_depth` | 32 | Direct root children start at depth 1 |
+| `document.max_text_bytes` | 262,144 | Cumulative UTF-8 text bytes |
+| `document.max_attribute_bytes` | 65,536 | Serialized attributes for each node or mark |
+
+Missing, non-integer, or non-positive values fall back to those defaults. The `document` configuration controls validation and rendering behavior only. It does not cause Laravel Blocks to persist content.
 
 `document.unknown_blocks` accepts exactly `throw`, `placeholder`, or `skip`; `throw` is the deterministic default. Schema version is a document contract and MUST NOT be configurable per application.
 

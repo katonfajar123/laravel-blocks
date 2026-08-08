@@ -2,6 +2,7 @@
 
 use KatonFajar\LaravelBlocks\Blocks\Block;
 use KatonFajar\LaravelBlocks\Blocks\BlockMetadata;
+use KatonFajar\LaravelBlocks\Blocks\BlockSchema;
 
 it('provides frozen shared defaults', function (): void {
     $block = new class extends Block
@@ -28,6 +29,7 @@ it('provides frozen shared defaults', function (): void {
         ->and($block->icon())->toBeNull()
         ->and($block->fields())->toBe([])
         ->and($block->supports())->toBe([])
+        ->and($block->schema())->toEqual(new BlockSchema)
         ->and($block->editorComponent())->toBeNull();
 });
 

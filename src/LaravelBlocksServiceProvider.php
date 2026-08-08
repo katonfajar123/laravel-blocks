@@ -6,6 +6,12 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\ServiceProvider;
 use KatonFajar\LaravelBlocks\Blocks\BlockRegistry;
+use KatonFajar\LaravelBlocks\Validation\AttributeValidator;
+use KatonFajar\LaravelBlocks\Validation\DocumentValidator;
+use KatonFajar\LaravelBlocks\Validation\MarkRegistry;
+use KatonFajar\LaravelBlocks\Validation\MarkValidator;
+use KatonFajar\LaravelBlocks\Validation\NodeValidator;
+use KatonFajar\LaravelBlocks\Validation\ValidationLimits;
 
 final class LaravelBlocksServiceProvider extends ServiceProvider
 {
@@ -18,11 +24,49 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
             static fn (Container $app): BlockRegistry => new BlockRegistry($app),
         );
 
+        $this->app->singleton(MarkRegistry::class);
+        $this->app->singleton(AttributeValidator::class);
+        $this->app->singleton(
+            ValidationLimits::class,
+            static function (Container $app): ValidationLimits {
+                $configuration = $app->make(Repository::class)
+                    ->get('laravel-blocks.document', []);
+
+                return ValidationLimits::fromArray(
+                    is_array($configuration) ? $configuration : [],
+                );
+            },
+        );
+        $this->app->singleton(
+            MarkValidator::class,
+            static fn (Container $app): MarkValidator => new MarkValidator(
+                $app->make(MarkRegistry::class),
+                $app->make(AttributeValidator::class),
+            ),
+        );
+        $this->app->singleton(
+            NodeValidator::class,
+            static fn (Container $app): NodeValidator => new NodeValidator(
+                $app->make(BlockRegistry::class),
+                $app->make(AttributeValidator::class),
+                $app->make(MarkValidator::class),
+            ),
+        );
+        $this->app->singleton(
+            DocumentValidator::class,
+            static fn (Container $app): DocumentValidator => new DocumentValidator(
+                $app->make(NodeValidator::class),
+                $app->make(ValidationLimits::class),
+            ),
+        );
+
         $this->app->singleton(
             LaravelBlocks::class,
             static fn (Container $app): LaravelBlocks => new LaravelBlocks(
                 $app->make(Repository::class),
                 $app->make(BlockRegistry::class),
+                $app->make(MarkRegistry::class),
+                $app->make(DocumentValidator::class),
             ),
         );
 

@@ -6,12 +6,18 @@ use Illuminate\Contracts\Config\Repository;
 use KatonFajar\LaravelBlocks\Blocks\Block;
 use KatonFajar\LaravelBlocks\Blocks\BlockMetadata;
 use KatonFajar\LaravelBlocks\Blocks\BlockRegistry;
+use KatonFajar\LaravelBlocks\Documents\Document;
+use KatonFajar\LaravelBlocks\Validation\DocumentValidator;
+use KatonFajar\LaravelBlocks\Validation\MarkRegistry;
+use KatonFajar\LaravelBlocks\Validation\MarkSchema;
 
 final readonly class LaravelBlocks
 {
     public function __construct(
         private Repository $config,
         private BlockRegistry $blocks,
+        private MarkRegistry $marks,
+        private DocumentValidator $validator,
     ) {}
 
     /**
@@ -60,5 +66,21 @@ final readonly class LaravelBlocks
     public function blocks(): array
     {
         return $this->blocks->all();
+    }
+
+    /**
+     * @param  MarkSchema|array<array-key, MarkSchema>  $marks
+     */
+    public function registerMarks(MarkSchema|array $marks): void
+    {
+        $this->marks->register($marks);
+    }
+
+    /**
+     * @param  array<array-key, mixed>|string|Document|null  $value
+     */
+    public function validate(array|string|Document|null $value): Document
+    {
+        return $this->validator->validate($value);
     }
 }

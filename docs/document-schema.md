@@ -93,7 +93,7 @@ Normalization currently enforces:
 - root `content` is an ordered array and defaults to `[]` when omitted;
 - no custom envelope/root keys are accepted;
 - child payloads are copied through JSON serialization so callers cannot mutate Document state;
-- child node and mark semantics are preserved without early validation, which remains B04 scope.
+- `Document::from(...)` preserves child node and mark semantics without validating them; callers use the separate implemented `DocumentValidator` boundary when authoritative semantic validation is required.
 
 All normalization failures extend `DocumentException` and expose `reason()` plus a JSONPath-style `documentPath()`. Implemented reasons are:
 
@@ -112,7 +112,7 @@ All normalization failures extend `DocumentException` and expose `reason()` plus
 | `unexpected_root_attribute` | `$.attrs` | Root attrs contains a key other than `schemaVersion` |
 | `not_json_serializable` | `$.content` | Child payload cannot round-trip through JSON |
 
-`UnsupportedSchemaVersionException` additionally exposes the rejected integer through `schemaVersion()`. These normalization errors are distinct from future block/node validation errors.
+`UnsupportedSchemaVersionException` additionally exposes the rejected integer through `schemaVersion()`. These normalization errors remain distinct from the implemented `DocumentValidationException` failures for block, node, mark, attribute, nesting, and resource-limit rules.
 
 ## Node rules
 
@@ -297,7 +297,7 @@ These lower-camel identifiers are persisted contract values, not localized label
 
 ## Validation boundary
 
-The server MUST validate:
+The implemented server validator enforces:
 
 - JSON syntax and total document size;
 - schema version;
@@ -305,10 +305,22 @@ The server MUST validate:
 - node and mark names;
 - parent/child structure;
 - field types, required values, lengths, ranges, and allowed options;
-- URLs, media references, component names, model references, and custom attributes;
-- permissions for dynamic or privileged blocks.
+- URL types and allowed schemes;
+- configured document, node, depth, text, and attribute byte limits.
 
-Client-side validation improves feedback but is never a security boundary.
+Later media, dynamic-block, and renderer layers add provider-reference, component/model allow-list, authorization, and output-sanitization checks at their own trust boundaries.
+
+`Block::schema()` returns an immutable `BlockSchema` defining declared `AttributeRule` values, allowed parents, children, marks, and child-count bounds. The safe default is a leaf block with no attributes or children. Marks are registered separately through immutable `MarkSchema` definitions so inline formatting remains explicit and independently validated.
+
+Attribute rules currently cover strings, integers, numbers, booleans, URLs with allowed schemes, nested objects, and homogeneous lists. They support required/nullable state, lengths, numeric ranges, allow-listed scalar values, nested properties, and list item constraints. Undeclared attributes fail rather than passing through implicitly.
+
+The public entry point is:
+
+```php
+$document = LaravelBlocks::validate($value);
+```
+
+It accepts an array, JSON string, `Document`, or `null` and returns the same canonical immutable document shape after validation. `DocumentValidationException` exposes a stable `reason()` and JSON-like `documentPath()`, for example `unknown_node_type` at `$.content[0].type`. Client-side validation improves feedback but is never a security boundary.
 
 ## Derived outputs
 

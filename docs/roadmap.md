@@ -27,7 +27,7 @@ This roadmap defines direction, release composition, and dependency relationship
 
 An in-progress implementation must finish first. Otherwise the highest-value incomplete gap whose dependencies are satisfied is selected, scoped, verified, and evaluated before unrelated work begins.
 
-Package Skeleton, Document Foundation, and Block Contract + Registry are complete. Schema Validator is the next dependency-safe foundation because rendering and the PHP-to-Editor Manifest require authoritative node validation. Renderer, manifest, precompiled assets, editor engine/UI infrastructure, and blocks remain later dependency candidates rather than an instruction to advance automatically.
+Package Skeleton, Document Foundation, Block Contract + Registry, and Schema Validator are complete. The safe Blade Renderer is the next dependency-safe foundation because every frontend output path must consume the authoritative validated document. Manifest, precompiled assets, editor engine/UI infrastructure, and blocks remain later dependency candidates rather than an instruction to advance automatically.
 
 ## B00 frozen decisions
 

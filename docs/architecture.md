@@ -214,7 +214,9 @@ The manifest MUST NOT expose PHP class/view names, callbacks, executable rules, 
 
 ### Document validator
 
-The validator MUST check the top-level document, allowed children, node types, mark types, attributes, nesting rules, and configured block availability. Unknown content must fail predictably; it must never be rendered as trusted markup.
+The implemented validation pipeline normalizes through `Document`, then applies `DocumentValidator`, `NodeValidator`, `MarkValidator`, and `AttributeValidator`. Blocks expose an executable `BlockSchema`; marks use `MarkSchema` and a singleton `MarkRegistry`. These declarations constrain attributes, parents, children, marks, and child-count bounds without exposing executable PHP rules to the editor manifest.
+
+`LaravelBlocks::validate(...)` and the facade accept arrays, JSON strings, `Document`, or `null`, and return a validated immutable `Document`. A failure raises `DocumentValidationException` with a machine-readable `reason()` and precise `documentPath()`. Validation always rejects malformed structure, unknown node/mark types, undeclared attributes, invalid nesting, and configured resource-limit violations before rendering. The renderer's future unknown-block tolerance policy does not weaken this authoritative validation entry point.
 
 ### Schema migrator
 
