@@ -1,0 +1,9 @@
+[data-laravel-blocks-root] {
+  box-sizing: border-box;
+}
+
+[data-laravel-blocks-root] *,
+[data-laravel-blocks-root] *::before,
+[data-laravel-blocks-root] *::after {
+  box-sizing: inherit;
+}

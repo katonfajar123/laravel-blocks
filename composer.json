@@ -1,0 +1,55 @@
+{
+    "name": "katonfajar/laravel-blocks",
+    "description": "A complete Gutenberg-style editing experience for Laravel.",
+    "keywords": [
+        "blocks",
+        "editor",
+        "laravel",
+        "tiptap"
+    ],
+    "homepage": "https://github.com/katonfajar123/laravel-blocks",
+    "license": "MIT",
+    "type": "library",
+    "require": {
+        "php": "^8.2",
+        "illuminate/contracts": "^11.0 || ^12.0 || ^13.0",
+        "illuminate/support": "^11.0 || ^12.0 || ^13.0"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.10",
+        "laravel/pint": "^1.30",
+        "orchestra/testbench": "^9.17 || ^10.11 || ^11.1",
+        "pestphp/pest": "^3.8 || ^4.7 || ^5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "KatonFajar\\LaravelBlocks\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "analyse": "@php vendor/bin/phpstan analyse --memory-limit=1G",
+        "format": "@php vendor/bin/pint",
+        "lint": "@php vendor/bin/pint --test",
+        "test": "@php vendor/bin/pest"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "KatonFajar\\LaravelBlocks\\LaravelBlocksServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        },
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
