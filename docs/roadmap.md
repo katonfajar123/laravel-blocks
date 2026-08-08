@@ -27,7 +27,7 @@ This roadmap defines direction, release composition, and dependency relationship
 
 An in-progress implementation must finish first. Otherwise the highest-value incomplete gap whose dependencies are satisfied is selected, scoped, verified, and evaluated before unrelated work begins.
 
-`B01 — Package Skeleton` and `B02 — Document Foundation` are complete. `B03 — Block Contract + Registry` is the current candidate because deterministic block resolution is now the highest-value dependency-safe gap. Validator, Renderer, PHP-to-Editor Manifest, precompiled assets, editor engine/UI infrastructure, and blocks remain dependency candidates, not an instruction to advance automatically.
+Package Skeleton, Document Foundation, and Block Contract + Registry are complete. Schema Validator is the next dependency-safe foundation because rendering and the PHP-to-Editor Manifest require authoritative node validation. Renderer, manifest, precompiled assets, editor engine/UI infrastructure, and blocks remain later dependency candidates rather than an instruction to advance automatically.
 
 ## B00 frozen decisions
 

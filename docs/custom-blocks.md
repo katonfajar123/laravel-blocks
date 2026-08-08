@@ -66,7 +66,9 @@ class HeroBlock extends Block
 }
 ```
 
-The abstract `Block` base-class direction and method-based metadata surface are frozen by B00. `name()`, `label()`, and `view()` are required; `description()`, `category()`, `keywords()`, `icon()`, `fields()`, `supports()`, and `editorComponent()` provide shared defaults. B03 may refine additive signatures without replacing the base class or changing persisted node names.
+The abstract `Block` base class and method-based metadata surface are implemented. `name()`, `label()`, and `view()` are required; `description()`, `category()`, `keywords()`, `icon()`, `fields()`, `supports()`, and `editorComponent()` provide shared defaults. The final `metadata()` method returns one immutable descriptive snapshot per block instance.
+
+Registration accepts an instance, a container-resolved block class, or an array of either. Stable names use lower-camel identifiers, array registration is atomic, and duplicate or unknown names fail through typed exceptions. Field validation, manifest generation, and rendering are delivered by their respective package layers rather than the registry.
 
 ## Render view
 

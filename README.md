@@ -7,7 +7,7 @@
 Laravel Blocks is planned as a ready-to-use visual block editor for Laravel. It is designed to give authors a polished Gutenberg-style canvas while letting Laravel applications own their content, models, persistence, Blade output, and custom PHP blocks.
 
 > [!IMPORTANT]
-> This repository currently contains the package/toolchain foundation and canonical Document v1 boundary, but no installable editor release exists yet. Editor commands and APIs below remain the target developer experience until their implementation is complete.
+> This repository currently contains the package/toolchain foundation, canonical Document v1 boundary, and PHP Block Registry, but no installable editor release exists yet. Editor commands and APIs below remain the target developer experience until their implementation is complete.
 
 ## Target developer experience
 
@@ -135,6 +135,6 @@ PHP `^8.2` and the Laravel/Illuminate 11/12/13 target are frozen package constra
 
 ## Development status
 
-The fundamental architecture and mandatory Editor UX are specified. The runnable package/toolchain and immutable canonical Document v1 normalization boundary are implemented.
+The fundamental architecture and mandatory Editor UX are specified. The runnable package/toolchain, immutable canonical Document v1 normalization boundary, abstract PHP Block contract, and container-backed Block Registry are implemented.
 
-The next planned foundation is the Block Contract and Registry because validation, rendering, the editor manifest, and editor integration require deterministic block resolution. See the public [roadmap](docs/roadmap.md) for the planned release sequence.
+The next planned foundation is server-side schema validation because rendering and the editor manifest require registered nodes to be validated against authoritative block contracts. See the public [roadmap](docs/roadmap.md) for the planned release sequence.

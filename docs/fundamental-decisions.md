@@ -160,7 +160,7 @@ Selectable block attributes reserve `design` and `advanced` alongside their decl
 
 The primary extension surface is an abstract `Block` base class. It provides shared defaults and one source of truth for registration, validation, editor metadata, and rendering.
 
-Target contract:
+Implemented contract:
 
 ```php
 abstract class Block
@@ -209,6 +209,10 @@ abstract class Block
 ```
 
 `editorComponent()` returns `null` by default. The registry resolves block instances from the Laravel container, rejects duplicate stable names, and never persists a PHP class name in document JSON.
+
+The implementation lives under `KatonFajar\LaravelBlocks\Blocks`. Every block also exposes a final `metadata()` method that captures its immutable `BlockMetadata` once per instance. Metadata contains descriptive PHP-side values; manifest serialization and filtering remain a separate boundary.
+
+`BlockRegistry::register(...)` accepts one block instance, one `class-string<Block>`, or an array of either. Class strings resolve through Laravel's container, names must be non-empty lower-camel identifiers, bulk registration is atomic, insertion order is deterministic, and duplicate or unknown names raise typed exceptions carrying `blockName()` context.
 
 ## Editor manifest v1
 

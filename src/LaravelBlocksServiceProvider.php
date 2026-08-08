@@ -5,6 +5,7 @@ namespace KatonFajar\LaravelBlocks;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\ServiceProvider;
+use KatonFajar\LaravelBlocks\Blocks\BlockRegistry;
 
 final class LaravelBlocksServiceProvider extends ServiceProvider
 {
@@ -13,9 +14,15 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
         $this->mergeConfigFrom($this->packageConfigPath(), 'laravel-blocks');
 
         $this->app->singleton(
+            BlockRegistry::class,
+            static fn (Container $app): BlockRegistry => new BlockRegistry($app),
+        );
+
+        $this->app->singleton(
             LaravelBlocks::class,
             static fn (Container $app): LaravelBlocks => new LaravelBlocks(
                 $app->make(Repository::class),
+                $app->make(BlockRegistry::class),
             ),
         );
 

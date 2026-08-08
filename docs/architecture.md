@@ -158,24 +158,36 @@ Reusable blocks, editor-managed custom-pattern persistence, media metadata datab
 
 ### `BlockRegistry`
 
-The block registry is the central catalog for built-in and application blocks. It maps a stable document node name to a block definition and MUST reject duplicate names unless an explicit replacement mechanism is used.
+The block registry is the central catalog for built-in and application blocks. It maps a stable document node name to a block definition and rejects every duplicate name. No implicit replacement mechanism exists.
 
 The public block definition is a container-resolved abstract `Block` base class. The registry accepts block instances or class strings, maps stable document names to resolved instances, and rejects duplicates.
 
-Target registry responsibilities:
+Implemented registry responsibilities:
 
 ```php
 final class BlockRegistry
 {
-    /** @param class-string<Block>|Block $block */
-    public function register(string|Block $block): void
+    /**
+     * @param class-string<Block>|Block|array<array-key, class-string<Block>|Block> $blocks
+     */
+    public function register(string|Block|array $blocks): void
     {
-        // Resolve, validate, and store the block by its stable name.
+        // Resolve through the container, validate, and atomically store by stable name.
     }
 
     public function get(string $name): Block
     {
         // Return the block or throw UnknownBlockException.
+    }
+
+    public function has(string $name): bool
+    {
+        // Report whether the stable name is registered.
+    }
+
+    public function metadata(string $name): BlockMetadata
+    {
+        // Return the immutable metadata snapshot for the registered block.
     }
 
     /** @return array<string, Block> */
@@ -186,7 +198,9 @@ final class BlockRegistry
 }
 ```
 
-The abstract base-class and deterministic resolution direction are frozen by B00. Additive signatures may be refined in B03 without changing persisted names or the manifest boundary.
+Registration order is deterministic. Names must be non-empty lower-camel identifiers. A failed bulk registration changes no registry state, and duplicate/unknown exceptions expose the relevant name through `blockName()`. The registry is a singleton shared by the package service and facade.
+
+`BlockMetadata` is an immutable per-instance snapshot of descriptive PHP metadata. It does not serialize PHP classes, callbacks, or arbitrary module URLs to the editor; the manifest boundary remains responsible for selecting safe client-facing fields.
 
 ### Field registry
 
