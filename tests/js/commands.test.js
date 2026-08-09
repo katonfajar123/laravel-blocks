@@ -103,6 +103,7 @@ describe('editor command registry', () => {
         'moveBlockUp',
         'moveBlockDown',
         'insertManifestBlock',
+        'updateBlockAttrs',
         'setParagraph',
         'setHeading',
         'undo',

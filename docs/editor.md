@@ -26,7 +26,7 @@ The block Inserter, Block Appender, and slash menu MUST share the same registry-
 
 Initial categories are Text, Media, Design, Laravel, Dynamic, Interactive, Content, and Marketing. Category names are presentation metadata and do not form part of the stored schema.
 
-The current implementation includes a basic manifest-driven Block Appender and Inserter. It reads the editor manifest payload, groups blocks by category, supports search, keyboard ArrowUp/ArrowDown/Enter/Escape on the search field, inserts supported Tiptap nodes, and shows disabled unsupported manifest blocks with a reason. It currently maps `paragraph`, `heading`, `blockquote`, and `codeBlock`; patterns, reusable blocks, recent/favorites, nested insertion rules, and slash commands remain later milestones.
+The current implementation includes a basic manifest-driven Block Appender, Inserter, and slash command menu. These surfaces read the editor manifest payload, group or filter blocks by category/search query, insert supported Tiptap nodes through the shared command layer, and show disabled unsupported manifest blocks with a reason. The slash menu opens from `/` in an empty top-level text block, supports query typing, ArrowUp/ArrowDown, Enter, Escape, Backspace, and pointer insertion, and replaces the triggering empty block with the selected supported node. The bundle currently maps `paragraph`, `heading`, `blockquote`, and `codeBlock`; patterns, reusable blocks, recent/favorites, nested insertion rules, Home/End behavior, IME polish, and async provider behavior remain later milestones.
 
 ## Block operations
 
@@ -86,6 +86,8 @@ Advanced: anchor ID, CSS class, visibility, custom attributes
 
 Unavailable settings MUST be omitted instead of displayed as non-functional controls. PHP Field definitions and block supports MUST generate normal Inspector controls without consumer-authored Vue.
 
+The current implementation includes the first manifest-generated Inspector sidebar for the selected top-level block. It renders the Content, Design, and Advanced tabs, derives basic controls from declarative manifest fields, updates simple `attrs.*` values through the shared command registry, and keeps canonical hidden JSON synchronized. The current control set is intentionally basic and top-level only; the complete Field Engine, media/repeater/relation controls, validation feedback, custom Inspector extension points, document settings, and polished responsive drawer behavior remain later milestones.
+
 ## Document tools
 
 The `1.0` document tools MUST include:
@@ -118,7 +120,7 @@ The interface MUST expose applicable commands through:
 
 These are multiple entry points to the same command and selection layers. They MUST NOT implement conflicting behavior independently.
 
-The current implementation includes the internal selection snapshot and shared command registry plus visible rich-text toolbar, link popover, top-level block toolbar/options, and basic manifest inserter/appender. Keyboard shortcuts, slash commands, Inspector, nested controls, drag/drop, and complete block operation UI remain later milestones.
+The current implementation includes the internal selection snapshot and shared command registry plus visible rich-text toolbar, link popover, top-level block toolbar/options, basic manifest inserter/appender, basic slash commands, and basic generated Inspector controls. Keyboard shortcuts beyond direct command APIs, nested controls, drag/drop, and complete block operation UI remain later milestones.
 
 ## Shared UI infrastructure
 
@@ -126,7 +128,7 @@ Laravel Blocks MUST provide namespaced Button, IconButton, Toolbar, Popover, Too
 
 Popovers MUST be anchor-aware and collision-aware, preserve the editor selection, remain within the viewport, support role-appropriate keyboard navigation and Escape, dismiss predictably, and restore focus to the invoking control or selection. Only true dialogs trap focus. See the detailed [Popover and overlay contract](editor-ux-contract.md#popover-and-overlay-contract).
 
-The current implementation includes the first Button, IconButton, Toolbar, ToolbarGroup, Popover, overlay, and positioning primitives. Rich-text, link, block toolbar, options menu, and inserter surfaces now use those foundations on basic paths; slash menu, Inspector, full context-menu semantics, and complete responsive/accessibility polish remain later milestones.
+The current implementation includes the first Button, IconButton, Toolbar, ToolbarGroup, Popover, overlay, and positioning primitives. Rich-text, link, block toolbar, options menu, inserter, slash menu, and Inspector surfaces now use those foundations on basic paths; full context-menu semantics and complete responsive/accessibility polish remain later milestones.
 
 ## Autosave and recovery
 

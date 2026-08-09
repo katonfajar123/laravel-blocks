@@ -70,7 +70,7 @@ The abstract `Block` base class and method-based metadata surface are implemente
 
 Registration accepts an instance, a container-resolved block class, or an array of either. Stable names use lower-camel identifiers, array registration is atomic, and duplicate or unknown names fail through typed exceptions. Manifest generation and rendering are delivered by their respective package layers rather than the registry.
 
-The implemented manifest bridge serializes `fields()` into Editor Manifest v1 when a field definition is an associative manifest array or implements the manifest-field provider contract. Unsupported field definitions, callbacks, objects, resources, and arbitrary editor-component URLs fail loudly with typed manifest errors instead of being silently dropped or exposed to JavaScript. The complete Field Engine and generated Inspector renderer remain later milestones.
+The implemented manifest bridge serializes `fields()` into Editor Manifest v1 when a field definition is an associative manifest array or implements the manifest-field provider contract. Unsupported field definitions, callbacks, objects, resources, and arbitrary editor-component URLs fail loudly with typed manifest errors instead of being silently dropped or exposed to JavaScript. A basic generated Inspector renderer consumes those manifest fields; the complete Field Engine remains a later milestone.
 
 ## Render view
 

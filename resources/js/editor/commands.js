@@ -198,10 +198,71 @@ function insertManifestBlock(editor, payload = {}) {
     return false;
   }
 
+  const node = editor.schema.nodeFromJSON(insert.node);
   const position = payload.placement === 'before' ? block.from : block.to;
-  const transaction = editor.state.tr.insert(position, editor.schema.nodeFromJSON(insert.node));
+  const transaction = payload.placement === 'replace'
+    ? editor.state.tr.replaceWith(block.from, block.to, node)
+    : editor.state.tr.insert(position, node);
+  const focusPosition = payload.placement === 'replace' ? block.from + 1 : position + 1;
 
-  return dispatchBlockTransaction(editor, transaction, position + 1);
+  return dispatchBlockTransaction(editor, transaction, focusPosition);
+}
+
+function valueAtPath(source, path) {
+  const segments = String(path ?? '')
+    .split('.')
+    .filter(Boolean);
+  const effective = segments[0] === 'attrs' ? segments.slice(1) : segments;
+
+  return effective.reduce(
+    (value, segment) => (value && typeof value === 'object' ? value[segment] : undefined),
+    source,
+  );
+}
+
+function setValueAtPath(source, path, value) {
+  const segments = String(path ?? '').split('.').filter(Boolean);
+
+  if (segments[0] !== 'attrs' || segments.length < 2) {
+    return { ...source };
+  }
+
+  const next = { ...source };
+  let cursor = next;
+
+  for (const segment of segments.slice(1, -1)) {
+    cursor[segment] = cursor[segment] && typeof cursor[segment] === 'object' && !Array.isArray(cursor[segment])
+      ? { ...cursor[segment] }
+      : {};
+    cursor = cursor[segment];
+  }
+
+  cursor[segments.at(-1)] = value;
+
+  return next;
+}
+
+function updateBlockAttrs(editor, payload = {}) {
+  const target = topLevelBlock(editor, payload);
+
+  if (!target || typeof payload.path !== 'string') {
+    return false;
+  }
+
+  const nextAttrs = setValueAtPath(target.node.attrs ?? {}, payload.path, payload.value);
+
+  if (JSON.stringify(nextAttrs) === JSON.stringify(target.node.attrs ?? {})) {
+    return true;
+  }
+
+  const transaction = editor.state.tr.setNodeMarkup(
+    target.block.from,
+    undefined,
+    nextAttrs,
+    target.node.marks,
+  );
+
+  return dispatchBlockTransaction(editor, transaction, target.block.from + 1);
 }
 
 const definitions = [
@@ -302,6 +363,17 @@ const definitions = [
     'Insert block',
     (editor, payload) => blockInsertPayload(payload?.item).valid && activeBlock(editor, payload).active,
     (editor, payload) => insertManifestBlock(editor, payload),
+  ),
+  simpleCommand(
+    'updateBlockAttrs',
+    'Update block settings',
+    (editor, payload) => {
+      const target = topLevelBlock(editor, payload);
+
+      return Boolean(target && typeof payload?.path === 'string' && payload.path.startsWith('attrs.')
+        && valueAtPath(target.node.attrs ?? {}, payload.path) !== payload.value);
+    },
+    (editor, payload) => updateBlockAttrs(editor, payload),
   ),
   simpleCommand(
     'setParagraph',

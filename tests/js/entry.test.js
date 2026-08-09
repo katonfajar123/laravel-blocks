@@ -16,6 +16,10 @@ describe('package frontend entry', () => {
     expect(LaravelBlocks.ui.createPopoverController).toBeTypeOf('function');
     expect(LaravelBlocks.blockEditor.BlockToolbar.name).toBe('LaravelBlocksBlockToolbar');
     expect(LaravelBlocks.blockEditor.BlockInserter.name).toBe('LaravelBlocksBlockInserter');
+    expect(LaravelBlocks.blockEditor.BlockInspector.name).toBe('LaravelBlocksBlockInspector');
+    expect(LaravelBlocks.blockEditor.SlashCommandMenu.name).toBe('LaravelBlocksSlashCommandMenu');
+    expect(LaravelBlocks.blockEditor.inspectorFieldsForBlock).toBeTypeOf('function');
+    expect(LaravelBlocks.blockEditor.slashCommandItems).toBeTypeOf('function');
     expect(LaravelBlocks.blockEditor.createBlockSelectionState).toBeTypeOf('function');
     expect(LaravelBlocks.blockEditor.blockInserterItems).toBeTypeOf('function');
     expect(LaravelBlocks.richText.RichTextToolbar.name).toBe('LaravelBlocksRichTextToolbar');

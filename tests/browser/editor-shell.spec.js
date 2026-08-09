@@ -41,6 +41,16 @@ const manifest = {
       label: 'Heading',
       description: 'Start with a heading',
       category: 'text',
+      fields: [{
+        constraints: { allowedValues: [1, 2, 3, 4, 5, 6] },
+        default: 2,
+        group: 'content',
+        help: 'Choose the heading level.',
+        label: 'Level',
+        name: 'level',
+        path: 'attrs.level',
+        type: 'select',
+      }],
       keywords: ['title'],
       supports: { inserter: true },
     },
@@ -243,6 +253,7 @@ test('executes editor mutations through the shared command API', async ({ page }
         'moveBlockUp',
         'moveBlockDown',
         'insertManifestBlock',
+        'updateBlockAttrs',
         'setParagraph',
         'setHeading',
         'undo',
@@ -446,6 +457,86 @@ test('inserts manifest blocks through the appender inserter', async ({ page }) =
 
   await page.keyboard.press('Escape');
   await expect(inserter).toBeHidden();
+});
+
+test('replaces an empty text block through slash commands', async ({ page }) => {
+  await page.goto(baseUrl);
+
+  const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
+  const slash = page.locator('#editor-null [data-laravel-blocks-slash-command]');
+  const query = page.locator('#editor-null [data-laravel-blocks-slash-query]');
+  const heading = page.locator('#editor-null [data-laravel-blocks-slash-item="heading"]');
+  const unsupported = page.locator('#editor-null [data-laravel-blocks-slash-item="featureCard"]');
+
+  await canvas.click();
+  await page.keyboard.press('/');
+
+  await expect(slash).toBeVisible();
+  await expect(query).toHaveAttribute('data-laravel-blocks-slash-query', '');
+
+  await page.keyboard.type('feature');
+
+  await expect(unsupported).toBeDisabled();
+  await expect(unsupported).toHaveAttribute(
+    'data-laravel-blocks-slash-disabled-reason',
+    'This block is not supported by the current editor bundle yet.',
+  );
+
+  await page.keyboard.press('Escape');
+  await expect(slash).toBeHidden();
+  expect(await firstContentNode(page, '#editor-null')).toEqual({ type: 'paragraph' });
+
+  await page.keyboard.press('/');
+  await page.keyboard.type('hea');
+
+  await expect(query).toHaveAttribute('data-laravel-blocks-slash-query', 'hea');
+  await expect(heading).toBeVisible();
+  await expect(heading).toHaveAttribute('data-laravel-blocks-slash-item-state', 'active');
+
+  await page.keyboard.press('Enter');
+
+  await expect(slash).toBeHidden();
+  await expect(canvas).toBeFocused();
+  await expect.poll(() => firstContentNode(page, '#editor-null')).toEqual({
+    type: 'heading',
+    attrs: { level: 2 },
+  });
+});
+
+test('edits selected block fields through the manifest-generated inspector', async ({ page }) => {
+  await page.goto(baseUrl);
+
+  const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
+  const inspector = page.locator('#editor-null [data-laravel-blocks-inspector]');
+  const level = page.locator('#editor-null [data-laravel-blocks-inspector-field="level"]');
+
+  await canvas.click();
+  await page.keyboard.press('/');
+  await page.keyboard.type('hea');
+  await page.keyboard.press('Enter');
+
+  await expect(inspector).toBeVisible();
+  await expect(page.locator('#editor-null [data-laravel-blocks-inspector-title]')).toContainText('Heading');
+  await expect(level).toBeVisible();
+  await expect(level).toHaveValue('2');
+
+  await level.selectOption('3');
+
+  await expect(canvas).toBeFocused();
+  await expect.poll(() => firstContentNode(page, '#editor-null')).toEqual({
+    type: 'heading',
+    attrs: { level: 3 },
+  });
+
+  await page.locator('#editor-null [data-laravel-blocks-inspector-tab="design"]').click();
+  await expect(page.locator('#editor-null [data-laravel-blocks-inspector-panel="design"]')).toBeVisible();
+  await expect(page.locator('#editor-null [data-laravel-blocks-inspector-empty]'))
+    .toContainText('No design settings');
+
+  await page.locator('#editor-null [data-laravel-blocks-inspector-tab="advanced"]').click();
+  await expect(page.locator('#editor-null [data-laravel-blocks-inspector-panel="advanced"]')).toBeVisible();
+  await expect(page.locator('#editor-null [data-laravel-blocks-inspector-empty]'))
+    .toContainText('No advanced settings');
 });
 
 function editorFixture() {
