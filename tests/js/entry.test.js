@@ -22,7 +22,7 @@ describe('package frontend entry', () => {
     expect(LaravelBlocks.blockEditor.slashCommandItems).toBeTypeOf('function');
     expect(LaravelBlocks.blockEditor.createBlockSelectionState).toBeTypeOf('function');
     expect(LaravelBlocks.blockEditor.blockInserterItems).toBeTypeOf('function');
-    expect(LaravelBlocks.richText.RichTextToolbar.name).toBe('LaravelBlocksRichTextToolbar');
+    expect(LaravelBlocks.richText.RichTextToolbar).toBeUndefined();
     expect(LaravelBlocks.richText.LinkPopover.name).toBe('LaravelBlocksLinkPopover');
     expect(LaravelBlocks.richText.createRichTextToolbarItems).toBeTypeOf('function');
     expect(LaravelBlocks.richText.validateLinkHref).toBeTypeOf('function');

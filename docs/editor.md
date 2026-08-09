@@ -26,7 +26,7 @@ The block Inserter, Block Appender, and slash menu MUST share the same registry-
 
 Initial categories are Text, Media, Design, Laravel, Dynamic, Interactive, Content, and Marketing. Category names are presentation metadata and do not form part of the stored schema.
 
-The current implementation includes a basic manifest-driven Block Appender, Inserter, and slash command menu. These surfaces read the editor manifest payload, group or filter blocks by category/search query, insert supported Tiptap nodes through the shared command layer, and show disabled unsupported manifest blocks with a reason. The slash menu opens from `/` in an empty top-level text block, supports query typing, ArrowUp/ArrowDown, Enter, Escape, Backspace, and pointer insertion, and replaces the triggering empty block with the selected supported node. The bundle currently maps `paragraph`, `heading`, `blockquote`, and `codeBlock`; patterns, reusable blocks, recent/favorites, nested insertion rules, Home/End behavior, IME polish, and async provider behavior remain later milestones.
+The current implementation includes a manifest-driven header Inserter and slash command menu. These surfaces read the editor manifest payload, group or filter blocks by category/search query, insert supported Tiptap nodes through the shared command layer, and show disabled unsupported manifest blocks with a reason. The header Inserter opens as an icon grid with search and a Browse all affordance, while the slash menu opens as a compact keyboard-first list from `/` in an empty top-level text block. Slash commands support query typing, ArrowUp/ArrowDown, Enter, Escape, Backspace, and pointer insertion, and replace the triggering empty block with the selected supported node. The bundle currently maps `paragraph`, `heading`, `bulletList`, `blockquote`, and `codeBlock`; patterns, reusable blocks, recent/favorites, nested insertion rules, Home/End behavior, IME polish, and async provider behavior remain later milestones.
 
 ## Block operations
 
@@ -46,7 +46,7 @@ The default `1.0` editor MUST include:
 
 Operations MUST preserve a valid document tree. Dragging MUST show a precise insertion indicator, invalid targets, and autoscroll where needed. An invalid drop target MUST be visibly rejected rather than repaired silently after the drop, and movement MUST have Move Up/Down plus keyboard alternatives.
 
-The current implementation includes basic top-level block controls. A cursor inside a top-level block shows a visible selection frame, contextual block toolbar, type label, Move Up/Down buttons, and an options menu for Duplicate, Insert before, Insert after, and Delete. These actions execute through the shared command registry and update canonical hidden JSON. Nested block controls, drag/drop, keyboard reordering, multi-select, copy/paste, and block-specific toolbars remain later milestones.
+The current implementation includes basic top-level block controls. A cursor inside a top-level block shows one unified contextual toolbar with Transform To, Move Up/Down, common inline formatting, Link, and a More menu for Duplicate, Insert before, Insert after, and Delete. The active block no longer draws a hard canvas stroke; the toolbar is the primary selection affordance. These actions execute through the shared command registry and update canonical hidden JSON. Nested block controls, drag/drop, keyboard reordering, multi-select, copy/paste, and block-specific command filtering remain later milestones.
 
 ## Inline rich text
 
@@ -62,7 +62,7 @@ Text-capable nodes MUST support:
 
 A selection bubble menu MUST provide fast access to frequent marks. Link editing MUST use a selection-anchored popover with validation, target control, apply/unlink behavior, Escape cancellation, and predictable focus restoration. The editor schema, not the toolbar, determines which marks a node accepts.
 
-The current implementation includes the first visible selection bubble toolbar for Bold, Italic, and Link. It appears for a non-empty text selection, routes actions through the shared command layer, updates canonical hidden JSON, and restores focus to the editor canvas.
+The current implementation routes Bold, Italic, and Link through the unified contextual toolbar rather than a second text-only toolbar. It appears with the selected top-level block, uses selection state for link editing, routes actions through the shared command layer, updates canonical hidden JSON, and restores focus to the editor canvas.
 
 The Link control opens a selection-anchored popover with URL input, open-in-new-tab toggle, Apply, Unlink, inline validation feedback, Escape cancellation, and preserved-selection mutation. The current provider boundary validates safe external, root-relative, and anchor links; internal-link search/autocomplete, remaining marks, keyboard shortcuts, mixed-selection state, and schema-filtered mark availability remain later milestones.
 
@@ -86,7 +86,7 @@ Advanced: anchor ID, CSS class, visibility, custom attributes
 
 Unavailable settings MUST be omitted instead of displayed as non-functional controls. PHP Field definitions and block supports MUST generate normal Inspector controls without consumer-authored Vue.
 
-The current implementation includes the first manifest-generated Inspector sidebar for the selected top-level block. It renders the Content, Design, and Advanced tabs, derives basic controls from declarative manifest fields, updates simple `attrs.*` values through the shared command registry, and keeps canonical hidden JSON synchronized. The current control set is intentionally basic and top-level only; the complete Field Engine, media/repeater/relation controls, validation feedback, custom Inspector extension points, document settings, and polished responsive drawer behavior remain later milestones.
+The current implementation includes the first manifest-generated Inspector sidebar for the selected top-level block, but it is closed by default and opens only from the explicit settings control in the sticky header. It renders the Content, Design, and Advanced tabs, derives basic controls from declarative manifest fields, updates simple `attrs.*` values through the shared command registry, and keeps canonical hidden JSON synchronized. The current control set is intentionally basic and top-level only; the complete Field Engine, media/repeater/relation controls, validation feedback, custom Inspector extension points, document settings, and polished responsive drawer behavior remain later milestones.
 
 ## Document tools
 
@@ -110,9 +110,8 @@ JSON preview is a diagnostic view of the canonical value. HTML preview MUST use 
 
 The interface MUST expose applicable commands through:
 
-- a document toolbar;
-- a contextual block toolbar;
-- a text-selection bubble menu;
+- a sticky document header for global controls such as Inserter, Undo, Redo, and Settings;
+- one contextual toolbar for the active block and text selection;
 - the settings sidebar;
 - slash commands;
 - a command palette;
@@ -120,7 +119,7 @@ The interface MUST expose applicable commands through:
 
 These are multiple entry points to the same command and selection layers. They MUST NOT implement conflicting behavior independently.
 
-The current implementation includes the internal selection snapshot and shared command registry plus visible rich-text toolbar, link popover, top-level block toolbar/options, basic manifest inserter/appender, basic slash commands, basic generated Inspector controls, and basic visible undo/redo controls. Undo and Redo execute through the command registry from the document history toolbar and from Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z. The full shortcut map, nested controls, drag/drop, and complete block operation UI remain later milestones.
+The current implementation includes the internal selection snapshot and shared command registry plus a sticky header, unified contextual toolbar, Transform To menu, link popover, basic manifest header Inserter, basic slash commands, basic generated Inspector controls, and visible header Undo/Redo controls. Undo and Redo execute through the command registry from the sticky header and from Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z. The default editor surface is full-width and clean; the Inspector does not open automatically. The full shortcut map, nested controls, drag/drop, and complete block operation UI remain later milestones.
 
 ## Shared UI infrastructure
 

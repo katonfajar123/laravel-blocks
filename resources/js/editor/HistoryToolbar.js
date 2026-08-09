@@ -1,6 +1,6 @@
 import { h, nextTick } from 'vue';
 
-import { Button, Toolbar, ToolbarGroup } from '../ui/index.js';
+import { Icon, IconButton, Toolbar, ToolbarGroup } from '../ui/index.js';
 
 function commandState(registry, command) {
   return registry?.state?.(command) ?? {
@@ -37,12 +37,13 @@ export const HistoryToolbar = {
       return result;
     }
 
-    function historyButton(command, label, shortcut) {
+    function historyButton(command, label, shortcut, icon) {
       const state = commandState(props.commandRegistry, command);
 
-      return h(Button, {
+      return h(IconButton, {
         'aria-label': label,
         disabled: !state.enabled,
+        label,
         size: 'sm',
         title: state.disabledReason || `${label} (${shortcut})`,
         variant: 'ghost',
@@ -50,7 +51,7 @@ export const HistoryToolbar = {
         onClick: () => run(command),
         onMousedown: (event) => event.preventDefault(),
       }, {
-        default: () => label,
+        default: () => h(Icon, { name: icon }),
       });
     }
 
@@ -71,8 +72,8 @@ export const HistoryToolbar = {
             label: 'History',
           }, {
             default: () => [
-              historyButton('undo', 'Undo', 'Ctrl/Cmd+Z'),
-              historyButton('redo', 'Redo', 'Ctrl/Cmd+Shift+Z'),
+              historyButton('undo', 'Undo', 'Ctrl/Cmd+Z', 'undo'),
+              historyButton('redo', 'Redo', 'Ctrl/Cmd+Shift+Z', 'redo'),
             ],
           }),
         ],

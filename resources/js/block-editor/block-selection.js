@@ -43,6 +43,27 @@ export function createBlockSelectionState(editor) {
 
   const cursor = selection.$from;
 
+  if (cursor.depth === 0 && editor?.state?.doc?.childCount > 0) {
+    const node = editor.state.doc.child(0);
+
+    if (node?.isBlock) {
+      return Object.freeze({
+        active: true,
+        attrs: Object.freeze({ ...(node.attrs ?? {}) }),
+        canMoveDown: editor.state.doc.childCount > 1,
+        canMoveUp: false,
+        depth: 1,
+        from: 0,
+        index: 0,
+        label: labelForType(node.type?.name),
+        siblingCount: editor.state.doc.childCount,
+        text: node.textContent ?? '',
+        to: node.nodeSize,
+        type: node.type?.name ?? 'unknown',
+      });
+    }
+  }
+
   for (let depth = cursor.depth; depth > 0; depth -= 1) {
     const node = cursor.node(depth);
 
@@ -147,7 +168,16 @@ export function blockToolbarStyle({
   }
 
   const viewportWidth = globalThis.window?.innerWidth ?? 1024;
-  const top = Math.max(viewportPadding, rect.top - (toolbarRect.height ?? 40) - offset);
+  const toolbarHeight = toolbarRect.height ?? 40;
+  const stickyHeader = globalThis.document?.querySelector?.('[data-laravel-blocks-editor-header]');
+  const stickyHeaderBottom = stickyHeader?.getBoundingClientRect?.().bottom ?? 0;
+  const minimumTop = Math.max(viewportPadding, stickyHeaderBottom + viewportPadding);
+  const preferredTop = rect.top - toolbarHeight - offset;
+  const fallbackTop = Math.min(
+    rect.bottom + offset,
+    (globalThis.window?.innerHeight ?? 768) - toolbarHeight - viewportPadding,
+  );
+  const top = preferredTop < minimumTop ? Math.max(minimumTop, fallbackTop) : preferredTop;
   const left = Math.min(
     Math.max(viewportPadding, rect.left),
     viewportWidth - (toolbarRect.width ?? 240) - viewportPadding,

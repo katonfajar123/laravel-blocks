@@ -106,6 +106,9 @@ describe('editor command registry', () => {
         'updateBlockAttrs',
         'setParagraph',
         'setHeading',
+        'setBlockquote',
+        'setCodeBlock',
+        'toggleBulletList',
         'undo',
         'redo',
       ]);
@@ -197,6 +200,21 @@ function fakeChain(calls, prefix, runResult) {
     },
     setHeading({ level }) {
       calls.push(`${prefix}:setHeading:${level}`);
+
+      return this;
+    },
+    toggleBlockquote() {
+      calls.push(`${prefix}:toggleBlockquote`);
+
+      return this;
+    },
+    setCodeBlock() {
+      calls.push(`${prefix}:setCodeBlock`);
+
+      return this;
+    },
+    toggleBulletList() {
+      calls.push(`${prefix}:toggleBulletList`);
 
       return this;
     },

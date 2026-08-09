@@ -3,7 +3,7 @@
 This directory is the current source of truth for the intended Laravel Blocks product and engineering contracts.
 
 > [!NOTE]
-> Laravel Blocks does not have an editor release yet. The package foundation, canonical document boundary, block registry, schema validator, Blade renderer, PHP-to-editor manifest bridge, precompiled asset distribution boundary, minimal editor shell, internal selection/command layer, first UI primitive/Popover infrastructure, first visible rich-text toolbar, basic link popover, basic top-level block controls, basic manifest inserter/appender, basic slash commands, and a basic manifest-generated Inspector are implemented; examples marked **Target API** remain design contracts until their owning milestone lands.
+> Laravel Blocks does not have an editor release yet. The package foundation, canonical document boundary, block registry, schema validator, Blade renderer, PHP-to-editor manifest bridge, precompiled asset distribution boundary, minimal editor shell, internal selection/command layer, first UI primitive/Popover infrastructure, unified contextual toolbar, basic link popover, basic top-level block controls, header Inserter, basic slash commands, sticky history controls, and an opt-in generated Inspector are implemented; examples marked **Target API** remain design contracts until their owning milestone lands.
 
 ## Start here
 
@@ -16,6 +16,7 @@ This directory is the current source of truth for the intended Laravel Blocks pr
 | [Document schema](document-schema.md) | Canonical JSON rules, node contracts, nesting, and compatibility |
 | [Editor UX contract](editor-ux-contract.md) | Mandatory complete-editor behavior, UI primitives, interactions, and asset delivery |
 | [Design principles](design-principles.md) | Independent visual identity, UI principles, and design-token ownership |
+| [Design system](../DESIGN.md) | Concrete visual rules for calm chrome, no-stroke selection, popovers, and SVG path icons |
 | [Roadmap](roadmap.md) | Incremental milestones from `0.1` through `1.0` |
 
 ## User guides

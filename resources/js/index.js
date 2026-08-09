@@ -31,13 +31,16 @@ import {
 } from './editor/mount.js';
 import {
   Button,
+  Icon,
   IconButton,
   Popover,
   Toolbar,
   ToolbarGroup,
+  blockIconName,
   computePopoverStyle,
   createOverlayController,
   createPopoverController,
+  iconPath,
   normalizePopoverPlacement,
   targetIsInside,
 } from './ui/index.js';
@@ -54,7 +57,6 @@ import { handleHistoryShortcut, historyShortcutCommand } from './editor/keyboard
 import { createSelectionState } from './editor/selection.js';
 import {
   LinkPopover,
-  RichTextToolbar,
   createRichTextToolbarItems,
   createDefaultLinkProvider,
   currentLinkForm,
@@ -92,9 +94,11 @@ export {
   coerceInspectorFieldValue,
   createBlockSelectionState,
   IconButton,
+  Icon,
+  blockIconName,
+  iconPath,
   LinkPopover,
   Popover,
-  RichTextToolbar,
   Toolbar,
   ToolbarGroup,
   computePopoverStyle,
@@ -145,13 +149,16 @@ export const LaravelBlocks = Object.freeze({
   normalizeDocument,
   ui: Object.freeze({
     Button,
+    Icon,
     IconButton,
     Popover,
     Toolbar,
     ToolbarGroup,
+    blockIconName,
     computePopoverStyle,
     createOverlayController,
     createPopoverController,
+    iconPath,
     normalizePopoverPlacement,
     targetIsInside,
   }),
@@ -179,7 +186,6 @@ export const LaravelBlocks = Object.freeze({
   }),
   richText: Object.freeze({
     LinkPopover,
-    RichTextToolbar,
     createRichTextToolbarItems,
     createDefaultLinkProvider,
     currentLinkForm,

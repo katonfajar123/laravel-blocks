@@ -1,6 +1,6 @@
-import { computed, h, nextTick, ref, watch } from 'vue';
+import { computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
-import { Button } from '../ui/index.js';
+import { Icon, IconButton, blockIconName, targetIsInside } from '../ui/index.js';
 import { blockInserterItems, filterBlockInserterItems } from './manifest.js';
 
 function groupedItems(items) {
@@ -42,6 +42,7 @@ export const BlockInserter = {
     const input = ref(null);
     const open = ref(false);
     const query = ref('');
+    const root = ref(null);
 
     const items = computed(() => blockInserterItems(props.manifest));
     const filtered = computed(() => filterBlockInserterItems(items.value, query.value));
@@ -52,6 +53,12 @@ export const BlockInserter = {
       open.value = false;
       query.value = '';
       activeIndex.value = 0;
+      globalThis.document?.dispatchEvent?.(new CustomEvent('laravel-blocks:overlay-close', {
+        detail: {
+          reason,
+          source: 'block-inserter',
+        },
+      }));
 
       if (reason !== 'insert') {
         props.commandRegistry?.run?.('focus');
@@ -60,7 +67,30 @@ export const BlockInserter = {
 
     function show() {
       open.value = true;
+      globalThis.document?.dispatchEvent?.(new CustomEvent('laravel-blocks:overlay-open', {
+        detail: {
+          source: 'block-inserter',
+        },
+      }));
       nextTick(() => input.value?.focus?.({ preventScroll: true }));
+    }
+
+    function toggle() {
+      if (open.value) {
+        close('toggle');
+
+        return;
+      }
+
+      show();
+    }
+
+    function handleOutsidePointer(event) {
+      if (!open.value || targetIsInside(event.target, [root.value])) {
+        return;
+      }
+
+      close('outside-pointer');
     }
 
     function insert(item = activeItem.value) {
@@ -110,6 +140,14 @@ export const BlockInserter = {
       activeIndex.value = 0;
     });
 
+    onMounted(() => {
+      globalThis.document?.addEventListener?.('pointerdown', handleOutsidePointer, true);
+    });
+
+    onBeforeUnmount(() => {
+      globalThis.document?.removeEventListener?.('pointerdown', handleOutsidePointer, true);
+    });
+
     expose({
       close,
       insert,
@@ -125,15 +163,18 @@ export const BlockInserter = {
     return () => h('div', {
       class: 'lb-block-inserter',
       'data-laravel-blocks-block-inserter-root': '',
+      ref: root,
     }, [
-      h(Button, {
+      h(IconButton, {
         'aria-expanded': open.value ? 'true' : 'false',
         'aria-haspopup': 'dialog',
+        class: 'lb-block-inserter__button',
         'data-laravel-blocks-block-appender': '',
-        onClick: show,
+        label: 'Add block',
+        onClick: toggle,
         variant: 'ghost',
       }, {
-        default: () => '+ Add block',
+        default: () => h(Icon, { name: 'plus' }),
       }),
       h('div', {
         'aria-label': 'Block inserter',
@@ -142,10 +183,13 @@ export const BlockInserter = {
         hidden: !open.value,
         role: 'dialog',
       }, [
-        h('label', {
+        h('div', {
           class: 'lb-block-inserter__search',
         }, [
-          h('span', 'Search blocks'),
+          h(Icon, {
+            name: 'search',
+            size: 22,
+          }),
           h('input', {
             'aria-label': 'Search blocks',
             'data-laravel-blocks-block-search': '',
@@ -192,6 +236,10 @@ export const BlockInserter = {
                 title: item.disabledReason || item.description || item.label,
                 type: 'button',
               }, [
+                h(Icon, {
+                  name: blockIconName(item.name),
+                  size: 18,
+                }),
                 h('span', {
                   class: 'lb-block-inserter__item-label',
                 }, item.label),
@@ -203,6 +251,15 @@ export const BlockInserter = {
               ]);
             })),
           ]))),
+        h('button', {
+          class: 'lb-block-inserter__browse',
+          'data-laravel-blocks-block-browse-all': '',
+          onClick: (event) => {
+            event.preventDefault();
+            input.value?.focus?.({ preventScroll: true });
+          },
+          type: 'button',
+        }, 'Browse all'),
       ]),
     ]);
   },

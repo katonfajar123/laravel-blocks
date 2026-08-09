@@ -390,6 +390,27 @@ const definitions = [
     (editor, payload) => Boolean(editor.isActive('heading', { level: normalLevel(payload) })),
   ),
   simpleCommand(
+    'setBlockquote',
+    'Quote',
+    (editor) => chainCan(editor, (chain) => chain.toggleBlockquote().run()),
+    (editor) => runChain(editor, (chain) => chain.toggleBlockquote()),
+    (editor) => Boolean(editor.isActive('blockquote')),
+  ),
+  simpleCommand(
+    'setCodeBlock',
+    'Code',
+    (editor) => chainCan(editor, (chain) => chain.setCodeBlock().run()),
+    (editor) => runChain(editor, (chain) => chain.setCodeBlock()),
+    (editor) => Boolean(editor.isActive('codeBlock')),
+  ),
+  simpleCommand(
+    'toggleBulletList',
+    'List',
+    (editor) => chainCan(editor, (chain) => chain.toggleBulletList().run()),
+    (editor) => runChain(editor, (chain) => chain.toggleBulletList()),
+    (editor) => Boolean(editor.isActive('bulletList')),
+  ),
+  simpleCommand(
     'undo',
     'Undo',
     (editor) => chainCan(editor, (chain) => chain.undo().run()),

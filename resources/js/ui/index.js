@@ -1,4 +1,5 @@
 export { Button, IconButton } from './Button.js';
+export { Icon, blockIconName, iconPath } from './icons.js';
 export { Popover } from './Popover.js';
 export { Toolbar, ToolbarGroup } from './Toolbar.js';
 export { createOverlayController, targetIsInside } from './overlay.js';

@@ -30,6 +30,13 @@ Block-specific controls appear when a block or selection needs them. Global cont
 
 Frequently needed document controls MAY remain visible. Infrequent block actions belong in contextual toolbars, menus, Inspector tabs, or discoverable commands rather than permanent button rows.
 
+Laravel Blocks uses a two-toolbar default model:
+
+- one sticky document header for global actions such as Inserter, Undo, Redo, and Settings;
+- one contextual toolbar for the active block and text selection.
+
+Block-specific, rich-text, and transform controls MUST consolidate into that contextual toolbar instead of competing through separate always-visible rows. The Settings Inspector MUST stay closed until the author explicitly opens it.
+
 ### 6. Prefer popovers over modals for small actions
 
 Links, compact choices, transforms, and contextual settings use anchored popovers. Modals are reserved for workflows that need focused space, such as a media library or destructive confirmation.
@@ -75,7 +82,7 @@ Exact token values are introduced with the relevant UI implementation. Minor tok
 
 - Hover MUST enhance discoverability but MUST NOT be the only way to reveal an essential keyboard action.
 - Focus MUST remain visible even when hover and selected states overlap.
-- Selected blocks MUST be clear without visually overpowering their content.
+- Selected blocks MUST be clear without visually overpowering their content; hard strokes around authored content are not the default selection treatment.
 - Toolbars MUST group related actions and preserve a consistent height and target size.
 - Popovers MUST look anchored to their invoking context without covering the selected content unnecessarily.
 - Menus MUST use consistent active, destructive, disabled, shortcut, and submenu treatments.

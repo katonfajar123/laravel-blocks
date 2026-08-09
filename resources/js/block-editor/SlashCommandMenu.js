@@ -2,6 +2,7 @@ import { computed, h } from 'vue';
 
 import { blockInserterItems, filterBlockInserterItems } from './manifest.js';
 import { blockRect } from './block-selection.js';
+import { Icon, blockIconName } from '../ui/index.js';
 
 export function slashCommandItems(manifest, query = '') {
   return filterBlockInserterItems(blockInserterItems(manifest), query);
@@ -122,6 +123,10 @@ export const SlashCommandMenu = {
           title: item.disabledReason || item.description || item.label,
           type: 'button',
         }, [
+          h(Icon, {
+            name: blockIconName(item.name),
+            size: 19,
+          }),
           h('span', {
             class: 'lb-slash-command__item-label',
           }, item.label),

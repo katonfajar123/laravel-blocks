@@ -101,7 +101,7 @@ undo
 redo
 ```
 
-The block toolbar, rich-text toolbar, popovers, context menu, slash menu, Inserter, Inspector, List View, drag/drop, and keyboard shortcuts MUST call those shared commands. A UI component MUST NOT create a private alternative mutation path.
+The sticky document header, unified contextual toolbar, popovers, context menu, slash menu, Inserter, Inspector, List View, drag/drop, and keyboard shortcuts MUST call those shared commands. A UI component MUST NOT create a private alternative mutation path. Rich-text and block-specific controls may appear inside the same contextual toolbar; they MUST NOT become competing persistent toolbar surfaces in the default editor.
 
 Commands MUST expose availability, active state, disabled reason, and success/failure so every UI surface presents consistent feedback.
 

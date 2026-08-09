@@ -37,6 +37,14 @@ const manifest = {
       supports: { inserter: true },
     },
     {
+      name: 'bulletList',
+      label: 'List',
+      description: 'Create a bulleted list',
+      category: 'text',
+      keywords: ['list'],
+      supports: { inserter: true },
+    },
+    {
       name: 'heading',
       label: 'Heading',
       description: 'Start with a heading',
@@ -256,6 +264,9 @@ test('executes editor mutations through the shared command API', async ({ page }
         'updateBlockAttrs',
         'setParagraph',
         'setHeading',
+        'setBlockquote',
+        'setCodeBlock',
+        'toggleBulletList',
         'undo',
     'redo',
   ]);
@@ -264,13 +275,16 @@ test('executes editor mutations through the shared command API', async ({ page }
 test('uses visible history controls and platform history shortcuts', async ({ page }) => {
   await page.goto(baseUrl);
 
-  const root = page.locator('#editor-null');
   const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
+  const header = page.locator('#editor-null [data-laravel-blocks-editor-header]');
   const toolbar = page.locator('#editor-null [data-laravel-blocks-history-toolbar]');
   const undo = page.locator('#editor-null [data-laravel-blocks-history-command="undo"]');
   const redo = page.locator('#editor-null [data-laravel-blocks-history-command="redo"]');
 
+  await expect(header).toBeVisible();
   await expect(toolbar).toBeVisible();
+  await expect(undo.locator('svg.lb-ui-icon path')).toHaveCount(2);
+  await expect(redo.locator('svg.lb-ui-icon path')).toHaveCount(2);
   await expect(undo).toBeDisabled();
   await expect(redo).toBeDisabled();
 
@@ -307,17 +321,19 @@ test('uses visible history controls and platform history shortcuts', async ({ pa
 
   await expect(canvas).toBeFocused();
   await expect.poll(() => editorInputValue(page, '#editor-null')).toBe(withShortcut);
-  await expect(root.locator('[data-laravel-blocks-history-command="undo"]')).toBeEnabled();
+  await expect(undo).toBeEnabled();
 });
 
-test('formats selected text through the visible rich text toolbar', async ({ page }) => {
+test('formats selected text through the unified contextual toolbar', async ({ page }) => {
   await page.goto(baseUrl);
 
   const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
-  const toolbar = page.locator('#editor-null [data-laravel-blocks-rich-text-toolbar]');
-  const bold = page.locator('#editor-null [data-laravel-blocks-rich-text-command="toggleBold"]');
-  const italic = page.locator('#editor-null [data-laravel-blocks-rich-text-command="toggleItalic"]');
+  const toolbar = page.locator('#editor-null [data-laravel-blocks-contextual-toolbar]');
+  const richToolbar = page.locator('#editor-null [data-laravel-blocks-rich-text-toolbar]');
+  const bold = page.locator('#editor-null [data-laravel-blocks-contextual-command="toggleBold"]');
+  const italic = page.locator('#editor-null [data-laravel-blocks-contextual-command="toggleItalic"]');
 
+  await expect(richToolbar).toHaveCount(0);
   await expect(toolbar).toBeHidden();
 
   await canvas.click();
@@ -325,7 +341,6 @@ test('formats selected text through the visible rich text toolbar', async ({ pag
   await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
 
   await expect(toolbar).toBeVisible();
-  await expect(toolbar).toHaveAttribute('data-laravel-blocks-state', 'open');
   await expect(bold).toHaveAttribute('aria-pressed', 'false');
   await expect(italic).toHaveAttribute('aria-pressed', 'false');
 
@@ -343,14 +358,14 @@ test('formats selected text through the visible rich text toolbar', async ({ pag
 
   await page.keyboard.press('ArrowRight');
 
-  await expect(toolbar).toBeHidden();
+  await expect(toolbar).toBeVisible();
 });
 
-test('edits links through the rich text link popover', async ({ page }) => {
+test('edits links through the unified contextual link popover', async ({ page }) => {
   await page.goto(baseUrl);
 
   const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
-  const link = page.locator('#editor-null [data-laravel-blocks-rich-text-command="openLink"]');
+  const link = page.locator('#editor-null [data-laravel-blocks-contextual-command="openLink"]');
   const popover = page.locator('#editor-null [data-laravel-blocks-link-popover]');
   const input = page.locator('#editor-null [data-laravel-blocks-link-input]');
   const apply = page.locator('#editor-null [data-laravel-blocks-link-apply]');
@@ -409,6 +424,40 @@ test('edits links through the rich text link popover', async ({ page }) => {
   await expect.poll(() => firstTextMark(page, '#editor-null', 'link')).toBeNull();
 });
 
+test('transforms the current block through the unified contextual toolbar', async ({ page }) => {
+  await page.goto(baseUrl);
+
+  const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
+  const toolbar = page.locator('#editor-null [data-laravel-blocks-contextual-toolbar]');
+  const transform = page.locator('#editor-null [data-laravel-blocks-block-transform]');
+  const menu = page.locator('#editor-null [data-laravel-blocks-block-transform-menu]');
+
+  await canvas.click();
+  await page.keyboard.type('Transform me');
+
+  await expect(toolbar).toBeVisible();
+  await transform.click();
+  await expect(menu).toBeVisible();
+
+  await page.locator('#editor-null [data-laravel-blocks-block-transform-item="setHeading"]').click();
+
+  await expect(canvas).toBeFocused();
+  await expect(menu).toBeHidden();
+  await expect.poll(() => firstContentNode(page, '#editor-null')).toEqual({
+    type: 'heading',
+    attrs: { level: 2 },
+    content: [{ type: 'text', text: 'Transform me' }],
+  });
+
+  await transform.click();
+  await page.locator('#editor-null [data-laravel-blocks-block-transform-item="setParagraph"]').click();
+
+  await expect.poll(() => firstContentNode(page, '#editor-null')).toEqual({
+    type: 'paragraph',
+    content: [{ type: 'text', text: 'Transform me' }],
+  });
+});
+
 test('manages the current top-level block through contextual block controls', async ({ page }) => {
   await page.goto(baseUrl);
 
@@ -423,6 +472,7 @@ test('manages the current top-level block through contextual block controls', as
 
   await expect(wrapper).toBeVisible();
   await expect(toolbar).toBeVisible();
+  await expect(toolbar.locator('svg.lb-ui-icon')).not.toHaveCount(0);
   await expect(page.locator('#editor-null [data-laravel-blocks-block-label]')).toContainText('Paragraph');
   await expect(page.locator('#editor-null [data-laravel-blocks-block-command="moveBlockUp"]')).toBeDisabled();
 
@@ -476,6 +526,7 @@ test('inserts manifest blocks through the appender inserter', async ({ page }) =
   await canvas.click();
   await page.keyboard.type('Start');
 
+  await expect(appender.locator('svg.lb-ui-icon path')).toHaveCount(2);
   await appender.click();
   await expect(inserter).toBeVisible();
   await expect(search).toBeFocused();
@@ -557,6 +608,7 @@ test('edits selected block fields through the manifest-generated inspector', asy
 
   const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
   const inspector = page.locator('#editor-null [data-laravel-blocks-inspector]');
+  const toggle = page.locator('#editor-null [data-laravel-blocks-inspector-toggle]');
   const level = page.locator('#editor-null [data-laravel-blocks-inspector-field="level"]');
 
   await canvas.click();
@@ -564,7 +616,12 @@ test('edits selected block fields through the manifest-generated inspector', asy
   await page.keyboard.type('hea');
   await page.keyboard.press('Enter');
 
+  await expect(inspector).toBeHidden();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await toggle.click();
+
   await expect(inspector).toBeVisible();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
   await expect(page.locator('#editor-null [data-laravel-blocks-inspector-title]')).toContainText('Heading');
   await expect(level).toBeVisible();
   await expect(level).toHaveValue('2');

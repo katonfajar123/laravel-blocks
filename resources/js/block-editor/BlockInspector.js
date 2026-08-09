@@ -78,6 +78,10 @@ export const BlockInspector = {
       type: Object,
       default: () => ({}),
     },
+    open: {
+      type: Boolean,
+      default: true,
+    },
   },
   setup(props, { expose }) {
     const activeGroup = ref('content');
@@ -115,7 +119,7 @@ export const BlockInspector = {
       'aria-label': 'Block settings',
       class: 'lb-block-inspector',
       'data-laravel-blocks-inspector': '',
-      hidden: !props.block.active,
+      hidden: !props.open || !props.block.active,
     }, [
       h('div', {
         class: 'lb-block-inspector__header',

@@ -16,7 +16,7 @@ import { normalizeDocument, toCanonicalJson, toTiptapDocument } from './document
 import { HistoryToolbar } from './HistoryToolbar.js';
 import { handleHistoryShortcut } from './keyboard-shortcuts.js';
 import { createSelectionState } from './selection.js';
-import { RichTextToolbar } from '../rich-text/index.js';
+import { Icon, IconButton } from '../ui/index.js';
 
 function syncHiddenInputValue(value, input) {
   input.value = typeof value === 'string' ? value : JSON.stringify(value);
@@ -89,6 +89,7 @@ export const EditorShell = {
     const blockSelection = shallowRef(createBlockSelectionState(null));
     const commands = shallowRef(null);
     const editorStateVersion = shallowRef(0);
+    const inspectorOpen = shallowRef(false);
     const selection = shallowRef(createSelectionState(null));
     const slash = shallowRef({
       activeIndex: 0,
@@ -323,6 +324,11 @@ export const EditorShell = {
       slashCommand() {
         return slash.value;
       },
+      toggleInspector(force = null) {
+        inspectorOpen.value = typeof force === 'boolean' ? force : !inspectorOpen.value;
+
+        return inspectorOpen.value;
+      },
     });
 
     return () => h('div', {
@@ -330,23 +336,59 @@ export const EditorShell = {
       'data-laravel-blocks-shell': '',
     }, [
       h('div', {
-        class: 'lb-editor-shell__chrome',
-        'aria-hidden': 'true',
-      }, props.placeholder),
-      h(HistoryToolbar, {
-        commandRegistry: commands.value,
-        editor: editor.value,
-        stateVersion: editorStateVersion.value,
-      }),
-      h(RichTextToolbar, {
-        commandRegistry: commands.value,
-        editor: editor.value,
-        selection: selection.value,
-      }),
+        class: 'lb-editor-shell__header',
+        'data-laravel-blocks-editor-header': '',
+      }, [
+        h('div', {
+          class: 'lb-editor-shell__header-start',
+        }, [
+          h(BlockInserter, {
+            block: blockSelection.value,
+            commandRegistry: commands.value,
+            manifest: props.manifest,
+          }),
+          h(HistoryToolbar, {
+            commandRegistry: commands.value,
+            editor: editor.value,
+            stateVersion: editorStateVersion.value,
+          }),
+        ]),
+        h('div', {
+          class: 'lb-editor-shell__header-center',
+        }, [
+          h('span', {
+            class: 'lb-editor-shell__document-title',
+            'data-laravel-blocks-document-title': '',
+          }, 'Document'),
+          h('span', {
+            class: 'lb-editor-shell__document-shortcut',
+          }, 'Ctrl+K'),
+        ]),
+        h('div', {
+          class: 'lb-editor-shell__header-end',
+        }, [
+          h(IconButton, {
+            'aria-expanded': inspectorOpen.value ? 'true' : 'false',
+            class: 'lb-editor-shell__settings',
+            label: 'Toggle settings sidebar',
+            pressed: inspectorOpen.value,
+            title: inspectorOpen.value ? 'Hide settings' : 'Show settings',
+            variant: inspectorOpen.value ? 'primary' : 'ghost',
+            'data-laravel-blocks-inspector-toggle': '',
+            onClick: () => {
+              inspectorOpen.value = !inspectorOpen.value;
+            },
+          }, {
+            default: () => h(Icon, { name: 'settings' }),
+          }),
+        ]),
+      ]),
       h(BlockToolbar, {
         block: blockSelection.value,
         commandRegistry: commands.value,
         editor: editor.value,
+        selection: selection.value,
+        suppressed: slash.value.open,
       }),
       h(SlashCommandMenu, {
         activeIndex: slash.value.activeIndex,
@@ -373,14 +415,10 @@ export const EditorShell = {
         h(BlockInspector, {
           block: blockSelection.value,
           commandRegistry: commands.value,
+          open: inspectorOpen.value,
           manifest: props.manifest,
         }),
       ]),
-      h(BlockInserter, {
-        block: blockSelection.value,
-        commandRegistry: commands.value,
-        manifest: props.manifest,
-      }),
     ]);
   },
 };

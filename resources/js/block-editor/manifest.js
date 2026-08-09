@@ -3,6 +3,13 @@ const supportedInsertPayloads = Object.freeze({
     type: 'blockquote',
     content: [{ type: 'paragraph' }],
   }),
+  bulletList: () => ({
+    type: 'bulletList',
+    content: [{
+      type: 'listItem',
+      content: [{ type: 'paragraph' }],
+    }],
+  }),
   codeBlock: () => ({ type: 'codeBlock' }),
   heading: () => ({
     type: 'heading',

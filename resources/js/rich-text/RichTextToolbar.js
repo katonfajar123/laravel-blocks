@@ -1,6 +1,6 @@
 import { computed, h, nextTick, ref, shallowRef, watch } from 'vue';
 
-import { IconButton, Toolbar, ToolbarGroup } from '../ui/index.js';
+import { Icon, IconButton, Toolbar, ToolbarGroup } from '../ui/index.js';
 import { LinkPopover } from './link-popover.js';
 import {
   createRichTextToolbarItems,
@@ -145,7 +145,7 @@ export const RichTextToolbar = {
               onClick: openLinkPopover,
               onMousedown: (event) => event.preventDefault(),
             }, {
-              default: () => 'Link',
+              default: () => h(Icon, { name: 'link' }),
             }),
           }),
         ],
