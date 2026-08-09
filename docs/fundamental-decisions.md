@@ -281,6 +281,8 @@ The envelope keys `manifestVersion`, `documentSchemaVersion`, `categories`, and 
 
 An editor that receives an unsupported manifest major version MUST refuse to mount with a clear diagnostic rather than guessing at fields or silently dropping blocks.
 
+The implemented manifest bridge provides immutable manifest value objects plus `LaravelBlocks::editorManifest()`. It serializes registered blocks in deterministic registry order, emits first-seen categories once, keeps the manifest declarative, and rejects unsupported or non-serializable fields/supports through typed manifest exceptions.
+
 ## Generated inspector contract
 
 A normal PHP block automatically receives:

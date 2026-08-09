@@ -135,6 +135,6 @@ PHP `^8.2` and the Laravel/Illuminate 11/12/13 target are frozen package constra
 
 ## Development status
 
-The fundamental architecture and mandatory Editor UX are specified. The runnable package/toolchain, immutable canonical Document v1 normalization boundary, abstract PHP Block contract, container-backed Block Registry, executable block/mark schemas, server-authoritative document validator, and safe Blade renderer are implemented.
+The fundamental architecture and mandatory Editor UX are specified. The runnable package/toolchain, immutable canonical Document v1 normalization boundary, abstract PHP Block contract, container-backed Block Registry, executable block/mark schemas, server-authoritative document validator, safe Blade renderer, and PHP-to-editor Manifest v1 bridge are implemented.
 
-The next planned foundation is the PHP-to-editor manifest bridge. See the public [roadmap](docs/roadmap.md) for the planned release sequence.
+The next planned foundation is precompiled asset distribution for the default editor. See the public [roadmap](docs/roadmap.md) for the planned release sequence.

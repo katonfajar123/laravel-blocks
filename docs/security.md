@@ -38,6 +38,8 @@ Registered blocks and marks declare executable server schemas. Validation reject
 
 Editor Manifest v1 is declarative JSON. It MUST NOT expose PHP class or view names, callbacks, executable validation logic, secrets, authorization decisions, filesystem paths, or arbitrary JavaScript module URLs. Client constraints improve feedback; server validation and authorization remain authoritative.
 
+The manifest generator rejects unsupported field definitions, callbacks, objects, resources, non-finite numbers, invalid support objects, and arbitrary component URLs/paths with typed manifest errors. Empty control metadata objects are emitted as JSON objects, not executable placeholders.
+
 An unknown-block recovery placeholder MUST NOT echo the node's attributes or content. `skip` omits the complete subtree, while `throw` reports only the stable type and document path through a typed exception.
 
 ## Escaping and sanitization

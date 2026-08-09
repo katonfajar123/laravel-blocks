@@ -68,7 +68,9 @@ class HeroBlock extends Block
 
 The abstract `Block` base class and method-based metadata surface are implemented. `name()`, `label()`, and `view()` are required; `description()`, `category()`, `keywords()`, `icon()`, `fields()`, `supports()`, `schema()`, and `editorComponent()` provide shared defaults. The final `metadata()` method returns one immutable descriptive snapshot per block instance.
 
-Registration accepts an instance, a container-resolved block class, or an array of either. Stable names use lower-camel identifiers, array registration is atomic, and duplicate or unknown names fail through typed exceptions. Field validation, manifest generation, and rendering are delivered by their respective package layers rather than the registry.
+Registration accepts an instance, a container-resolved block class, or an array of either. Stable names use lower-camel identifiers, array registration is atomic, and duplicate or unknown names fail through typed exceptions. Manifest generation and rendering are delivered by their respective package layers rather than the registry.
+
+The implemented manifest bridge serializes `fields()` into Editor Manifest v1 when a field definition is an associative manifest array or implements the manifest-field provider contract. Unsupported field definitions, callbacks, objects, resources, and arbitrary editor-component URLs fail loudly with typed manifest errors instead of being silently dropped or exposed to JavaScript. The complete Field Engine and generated Inspector renderer remain later milestones.
 
 ## Render view
 

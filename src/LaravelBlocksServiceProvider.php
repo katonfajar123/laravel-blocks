@@ -7,6 +7,7 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Support\ServiceProvider;
 use KatonFajar\LaravelBlocks\Blocks\BlockRegistry;
+use KatonFajar\LaravelBlocks\Manifest\EditorManifestGenerator;
 use KatonFajar\LaravelBlocks\Rendering\DocumentRenderer;
 use KatonFajar\LaravelBlocks\Validation\AttributeValidator;
 use KatonFajar\LaravelBlocks\Validation\DocumentValidator;
@@ -27,6 +28,12 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
         );
 
         $this->app->singleton(MarkRegistry::class);
+        $this->app->singleton(
+            EditorManifestGenerator::class,
+            static fn (Container $app): EditorManifestGenerator => new EditorManifestGenerator(
+                $app->make(BlockRegistry::class),
+            ),
+        );
         $this->app->singleton(AttributeValidator::class);
         $this->app->singleton(
             ValidationLimits::class,
@@ -81,6 +88,7 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
                 $app->make(MarkRegistry::class),
                 $app->make(DocumentValidator::class),
                 $app->make(DocumentRenderer::class),
+                $app->make(EditorManifestGenerator::class),
             ),
         );
 

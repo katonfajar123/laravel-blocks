@@ -212,6 +212,10 @@ PHP serializes the registry to declarative Editor Manifest v1 with required `man
 
 The manifest MUST NOT expose PHP class/view names, callbacks, executable rules, secrets, authorization decisions, or arbitrary module URLs. Its client constraints are UX hints; server validation remains authoritative. The exact frozen envelope is documented in [Fundamental decisions](fundamental-decisions.md#editor-manifest-v1).
 
+The implemented bridge exposes `LaravelBlocks::editorManifest()` through the same package service and facade as registration, validation, and rendering. The generator serializes registered blocks in deterministic registry order, deduplicates categories by first occurrence, merges direct `attrs.*` schema constraints into field hints, and fails with typed manifest errors when a field or support value is not declarative JSON.
+
+Field entries may currently be associative manifest arrays or objects implementing the manifest-field provider contract. The complete Field Engine and generated Inspector controls remain later milestones; this bridge only establishes the safe catalog consumed by those layers.
+
 ### Document validator
 
 The implemented validation pipeline normalizes through `Document`, then applies `DocumentValidator`, `NodeValidator`, `MarkValidator`, and `AttributeValidator`. Blocks expose an executable `BlockSchema`; marks use `MarkSchema` and a singleton `MarkRegistry`. These declarations constrain attributes, parents, children, marks, and child-count bounds without exposing executable PHP rules to the editor manifest.

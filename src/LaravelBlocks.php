@@ -7,6 +7,8 @@ use KatonFajar\LaravelBlocks\Blocks\Block;
 use KatonFajar\LaravelBlocks\Blocks\BlockMetadata;
 use KatonFajar\LaravelBlocks\Blocks\BlockRegistry;
 use KatonFajar\LaravelBlocks\Documents\Document;
+use KatonFajar\LaravelBlocks\Manifest\EditorManifest;
+use KatonFajar\LaravelBlocks\Manifest\EditorManifestGenerator;
 use KatonFajar\LaravelBlocks\Rendering\DocumentRenderer;
 use KatonFajar\LaravelBlocks\Rendering\RenderContext;
 use KatonFajar\LaravelBlocks\Rendering\RenderedContent;
@@ -22,6 +24,7 @@ final readonly class LaravelBlocks
         private MarkRegistry $marks,
         private DocumentValidator $validator,
         private DocumentRenderer $renderer,
+        private EditorManifestGenerator $manifest,
     ) {}
 
     /**
@@ -94,5 +97,10 @@ final readonly class LaravelBlocks
     public function render(array|string|Document|null $value, ?RenderContext $context = null): RenderedContent
     {
         return $this->renderer->render($value, $context);
+    }
+
+    public function editorManifest(): EditorManifest
+    {
+        return $this->manifest->generate();
     }
 }

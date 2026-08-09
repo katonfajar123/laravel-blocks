@@ -27,7 +27,7 @@ This roadmap defines direction, release composition, and dependency relationship
 
 An in-progress implementation must finish first. Otherwise the highest-value incomplete gap whose dependencies are satisfied is selected, scoped, verified, and evaluated before unrelated work begins.
 
-Package Skeleton, Document Foundation, Block Contract + Registry, Schema Validator, and safe Blade Renderer are complete. The PHP-to-editor Manifest bridge is the next dependency-safe foundation because the editor must receive a declarative, non-executable block catalog before asset distribution and editor work. Precompiled assets, editor engine/UI infrastructure, and blocks remain later dependency candidates rather than an instruction to advance automatically.
+Package Skeleton, Document Foundation, Block Contract + Registry, Schema Validator, safe Blade Renderer, and PHP-to-editor Manifest bridge are complete. Precompiled Asset Distribution is the next dependency-safe foundation because the default editor must ship as versioned Composer assets before editor runtime work. Editor engine/UI infrastructure and blocks remain later dependency candidates rather than an instruction to advance automatically.
 
 ## B00 frozen decisions
 
