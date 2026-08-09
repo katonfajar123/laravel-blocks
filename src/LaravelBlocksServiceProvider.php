@@ -4,8 +4,10 @@ namespace KatonFajar\LaravelBlocks;
 
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Support\ServiceProvider;
 use KatonFajar\LaravelBlocks\Blocks\BlockRegistry;
+use KatonFajar\LaravelBlocks\Rendering\DocumentRenderer;
 use KatonFajar\LaravelBlocks\Validation\AttributeValidator;
 use KatonFajar\LaravelBlocks\Validation\DocumentValidator;
 use KatonFajar\LaravelBlocks\Validation\MarkRegistry;
@@ -59,6 +61,17 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
                 $app->make(ValidationLimits::class),
             ),
         );
+        $this->app->singleton(
+            DocumentRenderer::class,
+            static fn (Container $app): DocumentRenderer => new DocumentRenderer(
+                $app->make(Repository::class),
+                $app->make(ViewFactory::class),
+                $app->make(BlockRegistry::class),
+                $app->make(AttributeValidator::class),
+                $app->make(MarkValidator::class),
+                $app->make(ValidationLimits::class),
+            ),
+        );
 
         $this->app->singleton(
             LaravelBlocks::class,
@@ -67,6 +80,7 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
                 $app->make(BlockRegistry::class),
                 $app->make(MarkRegistry::class),
                 $app->make(DocumentValidator::class),
+                $app->make(DocumentRenderer::class),
             ),
         );
 
@@ -75,6 +89,8 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->loadViewsFrom($this->packageViewsPath(), 'laravel-blocks');
+
         if (! $this->app->runningInConsole()) {
             return;
         }
@@ -82,10 +98,19 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
         $this->publishes([
             $this->packageConfigPath() => config_path('laravel-blocks.php'),
         ], 'laravel-blocks-config');
+
+        $this->publishes([
+            $this->packageViewsPath() => resource_path('views/vendor/laravel-blocks'),
+        ], 'laravel-blocks-views');
     }
 
     private function packageConfigPath(): string
     {
         return dirname(__DIR__).'/config/laravel-blocks.php';
+    }
+
+    private function packageViewsPath(): string
+    {
+        return dirname(__DIR__).'/resources/views';
     }
 }

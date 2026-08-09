@@ -224,7 +224,7 @@ The migrator converts older persisted document contracts to the current contract
 
 ### Renderer
 
-The renderer walks the document tree and delegates known nodes to block renderers or Blade views. `LaravelBlocks::render(...)` returns an immutable `RenderedContent` implementing Laravel `Htmlable`. Unknown blocks use the deterministic configured policy `throw`, `placeholder`, or `skip`; `throw` is the default.
+The implemented renderer walks the document tree and delegates known nodes to registered block Blade views. `LaravelBlocks::render(...)` and `<x-laravel-blocks::content>` return trusted output through an immutable `RenderedContent` implementing Laravel `Htmlable`. Unknown blocks use the deterministic configured policy `throw`, `placeholder`, or `skip`; `throw` is the default.
 
 ### Media manager
 

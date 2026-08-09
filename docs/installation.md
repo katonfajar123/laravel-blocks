@@ -3,7 +3,7 @@
 ## Availability
 
 > [!WARNING]
-> Laravel Blocks has not been released. B01 provides the package/toolchain foundation and B02 implements `Document::from(...)`, `toArray()`, and `toJson()`; the installer, editor, validation rule, renderer, and compiled consumer assets below remain milestone targets.
+> Laravel Blocks has not been released. The package foundation, canonical document boundary, block registry, schema validator, and Blade renderer exist; the installer, editor, validation rule, built-in block catalog, and compiled consumer assets below remain milestone targets.
 
 ## Proposed requirements
 
@@ -151,7 +151,7 @@ The implemented `LaravelBlocks::validate(...)` boundary MUST run before accepted
 <x-laravel-blocks::content :content="$post->content" />
 ```
 
-Equivalent target PHP API:
+Equivalent implemented PHP API:
 
 ```php
 use KatonFajar\LaravelBlocks\Facades\LaravelBlocks;
@@ -159,7 +159,7 @@ use KatonFajar\LaravelBlocks\Facades\LaravelBlocks;
 $html = LaravelBlocks::render($post->content);
 ```
 
-The Blade component is preferred in templates because it can provide a consistent wrapper, error policy, and view context.
+The Blade component uses the same renderer path as the facade. Current rendering requires application or package blocks to be registered with safe Blade views; the built-in block catalog arrives in later `0.1` batches.
 
 ## Publish configuration and views
 

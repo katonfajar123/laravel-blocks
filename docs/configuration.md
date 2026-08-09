@@ -2,7 +2,7 @@
 
 ## Status
 
-The package merges and publishes a small serializable configuration. Document validation limits are active; values whose consuming subsystem has not been implemented yet remain inert defaults, not claims that the renderer, assets, or optional persistence exist.
+The package merges and publishes a small serializable configuration. Document validation limits and renderer unknown-block policy are active; values whose consuming subsystem has not been implemented yet remain inert defaults, not claims that assets or optional persistence exist.
 
 The implemented file is:
 
@@ -35,7 +35,7 @@ return [
 ];
 ```
 
-Testbench verifies merge behavior, serialization, active document limits, and the `laravel-blocks-config` publish group. The `document.unknown_blocks` values/default and precompiled asset-loading boundary are frozen contracts; their runtime consumers arrive with the renderer and asset-distribution work.
+Testbench verifies merge behavior, serialization, active document limits, renderer policy behavior, and the `laravel-blocks-config` publish group. The `document.unknown_blocks` values/default and precompiled asset-loading boundary are frozen contracts; asset runtime consumers arrive with asset-distribution work.
 
 ## Planned expanded configuration
 
@@ -130,7 +130,7 @@ The active positive-integer validation limits are:
 
 Missing, non-integer, or non-positive values fall back to those defaults. The `document` configuration controls validation and rendering behavior only. It does not cause Laravel Blocks to persist content.
 
-`document.unknown_blocks` accepts exactly `throw`, `placeholder`, or `skip`; `throw` is the deterministic default. Schema version is a document contract and MUST NOT be configurable per application.
+`document.unknown_blocks` accepts exactly `throw`, `placeholder`, or `skip`; `throw` is the deterministic default. The renderer enforces this policy while still rejecting malformed known content and malformed unknown recovery nodes. Schema version is a document contract and MUST NOT be configurable per application.
 
 The future `assets.auto_inject` runtime behavior MUST load published, versioned package CSS and deferred JavaScript once per page. `base_url` and auto-injection opt-out are advanced deployment controls; they do not make host Node.js, npm, Vue, Tiptap, or Vite setup part of the default installation.
 

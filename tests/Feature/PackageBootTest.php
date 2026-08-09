@@ -21,6 +21,10 @@ it('merges serializable configuration and registers its publish group', function
         LaravelBlocksServiceProvider::class,
         'laravel-blocks-config',
     );
+    $publishedViews = LaravelBlocksServiceProvider::pathsToPublish(
+        LaravelBlocksServiceProvider::class,
+        'laravel-blocks-views',
+    );
 
     expect($configuration)
         ->toBeArray()
@@ -41,6 +45,10 @@ it('merges serializable configuration and registers its publish group', function
         ->and($published)
         ->toBe([
             $packageRoot.'/config/laravel-blocks.php' => config_path('laravel-blocks.php'),
+        ])
+        ->and($publishedViews)
+        ->toBe([
+            $packageRoot.'/resources/views' => resource_path('views/vendor/laravel-blocks'),
         ]);
 });
 

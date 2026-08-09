@@ -1,5 +1,11 @@
 # Rendering
 
+## Status
+
+The core renderer is implemented for registered block nodes, escaped text, deterministic unknown-block policies, typed view failures, `LaravelBlocks::render(...)`, and `<x-laravel-blocks::content>`.
+
+Built-in block views, mark-specific rich-text HTML, dynamic block authorization, media resolution, and render caching remain later milestone work.
+
 ## Principle
 
 Frontend HTML is a derived representation of validated structured content. The editor's DOM and its Vue node views are not the frontend rendering contract.
@@ -41,13 +47,13 @@ input array, JSON string, or null
   -> compose HTML
 ```
 
-No code path may bypass document validation merely because the content originated from the package editor.
+No code path may bypass known-node validation merely because the content originated from the package editor. Unknown recovery policies are limited to `throw`, `placeholder`, and `skip`, and they never interpret unknown node attributes or content as HTML.
 
 ## Static blocks
 
 Static blocks render from their node content and attributes. Examples include Paragraph, Heading, Quote, Button, and Separator.
 
-Text content is escaped. Supported marks are converted to a controlled set of elements and attributes. URLs pass through a scheme and attribute policy.
+Text content is escaped. Mark-specific HTML output is added by the rich-text and built-in mark implementation so supported marks can be converted to a controlled set of elements and attributes. URLs pass through a scheme and attribute policy before they reach rendering.
 
 ## Container blocks
 

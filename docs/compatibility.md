@@ -28,6 +28,19 @@ Laravel's upstream support lifecycle is separate from Laravel Blocks compatibili
 
 Laravel Blocks is a library, so it MUST require only the Illuminate components it directly uses instead of requiring the complete `laravel/framework` package. PHP `^8.2` and the `^11.0|^12.0|^13.0` union for each used Illuminate component are frozen; the exact component subset grows only when an implementation batch proves a direct runtime need.
 
+The current implemented runtime set is:
+
+```json
+{
+  "require": {
+    "php": "^8.2",
+    "illuminate/contracts": "^11.0|^12.0|^13.0",
+    "illuminate/support": "^11.0|^12.0|^13.0",
+    "illuminate/view": "^11.0|^12.0|^13.0"
+  }
+}
+```
+
 The anticipated upper-bound set is:
 
 ```json

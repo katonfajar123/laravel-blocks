@@ -7,7 +7,7 @@
 Laravel Blocks is planned as a ready-to-use visual block editor for Laravel. It is designed to give authors a polished Gutenberg-style canvas while letting Laravel applications own their content, models, persistence, Blade output, and custom PHP blocks.
 
 > [!IMPORTANT]
-> This repository currently contains the package/toolchain foundation, canonical Document v1 boundary, PHP Block Registry, and server-side schema validator, but no installable editor release exists yet. Editor commands and APIs below remain the target developer experience until their implementation is complete.
+> This repository currently contains the package/toolchain foundation, canonical Document v1 boundary, PHP Block Registry, server-side schema validator, and safe Blade renderer, but no installable editor release exists yet. Editor commands and APIs below remain the target developer experience until their implementation is complete.
 
 ## Target developer experience
 
@@ -135,6 +135,6 @@ PHP `^8.2` and the Laravel/Illuminate 11/12/13 target are frozen package constra
 
 ## Development status
 
-The fundamental architecture and mandatory Editor UX are specified. The runnable package/toolchain, immutable canonical Document v1 normalization boundary, abstract PHP Block contract, container-backed Block Registry, executable block/mark schemas, and server-authoritative document validator are implemented.
+The fundamental architecture and mandatory Editor UX are specified. The runnable package/toolchain, immutable canonical Document v1 normalization boundary, abstract PHP Block contract, container-backed Block Registry, executable block/mark schemas, server-authoritative document validator, and safe Blade renderer are implemented.
 
-The next planned foundation is the safe Blade renderer built on that validated document boundary. See the public [roadmap](docs/roadmap.md) for the planned release sequence.
+The next planned foundation is the PHP-to-editor manifest bridge. See the public [roadmap](docs/roadmap.md) for the planned release sequence.

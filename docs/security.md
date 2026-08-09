@@ -32,7 +32,7 @@ Limits must apply recursively and before expensive rendering or database work.
 
 The implemented defaults are 1 MiB serialized document data, 10,000 non-root nodes, depth 32, 256 KiB cumulative text, and 64 KiB serialized attributes per node or mark. Applications may lower or raise these positive integer limits through `laravel-blocks.document`; invalid configured values fall back to the safe package defaults. Raw JSON size is checked before decoding, and canonical array/`Document` inputs are checked after normalization.
 
-Registered blocks and marks declare executable server schemas. Validation rejects unknown or reserved nested root nodes, undeclared attributes, unsafe URL schemes, disallowed/duplicate marks, invalid parent-child relationships, and resource-limit violations with typed reasons and document paths. This validation runs before the future renderer and is not bypassed by renderer fallback settings.
+Registered blocks and marks declare executable server schemas. Validation rejects unknown or reserved nested root nodes, undeclared attributes, unsafe URL schemes, disallowed/duplicate marks, invalid parent-child relationships, and resource-limit violations with typed reasons and document paths. Rendering never bypasses known-node validation, and renderer fallback settings do not convert malformed content into trusted output.
 
 ## Editor manifest and recovery placeholders
 

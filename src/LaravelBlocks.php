@@ -7,6 +7,9 @@ use KatonFajar\LaravelBlocks\Blocks\Block;
 use KatonFajar\LaravelBlocks\Blocks\BlockMetadata;
 use KatonFajar\LaravelBlocks\Blocks\BlockRegistry;
 use KatonFajar\LaravelBlocks\Documents\Document;
+use KatonFajar\LaravelBlocks\Rendering\DocumentRenderer;
+use KatonFajar\LaravelBlocks\Rendering\RenderContext;
+use KatonFajar\LaravelBlocks\Rendering\RenderedContent;
 use KatonFajar\LaravelBlocks\Validation\DocumentValidator;
 use KatonFajar\LaravelBlocks\Validation\MarkRegistry;
 use KatonFajar\LaravelBlocks\Validation\MarkSchema;
@@ -18,6 +21,7 @@ final readonly class LaravelBlocks
         private BlockRegistry $blocks,
         private MarkRegistry $marks,
         private DocumentValidator $validator,
+        private DocumentRenderer $renderer,
     ) {}
 
     /**
@@ -82,5 +86,13 @@ final readonly class LaravelBlocks
     public function validate(array|string|Document|null $value): Document
     {
         return $this->validator->validate($value);
+    }
+
+    /**
+     * @param  array<array-key, mixed>|string|Document|null  $value
+     */
+    public function render(array|string|Document|null $value, ?RenderContext $context = null): RenderedContent
+    {
+        return $this->renderer->render($value, $context);
     }
 }

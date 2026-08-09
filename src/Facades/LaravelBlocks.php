@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Facade;
 use KatonFajar\LaravelBlocks\Blocks\Block;
 use KatonFajar\LaravelBlocks\Blocks\BlockMetadata;
 use KatonFajar\LaravelBlocks\Documents\Document;
+use KatonFajar\LaravelBlocks\Rendering\RenderContext;
+use KatonFajar\LaravelBlocks\Rendering\RenderedContent;
 use KatonFajar\LaravelBlocks\Validation\MarkSchema;
 
 /**
@@ -16,6 +18,7 @@ use KatonFajar\LaravelBlocks\Validation\MarkSchema;
  * @method static array<string, Block> blocks()
  * @method static void registerMarks(MarkSchema|array<array-key, MarkSchema> $marks)
  * @method static Document validate(array<array-key, mixed>|string|Document|null $value)
+ * @method static RenderedContent render(array<array-key, mixed>|string|Document|null $value, ?RenderContext $context = null)
  *
  * @see \KatonFajar\LaravelBlocks\LaravelBlocks
  */
