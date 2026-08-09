@@ -1,4 +1,18 @@
 [data-laravel-blocks-root] {
+  --lb-accent: #4f46e5;
+  --lb-accent-contrast: #ffffff;
+  --lb-border: #d1d5db;
+  --lb-danger: #dc2626;
+  --lb-danger-contrast: #ffffff;
+  --lb-focus: #6366f1;
+  --lb-muted: #6b7280;
+  --lb-popover-background: #ffffff;
+  --lb-popover-shadow: 0 16px 36px rgb(15 23 42 / 0.18);
+  --lb-radius-control: 0.625rem;
+  --lb-radius-popover: 0.875rem;
+  --lb-surface: #ffffff;
+  --lb-surface-subtle: #f9fafb;
+  --lb-text: #111827;
   box-sizing: border-box;
 }
 
@@ -9,7 +23,7 @@
 }
 
 .lb-editor {
-  color: #111827;
+  color: var(--lb-text);
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
@@ -62,4 +76,126 @@
 .lb-editor-shell__loading {
   color: #6b7280;
   padding: 1rem;
+}
+
+.lb-ui-button {
+  align-items: center;
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: var(--lb-radius-control);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-weight: 600;
+  gap: 0.375rem;
+  justify-content: center;
+  line-height: 1;
+  min-height: 2.25rem;
+  padding: 0.5rem 0.75rem;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease,
+    box-shadow 120ms ease;
+  user-select: none;
+}
+
+.lb-ui-button:focus-visible {
+  outline: 2px solid var(--lb-focus);
+  outline-offset: 2px;
+}
+
+.lb-ui-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+.lb-ui-button--sm {
+  font-size: 0.8125rem;
+  min-height: 1.875rem;
+  padding: 0.375rem 0.5rem;
+}
+
+.lb-ui-button--md {
+  font-size: 0.875rem;
+}
+
+.lb-ui-button--lg {
+  font-size: 0.9375rem;
+  min-height: 2.75rem;
+  padding: 0.625rem 1rem;
+}
+
+.lb-ui-button--neutral {
+  background: var(--lb-surface);
+  border-color: var(--lb-border);
+  color: var(--lb-text);
+}
+
+.lb-ui-button--primary {
+  background: var(--lb-accent);
+  color: var(--lb-accent-contrast);
+}
+
+.lb-ui-button--ghost {
+  background: transparent;
+  color: var(--lb-text);
+}
+
+.lb-ui-button--danger {
+  background: var(--lb-danger);
+  color: var(--lb-danger-contrast);
+}
+
+.lb-ui-button:hover:not(:disabled) {
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.12);
+}
+
+.lb-ui-icon-button {
+  aspect-ratio: 1;
+  padding-inline: 0;
+  width: 2.25rem;
+}
+
+.lb-ui-toolbar {
+  align-items: center;
+  background: var(--lb-surface);
+  border: 1px solid var(--lb-border);
+  border-radius: var(--lb-radius-popover);
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+}
+
+.lb-ui-toolbar[aria-orientation="vertical"] {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.lb-ui-toolbar-group {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.125rem;
+}
+
+.lb-ui-toolbar-group + .lb-ui-toolbar-group {
+  border-inline-start: 1px solid var(--lb-border);
+  margin-inline-start: 0.25rem;
+  padding-inline-start: 0.25rem;
+}
+
+.lb-ui-popover {
+  background: var(--lb-popover-background);
+  border: 1px solid var(--lb-border);
+  border-radius: var(--lb-radius-popover);
+  box-shadow: var(--lb-popover-shadow);
+  color: var(--lb-text);
+  max-width: min(24rem, calc(100vw - 1rem));
+  min-width: 12rem;
+  padding: 0.75rem;
+  z-index: 50;
+}
+
+.lb-ui-popover[hidden] {
+  display: none;
 }

@@ -254,6 +254,8 @@ The implemented editor shell renders `<x-laravel-blocks::editor>` as a normalize
 
 The implemented editor engine also exposes a shared internal selection and command layer around the mounted Tiptap instance. Command metadata reports active/enabled state and deterministic disabled reasons, while command execution routes focus, bold, italic, paragraph, heading, undo, and redo through one registry. This is an infrastructure boundary for future toolbars, shortcuts, menus, and inspector controls; visible command UI remains a later editor-layer milestone.
 
+The implemented UI infrastructure adds package-owned Button, IconButton, Toolbar, ToolbarGroup, Popover, overlay, and positioning primitives. Popover infrastructure now supports anchor-based placement, Escape dismissal, outside-pointer dismissal, and focus restoration through the precompiled bundle; feature-specific surfaces such as rich-text toolbar, link popover, Inserter, slash command, Inspector, and block menus remain later milestones.
+
 ## Compatibility baseline
 
 The frozen package baseline is:

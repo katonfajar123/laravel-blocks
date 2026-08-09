@@ -118,6 +118,8 @@ Laravel Blocks MUST provide namespaced Button, IconButton, Toolbar, Popover, Too
 
 Popovers MUST be anchor-aware and collision-aware, preserve the editor selection, remain within the viewport, support role-appropriate keyboard navigation and Escape, dismiss predictably, and restore focus to the invoking control or selection. Only true dialogs trap focus. See the detailed [Popover and overlay contract](editor-ux-contract.md#popover-and-overlay-contract).
 
+The current implementation includes the first Button, IconButton, Toolbar, ToolbarGroup, Popover, overlay, and positioning primitives. This proves shared overlay behavior and focus restoration, but does not yet implement feature-specific toolbar, link, Inserter, slash menu, Inspector, or context-menu surfaces.
+
 ## Autosave and recovery
 
 Autosave is opt-in by default because the host application owns routes, authorization, and revision policy. The package SHOULD expose events or callbacks and a small transport contract rather than assuming a post model.

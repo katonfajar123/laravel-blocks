@@ -7,7 +7,7 @@
 Laravel Blocks is planned as a ready-to-use visual block editor for Laravel. It is designed to give authors a polished Gutenberg-style canvas while letting Laravel applications own their content, models, persistence, Blade output, and custom PHP blocks.
 
 > [!IMPORTANT]
-> This repository currently contains the package/toolchain foundation, canonical Document v1 boundary, PHP Block Registry, server-side schema validator, safe Blade renderer, PHP-to-editor manifest bridge, precompiled asset distribution, a minimal editor shell, and the internal editor selection/command layer. The visible editor UI surfaces, installer, validation rule, and built-in block catalog remain target milestones until implemented.
+> This repository currently contains the package/toolchain foundation, canonical Document v1 boundary, PHP Block Registry, server-side schema validator, safe Blade renderer, PHP-to-editor manifest bridge, precompiled asset distribution, a minimal editor shell, the internal editor selection/command layer, and the first package-owned UI primitives with shared Popover infrastructure. The visible editor toolbars, installer, validation rule, and built-in block catalog remain target milestones until implemented.
 
 ## Target developer experience
 
@@ -135,6 +135,6 @@ PHP `^8.2` and the Laravel/Illuminate 11/12/13 target are frozen package constra
 
 ## Development status
 
-The fundamental architecture and mandatory Editor UX are specified. The runnable package/toolchain, immutable canonical Document v1 normalization boundary, abstract PHP Block contract, container-backed Block Registry, executable block/mark schemas, server-authoritative document validator, safe Blade renderer, PHP-to-editor Manifest v1 bridge, precompiled asset distribution boundary, minimal Vue/Tiptap editor shell, and shared editor selection/command layer are implemented.
+The fundamental architecture and mandatory Editor UX are specified. The runnable package/toolchain, immutable canonical Document v1 normalization boundary, abstract PHP Block contract, container-backed Block Registry, executable block/mark schemas, server-authoritative document validator, safe Blade renderer, PHP-to-editor Manifest v1 bridge, precompiled asset distribution boundary, minimal Vue/Tiptap editor shell, shared editor selection/command layer, and first UI primitive/Popover infrastructure are implemented.
 
-The next planned foundation is the package-owned Editor UI kit and overlay infrastructure. See the public [roadmap](docs/roadmap.md) for the planned release sequence.
+The next planned foundation is the rich-text selection toolbar using the shared command and Popover layers. See the public [roadmap](docs/roadmap.md) for the planned release sequence.

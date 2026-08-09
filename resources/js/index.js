@@ -7,6 +7,18 @@ import {
   mountLaravelBlocksEditors,
   readEditorPayload,
 } from './editor/mount.js';
+import {
+  Button,
+  IconButton,
+  Popover,
+  Toolbar,
+  ToolbarGroup,
+  computePopoverStyle,
+  createOverlayController,
+  createPopoverController,
+  normalizePopoverPlacement,
+  targetIsInside,
+} from './ui/index.js';
 import { CommandRegistry, createDefaultCommandRegistry } from './editor/commands.js';
 import {
   emptyDocument,
@@ -25,14 +37,24 @@ export const packageMetadata = Object.freeze({
 
 export {
   bootWhenReady,
+  Button,
   CommandRegistry,
+  IconButton,
+  Popover,
+  Toolbar,
+  ToolbarGroup,
+  computePopoverStyle,
   createDefaultCommandRegistry,
+  createOverlayController,
+  createPopoverController,
   createSelectionState,
   emptyDocument,
   mountLaravelBlocksEditor,
   mountLaravelBlocksEditors,
+  normalizePopoverPlacement,
   normalizeDocument,
   readEditorPayload,
+  targetIsInside,
   toCanonicalDocument,
   toCanonicalJson,
   toTiptapDocument,
@@ -44,6 +66,18 @@ export const LaravelBlocks = Object.freeze({
   mountEditor: mountLaravelBlocksEditor,
   mountEditors: mountLaravelBlocksEditors,
   normalizeDocument,
+  ui: Object.freeze({
+    Button,
+    IconButton,
+    Popover,
+    Toolbar,
+    ToolbarGroup,
+    computePopoverStyle,
+    createOverlayController,
+    createPopoverController,
+    normalizePopoverPlacement,
+    targetIsInside,
+  }),
   toCanonicalDocument,
   toCanonicalJson,
 });
