@@ -27,13 +27,14 @@ for (const [name, entry] of Object.entries(entries)) {
   const path = join(distRoot, entry.file);
   const contents = readFileSync(path);
   const sha256 = createHash('sha256').update(contents).digest('hex');
+  const sri = createHash('sha256').update(contents).digest('base64');
   const stats = statSync(path);
 
   manifest.assets[name] = {
     file: entry.file,
     type: entry.type,
     sha256,
-    integrity: `sha256-${sha256}`,
+    integrity: `sha256-${sri}`,
     bytes: stats.size,
   };
 }

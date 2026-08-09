@@ -27,13 +27,13 @@ it('resolves versioned package distribution assets without host build tooling', 
         ->and($script->file)->toBe('laravel-blocks.js')
         ->and($script->type)->toBe('module')
         ->and($script->url)->toStartWith('/vendor/laravel-blocks/laravel-blocks.js?id=')
-        ->and($script->integrity)->toBe('sha256-'.$script->sha256)
+        ->and($script->integrity)->toBe(integrity_for_sha256($script->sha256))
         ->and($script->bytes)->toBe(filesize($packageRoot.'/dist/laravel-blocks.js'))
         ->and($stylesheet->name)->toBe('style')
         ->and($stylesheet->file)->toBe('laravel-blocks.css')
         ->and($stylesheet->type)->toBe('style')
         ->and($stylesheet->url)->toStartWith('/vendor/laravel-blocks/laravel-blocks.css?id=')
-        ->and($stylesheet->integrity)->toBe('sha256-'.$stylesheet->sha256)
+        ->and($stylesheet->integrity)->toBe(integrity_for_sha256($stylesheet->sha256))
         ->and($stylesheet->bytes)->toBe(filesize($packageRoot.'/dist/laravel-blocks.css'))
         ->and($assets->toArray()['version'])->toBe($packageJson['version'])
         ->and($service->assets())->toBe($assets)
@@ -119,7 +119,7 @@ it('fails clearly when distribution metadata does not match the built asset', fu
         JSON_THROW_ON_ERROR,
     );
     $manifest['assets']['script']['sha256'] = str_repeat('0', 64);
-    $manifest['assets']['script']['integrity'] = 'sha256-'.str_repeat('0', 64);
+    $manifest['assets']['script']['integrity'] = integrity_for_sha256(str_repeat('0', 64));
 
     file_put_contents(
         $distPath.'/manifest.json',
@@ -166,4 +166,15 @@ function copy_distribution_fixture(): string
     }
 
     return $target;
+}
+
+function integrity_for_sha256(string $sha256): string
+{
+    $binary = hex2bin($sha256);
+
+    if (! is_string($binary)) {
+        throw new RuntimeException('Invalid SHA-256 fixture.');
+    }
+
+    return 'sha256-'.base64_encode($binary);
 }

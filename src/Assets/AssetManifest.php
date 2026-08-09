@@ -195,7 +195,7 @@ final class AssetManifest
         $integrity = $this->requiredString($asset, 'integrity', $path.'.integrity');
         $bytes = $this->requiredPositiveInteger($asset, 'bytes', $path.'.bytes');
 
-        if ($integrity !== 'sha256-'.$sha256) {
+        if ($integrity !== $this->integrityForSha256($sha256)) {
             throw AssetManifestException::at(
                 'invalid_asset_integrity',
                 $path.'.integrity',
@@ -347,5 +347,16 @@ final class AssetManifest
             $file,
             substr($sha256, 0, 12),
         );
+    }
+
+    private function integrityForSha256(string $sha256): string
+    {
+        $binary = hex2bin($sha256);
+
+        if (! is_string($binary)) {
+            return '';
+        }
+
+        return 'sha256-'.base64_encode($binary);
     }
 }
