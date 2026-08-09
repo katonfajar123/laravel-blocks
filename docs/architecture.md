@@ -248,7 +248,9 @@ Laravel package discovery will register `KatonFajar\LaravelBlocks\LaravelBlocksS
 
 This follows Laravel's documented package discovery and resource-loading mechanisms.
 
-The implemented asset boundary commits `dist/laravel-blocks.js`, `dist/laravel-blocks.css`, and `dist/manifest.json` as the Composer distribution artifact. The service provider registers a `laravel-blocks-assets` publish group, and `AssetManifest` validates the versioned manifest, checksum, integrity, byte size, base URL, and missing/corrupt metadata before returning asset URLs. The package asset Blade component can emit the CSS and deferred module script once per page; the full editor component remains a later runtime milestone.
+The implemented asset boundary commits `dist/laravel-blocks.js`, `dist/laravel-blocks.css`, and `dist/manifest.json` as the Composer distribution artifact. The service provider registers a `laravel-blocks-assets` publish group, and `AssetManifest` validates the versioned manifest, checksum, integrity, byte size, base URL, and missing/corrupt metadata before returning asset URLs. The package asset Blade component emits the CSS and deferred module script once per page.
+
+The implemented editor shell renders `<x-laravel-blocks::editor>` as a normalized document payload, hidden canonical JSON input, and package-owned Vue/Tiptap mount. The shell proves no-host-build mounting and document synchronization; selection state, commands, toolbars, Inserter, Inspector, blocks, and polished UX remain later editor-layer milestones.
 
 ## Compatibility baseline
 

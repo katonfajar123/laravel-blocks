@@ -2,7 +2,7 @@
 
 ## Status
 
-The package merges and publishes a small serializable configuration. Document validation limits, renderer unknown-block policy, and the asset base URL used by the distribution resolver are active; values whose consuming subsystem has not been implemented yet remain inert defaults, not claims that optional persistence or the editor runtime exist.
+The package merges and publishes a small serializable configuration. Document validation limits, renderer unknown-block policy, asset auto-injection, and the asset base URL used by the distribution resolver are active; values whose consuming subsystem has not been implemented yet remain inert defaults, not claims that optional persistence or complete editor UX exists.
 
 The implemented file is:
 
@@ -35,7 +35,7 @@ return [
 ];
 ```
 
-Testbench verifies merge behavior, serialization, active document limits, renderer policy behavior, asset base URL behavior, and config/view/asset publish groups. The `document.unknown_blocks` values/default and precompiled asset-loading boundary are frozen contracts; the full editor runtime that consumes those assets arrives later.
+Testbench verifies merge behavior, serialization, active document limits, renderer policy behavior, asset base URL behavior, editor asset auto-injection opt-out, and config/view/asset publish groups. The `document.unknown_blocks` values/default and precompiled asset-loading boundary are frozen contracts; the current editor runtime is only a minimal shell until later UI milestones land.
 
 ## Planned expanded configuration
 
@@ -132,7 +132,7 @@ Missing, non-integer, or non-positive values fall back to those defaults. The `d
 
 `document.unknown_blocks` accepts exactly `throw`, `placeholder`, or `skip`; `throw` is the deterministic default. The renderer enforces this policy while still rejecting malformed known content and malformed unknown recovery nodes. Schema version is a document contract and MUST NOT be configurable per application.
 
-The implemented asset resolver uses `assets.base_url` when applications need a CDN or non-default public path; otherwise URLs point at `/vendor/laravel-blocks`. The future `assets.auto_inject` editor behavior MUST load published, versioned package CSS and deferred JavaScript once per page. `base_url` and auto-injection opt-out are advanced deployment controls; they do not make host Node.js, npm, Vue, Tiptap, or Vite setup part of the default installation.
+The implemented asset resolver uses `assets.base_url` when applications need a CDN or non-default public path; otherwise URLs point at `/vendor/laravel-blocks`. The implemented `assets.auto_inject` editor behavior loads published, versioned package CSS and deferred JavaScript once per page when enabled. `base_url` and auto-injection opt-out are advanced deployment controls; they do not make host Node.js, npm, Vue, Tiptap, or Vite setup part of the default installation.
 
 ## Optional shared persistence
 

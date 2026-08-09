@@ -5,5 +5,7 @@
 /.phpunit.result.cache
 /.phpstan/
 /coverage/
+/playwright-report/
+/test-results/
 /.idea/
 /.vscode/

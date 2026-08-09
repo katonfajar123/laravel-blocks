@@ -3,7 +3,7 @@
 ## Availability
 
 > [!WARNING]
-> Laravel Blocks has not been released. The package foundation, canonical document boundary, block registry, schema validator, Blade renderer, manifest bridge, and compiled asset distribution boundary exist; the installer command, editor, validation rule, and built-in block catalog remain milestone targets.
+> Laravel Blocks has not been released. The package foundation, canonical document boundary, block registry, schema validator, Blade renderer, manifest bridge, compiled asset distribution boundary, and minimal editor shell exist; the installer command, complete editor UX, validation rule, and built-in block catalog remain milestone targets.
 
 ## Proposed requirements
 
@@ -140,6 +140,8 @@ $post->update([
 ```
 
 The component MUST accept an associative array, non-blank JSON string, or `null` as its initial value and normalize it through `Document::from(...)`. A normal browser form submits canonical document JSON as a string. The application decides whether to retain that string or normalize it to an array for its persistence layer.
+
+The current implementation mounts a minimal package-owned Vue/Tiptap shell, emits an escaped manifest/document payload, auto-loads compiled assets when enabled, and synchronizes a hidden input to canonical document JSON. It does not yet include the shared command layer, toolbars, inserter, inspector, built-in blocks, or polished editing controls.
 
 The component MUST mount the complete package-owned canvas, toolbars, overlays, Inserter, Inspector, List View, media UI, and accessible interaction layer defined by the [Editor UX contract](editor-ux-contract.md). No consumer frontend assembly is part of the quick start.
 

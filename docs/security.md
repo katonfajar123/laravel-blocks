@@ -40,6 +40,8 @@ Editor Manifest v1 is declarative JSON. It MUST NOT expose PHP class or view nam
 
 The manifest generator rejects unsupported field definitions, callbacks, objects, resources, non-finite numbers, invalid support objects, and arbitrary component URLs/paths with typed manifest errors. Empty control metadata objects are emitted as JSON objects, not executable placeholders.
 
+The implemented editor component normalizes its initial value through `Document::from(...)`, emits the document and manifest payload as `application/json`, and uses JSON hex escaping for tag, quote, apostrophe, and ampersand characters. The hidden form input stores escaped canonical JSON, not HTML.
+
 ## Distribution asset integrity
 
 The Composer distribution contains a versioned asset manifest with SHA-256 checksums, integrity metadata, and byte sizes for the compiled JS/CSS files. Runtime asset resolution validates that metadata before returning URLs, so a missing, corrupt, or mismatched distribution artifact fails clearly instead of silently loading broken editor assets.

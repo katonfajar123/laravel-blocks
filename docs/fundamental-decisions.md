@@ -333,7 +333,7 @@ dist/
 
 A consuming application MUST NOT need Node.js, npm/pnpm/yarn, Vue, Tiptap, ProseMirror, Floating UI, Vite configuration, or a frontend build for the default editor. Package maintainers own source compilation, asset hashing/versioning, browser support, and release-artifact verification.
 
-The implemented B07 boundary commits the `dist/` artifact, generates deterministic SHA-256 manifest metadata during the maintainer build, registers an asset publish group, validates manifest/file integrity at runtime, and exposes asset URLs through the package service/facade plus a small Blade asset component. The full editor mount remains a later milestone.
+The implemented B07 boundary commits the `dist/` artifact, generates deterministic SHA-256 manifest metadata during the maintainer build, registers an asset publish group, validates manifest/file integrity at runtime, and exposes asset URLs through the package service/facade plus a small Blade asset component. The implemented E01 shell mounts Vue/Tiptap from that bundle and synchronizes a canonical hidden input; the command layer and complete editor UI remain later milestones.
 
 ## Command and UI boundaries
 
