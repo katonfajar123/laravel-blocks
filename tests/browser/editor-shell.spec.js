@@ -98,6 +98,124 @@ test('mounts null and JSON editor roots and synchronizes hidden document JSON', 
   });
 });
 
+test('executes editor mutations through the shared command API', async ({ page }) => {
+  await page.goto(baseUrl);
+
+  const root = page.locator('#editor-null');
+  const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
+
+  await expect(root).toHaveAttribute('data-laravel-blocks-mounted', 'true');
+  await canvas.click();
+  await page.keyboard.type('Command title');
+
+  const headingResult = await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('setHeading', { level: 2 }));
+
+  expect(headingResult).toMatchObject({
+    name: 'setHeading',
+    executed: true,
+  });
+
+  await expect.poll(() => firstContentNode(page, '#editor-null')).toEqual({
+      type: 'heading',
+      attrs: { level: 2 },
+      content: [{ type: 'text', text: 'Command title' }],
+  });
+
+  const paragraphResult = await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .commands
+    .run('setParagraph'));
+
+  expect(paragraphResult).toMatchObject({
+    name: 'setParagraph',
+    executed: true,
+  });
+
+  await expect.poll(() => firstContentNode(page, '#editor-null')).toEqual({
+      type: 'paragraph',
+      content: [{ type: 'text', text: 'Command title' }],
+  });
+
+  await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('toggleBold'));
+  await page.keyboard.type(' Bold');
+
+  await expect.poll(() => firstContentNode(page, '#editor-null')).toEqual({
+    type: 'paragraph',
+    content: [
+      { type: 'text', text: 'Command title' },
+      { type: 'text', marks: [{ type: 'bold' }], text: ' Bold' },
+    ],
+  });
+
+  await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('toggleBold'));
+  await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('toggleItalic'));
+  await page.keyboard.type(' Italic');
+
+  await expect.poll(() => firstContentNode(page, '#editor-null')).toEqual({
+    type: 'paragraph',
+    content: [
+      { type: 'text', text: 'Command title' },
+      { type: 'text', marks: [{ type: 'bold' }], text: ' Bold' },
+      { type: 'text', marks: [{ type: 'italic' }], text: ' Italic' },
+    ],
+  });
+
+  const beforeUndo = await editorInputValue(page, '#editor-null');
+
+  expect(await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('undo'))).toMatchObject({
+    name: 'undo',
+    executed: true,
+  });
+  await expect.poll(() => editorInputValue(page, '#editor-null')).not.toBe(beforeUndo);
+
+  expect(await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('redo'))).toMatchObject({
+    name: 'redo',
+    executed: true,
+  });
+  await expect.poll(() => editorInputValue(page, '#editor-null')).toBe(beforeUndo);
+
+  const selection = await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .selection());
+  const snapshot = await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .commandSnapshot({ setHeading: { level: 2 } }));
+
+  expect(selection).toMatchObject({
+    empty: true,
+  });
+  expect(snapshot.map((command) => command.name)).toEqual([
+    'focus',
+    'toggleBold',
+    'toggleItalic',
+    'setParagraph',
+    'setHeading',
+    'undo',
+    'redo',
+  ]);
+});
+
 function editorFixture() {
   return `<!doctype html>
 <html lang="en">
@@ -129,4 +247,18 @@ function editorRoot(id, name, document) {
     <script type="application/json" data-laravel-blocks-payload>${payload}</script>
     <div class="lb-editor__frame" data-laravel-blocks-mount></div>
   </div>`;
+}
+
+async function editorInputValue(page, selector) {
+  return page.locator(`${selector} [data-laravel-blocks-input]`).inputValue();
+}
+
+async function editorDocument(page, selector) {
+  return JSON.parse(await editorInputValue(page, selector));
+}
+
+async function firstContentNode(page, selector) {
+  const document = await editorDocument(page, selector);
+
+  return document.content?.[0] ?? null;
 }

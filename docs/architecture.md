@@ -250,7 +250,9 @@ This follows Laravel's documented package discovery and resource-loading mechani
 
 The implemented asset boundary commits `dist/laravel-blocks.js`, `dist/laravel-blocks.css`, and `dist/manifest.json` as the Composer distribution artifact. The service provider registers a `laravel-blocks-assets` publish group, and `AssetManifest` validates the versioned manifest, checksum, integrity, byte size, base URL, and missing/corrupt metadata before returning asset URLs. The package asset Blade component emits the CSS and deferred module script once per page.
 
-The implemented editor shell renders `<x-laravel-blocks::editor>` as a normalized document payload, hidden canonical JSON input, and package-owned Vue/Tiptap mount. The shell proves no-host-build mounting and document synchronization; selection state, commands, toolbars, Inserter, Inspector, blocks, and polished UX remain later editor-layer milestones.
+The implemented editor shell renders `<x-laravel-blocks::editor>` as a normalized document payload, hidden canonical JSON input, and package-owned Vue/Tiptap mount. The shell proves no-host-build mounting and document synchronization.
+
+The implemented editor engine also exposes a shared internal selection and command layer around the mounted Tiptap instance. Command metadata reports active/enabled state and deterministic disabled reasons, while command execution routes focus, bold, italic, paragraph, heading, undo, and redo through one registry. This is an infrastructure boundary for future toolbars, shortcuts, menus, and inspector controls; visible command UI remains a later editor-layer milestone.
 
 ## Compatibility baseline
 

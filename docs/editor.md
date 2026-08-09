@@ -110,6 +110,8 @@ The interface MUST expose applicable commands through:
 
 These are multiple entry points to the same command and selection layers. They MUST NOT implement conflicting behavior independently.
 
+The current implementation includes the internal selection snapshot and shared command registry used by those future surfaces. It does not yet expose visible toolbars, keyboard shortcuts, Inserter, Inspector, or block operation UI.
+
 ## Shared UI infrastructure
 
 Laravel Blocks MUST provide namespaced Button, IconButton, Toolbar, Popover, Tooltip, Dropdown, ContextMenu, Modal, Sidebar, Tabs, form-control, Snackbar, Spinner, and CommandMenu primitives. Blocks MUST reuse them instead of creating private overlay behavior.

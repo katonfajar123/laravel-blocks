@@ -7,6 +7,7 @@ import {
   mountLaravelBlocksEditors,
   readEditorPayload,
 } from './editor/mount.js';
+import { CommandRegistry, createDefaultCommandRegistry } from './editor/commands.js';
 import {
   emptyDocument,
   normalizeDocument,
@@ -14,6 +15,7 @@ import {
   toCanonicalJson,
   toTiptapDocument,
 } from './editor/document.js';
+import { createSelectionState } from './editor/selection.js';
 
 export const packageMetadata = Object.freeze({
   name: '@katonfajar/laravel-blocks',
@@ -23,6 +25,9 @@ export const packageMetadata = Object.freeze({
 
 export {
   bootWhenReady,
+  CommandRegistry,
+  createDefaultCommandRegistry,
+  createSelectionState,
   emptyDocument,
   mountLaravelBlocksEditor,
   mountLaravelBlocksEditors,

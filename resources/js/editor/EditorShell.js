@@ -1,8 +1,10 @@
 import { EditorContent, useEditor } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
-import { h } from 'vue';
+import { h, shallowRef } from 'vue';
 
+import { createDefaultCommandRegistry } from './commands.js';
 import { normalizeDocument, toCanonicalJson, toTiptapDocument } from './document.js';
+import { createSelectionState } from './selection.js';
 
 function syncHiddenInputValue(value, input) {
   input.value = typeof value === 'string' ? value : JSON.stringify(value);
@@ -30,12 +32,17 @@ export const EditorShell = {
       default: 'Start writing or type / to choose a block',
     },
   },
-  setup(props) {
+  setup(props, { expose }) {
+    const commands = shallowRef(null);
+    const selection = shallowRef(createSelectionState(null));
+
+    function updateSelection(currentEditor) {
+      selection.value = createSelectionState(currentEditor);
+    }
+
     const editor = useEditor({
       extensions: [
-        StarterKit.configure({
-          history: false,
-        }),
+        StarterKit,
       ],
       content: toTiptapDocument(props.document),
       editorProps: {
@@ -45,8 +52,32 @@ export const EditorShell = {
           'data-laravel-blocks-canvas': '',
         },
       },
-      onCreate: () => syncHiddenInputValue(normalizeDocument(props.document), props.input),
+      onCreate: ({ editor: createdEditor }) => {
+        commands.value = createDefaultCommandRegistry(createdEditor);
+        updateSelection(createdEditor);
+        syncHiddenInputValue(normalizeDocument(props.document), props.input);
+      },
+      onSelectionUpdate: ({ editor: updatedEditor }) => updateSelection(updatedEditor),
+      onTransaction: ({ editor: transactionEditor }) => updateSelection(transactionEditor),
       onUpdate: ({ editor: updatedEditor }) => syncHiddenInput(updatedEditor, props.input),
+    });
+
+    expose({
+      command(name, payload = {}) {
+        return commands.value?.state(name, payload) ?? null;
+      },
+      commandSnapshot(payloads = {}) {
+        return commands.value?.snapshot(payloads) ?? [];
+      },
+      editor() {
+        return editor.value ?? null;
+      },
+      runCommand(name, payload = {}) {
+        return commands.value?.run(name, payload) ?? null;
+      },
+      selection() {
+        return selection.value;
+      },
     });
 
     return () => h('div', {

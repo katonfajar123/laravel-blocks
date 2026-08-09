@@ -62,13 +62,39 @@ export function mountLaravelBlocksEditor(root) {
     placeholder: payload.placeholder,
   });
 
-  app.mount(target);
+  const component = app.mount(target);
 
   root.dataset.laravelBlocksMounted = 'true';
   root[API_KEY] = Object.freeze({
     app,
+    command(name, payload = {}) {
+      return component.command(name, payload);
+    },
+    commandSnapshot(payloads = {}) {
+      return component.commandSnapshot(payloads);
+    },
+    commands: Object.freeze({
+      run(name, payload = {}) {
+        return component.runCommand(name, payload);
+      },
+      state(name, payload = {}) {
+        return component.command(name, payload);
+      },
+      snapshot(payloads = {}) {
+        return component.commandSnapshot(payloads);
+      },
+    }),
+    editor() {
+      return component.editor();
+    },
     input,
     payload,
+    runCommand(name, payload = {}) {
+      return component.runCommand(name, payload);
+    },
+    selection() {
+      return component.selection();
+    },
   });
 
   return root[API_KEY];

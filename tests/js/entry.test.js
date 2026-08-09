@@ -11,5 +11,6 @@ describe('package frontend entry', () => {
     expect(Object.isFrozen(LaravelBlocks)).toBe(true);
     expect(LaravelBlocks.packageMetadata).toBe(packageMetadata);
     expect(LaravelBlocks.mountEditor).toBeTypeOf('function');
+    expect(LaravelBlocks.toCanonicalJson).toBeTypeOf('function');
   });
 });
