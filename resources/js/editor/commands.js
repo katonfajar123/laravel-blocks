@@ -1,3 +1,5 @@
+import { linkAttributes } from '../rich-text/link-provider.js';
+
 function normalLevel(payload) {
   const level = Number(payload?.level ?? 2);
 
@@ -44,6 +46,17 @@ function runChain(editor, callback) {
   return Boolean(callback(editor.chain().focus()).run());
 }
 
+function withStoredSelection(chain, payload) {
+  const from = Number(payload?.selection?.from);
+  const to = Number(payload?.selection?.to);
+
+  if (Number.isInteger(from) && Number.isInteger(to) && from !== to) {
+    return chain.setTextSelection({ from, to });
+  }
+
+  return chain;
+}
+
 function simpleCommand(name, label, can, run, active = () => false) {
   return Object.freeze({
     name,
@@ -75,6 +88,42 @@ const definitions = [
     (editor) => chainCan(editor, (chain) => chain.toggleItalic().run()),
     (editor) => runChain(editor, (chain) => chain.toggleItalic()),
     (editor) => Boolean(editor.isActive('italic')),
+  ),
+  simpleCommand(
+    'setLink',
+    'Link',
+    (editor, payload) => {
+      const link = linkAttributes(payload);
+
+      return link.valid && chainCan(editor, (chain) => withStoredSelection(chain, payload)
+        .extendMarkRange('link')
+        .setLink(link.attrs)
+        .run());
+    },
+    (editor, payload) => {
+      const link = linkAttributes(payload);
+
+      if (!link.valid) {
+        return false;
+      }
+
+      return runChain(editor, (chain) => withStoredSelection(chain, payload)
+        .extendMarkRange('link')
+        .setLink(link.attrs));
+    },
+    (editor) => Boolean(editor.isActive('link')),
+  ),
+  simpleCommand(
+    'unsetLink',
+    'Unlink',
+    (editor, payload) => chainCan(editor, (chain) => withStoredSelection(chain, payload)
+      .extendMarkRange('link')
+      .unsetLink()
+      .run()),
+    (editor, payload) => runChain(editor, (chain) => withStoredSelection(chain, payload)
+      .extendMarkRange('link')
+      .unsetLink()),
+    (editor) => Boolean(editor.isActive('link')),
   ),
   simpleCommand(
     'setParagraph',

@@ -15,6 +15,8 @@ describe('package frontend entry', () => {
     expect(LaravelBlocks.ui.Popover.name).toBe('LaravelBlocksPopover');
     expect(LaravelBlocks.ui.createPopoverController).toBeTypeOf('function');
     expect(LaravelBlocks.richText.RichTextToolbar.name).toBe('LaravelBlocksRichTextToolbar');
+    expect(LaravelBlocks.richText.LinkPopover.name).toBe('LaravelBlocksLinkPopover');
     expect(LaravelBlocks.richText.createRichTextToolbarItems).toBeTypeOf('function');
+    expect(LaravelBlocks.richText.validateLinkHref).toBeTypeOf('function');
   });
 });

@@ -47,11 +47,60 @@ describe('editor command registry', () => {
     expect(() => registry.run('setHeading', { level: 'x' })).toThrow(/Heading level/);
   });
 
+  it('applies and removes link marks through stored selection', () => {
+    const editor = fakeEditor();
+    const registry = createDefaultCommandRegistry(editor);
+
+    expect(registry.run('setLink', {
+      href: 'example.com',
+      openInNewTab: true,
+      selection: { from: 2, to: 8 },
+    })).toMatchObject({
+      executed: true,
+      name: 'setLink',
+    });
+    expect(editor.calls).toContain('run:setTextSelection:2-8');
+    expect(editor.calls).toContain('run:extendMarkRange:link');
+    expect(editor.calls).toContain('run:setLink:https://example.com:_blank');
+
+    expect(registry.run('unsetLink', {
+      selection: { from: 2, to: 8 },
+    })).toMatchObject({
+      executed: true,
+      name: 'unsetLink',
+    });
+    expect(editor.calls).toContain('run:unsetLink');
+  });
+
+  it('does not execute invalid link commands', () => {
+    const editor = fakeEditor();
+    const registry = createDefaultCommandRegistry(editor);
+
+    expect(registry.run('setLink', {
+      href: 'javascript:alert(1)',
+      selection: { from: 2, to: 8 },
+    })).toMatchObject({
+      executed: false,
+      name: 'setLink',
+    });
+    expect(editor.calls).not.toContain('run:setLink:javascript:alert(1):null');
+  });
+
   it('returns deterministic command snapshots', () => {
     const registry = createDefaultCommandRegistry(fakeEditor());
 
     expect(registry.snapshot({ setHeading: { level: 3 } }).map((command) => command.name))
-      .toEqual(['focus', 'toggleBold', 'toggleItalic', 'setParagraph', 'setHeading', 'undo', 'redo']);
+      .toEqual([
+        'focus',
+        'toggleBold',
+        'toggleItalic',
+        'setLink',
+        'unsetLink',
+        'setParagraph',
+        'setHeading',
+        'undo',
+        'redo',
+      ]);
   });
 
   it('creates immutable selection snapshots from the editor state', () => {
@@ -140,6 +189,26 @@ function fakeChain(calls, prefix, runResult) {
     },
     setHeading({ level }) {
       calls.push(`${prefix}:setHeading:${level}`);
+
+      return this;
+    },
+    setTextSelection({ from, to }) {
+      calls.push(`${prefix}:setTextSelection:${from}-${to}`);
+
+      return this;
+    },
+    extendMarkRange(mark) {
+      calls.push(`${prefix}:extendMarkRange:${mark}`);
+
+      return this;
+    },
+    setLink(attrs) {
+      calls.push(`${prefix}:setLink:${attrs.href}:${attrs.target}`);
+
+      return this;
+    },
+    unsetLink() {
+      calls.push(`${prefix}:unsetLink`);
 
       return this;
     },

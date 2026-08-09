@@ -209,6 +209,8 @@ test('executes editor mutations through the shared command API', async ({ page }
     'focus',
     'toggleBold',
     'toggleItalic',
+    'setLink',
+    'unsetLink',
     'setParagraph',
     'setHeading',
     'undo',
@@ -250,6 +252,69 @@ test('formats selected text through the visible rich text toolbar', async ({ pag
   await page.keyboard.press('ArrowRight');
 
   await expect(toolbar).toBeHidden();
+});
+
+test('edits links through the rich text link popover', async ({ page }) => {
+  await page.goto(baseUrl);
+
+  const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
+  const link = page.locator('#editor-null [data-laravel-blocks-rich-text-command="openLink"]');
+  const popover = page.locator('#editor-null [data-laravel-blocks-link-popover]');
+  const input = page.locator('#editor-null [data-laravel-blocks-link-input]');
+  const apply = page.locator('#editor-null [data-laravel-blocks-link-apply]');
+  const target = page.locator('#editor-null [data-laravel-blocks-link-target]');
+  const unlink = page.locator('#editor-null [data-laravel-blocks-link-unlink]');
+
+  await canvas.click();
+  await page.keyboard.type('Linked text');
+  await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
+
+  await link.click();
+  await expect(popover).toBeVisible();
+  await expect(input).toBeFocused();
+
+  await input.fill('javascript:alert(1)');
+  await apply.click();
+
+  await expect(page.locator('#editor-null [data-laravel-blocks-link-error]')).toContainText('http');
+  await expect.poll(() => firstTextMark(page, '#editor-null', 'link')).toBeNull();
+
+  await input.fill('example.com/docs');
+  await target.check();
+  await apply.click();
+
+  await expect(popover).toBeHidden();
+  await expect(canvas).toBeFocused();
+  await expect.poll(() => firstTextMark(page, '#editor-null', 'link')).toMatchObject({
+    attrs: {
+      href: 'https://example.com/docs',
+      rel: 'noopener noreferrer',
+      target: '_blank',
+    },
+    type: 'link',
+  });
+
+  await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
+  await link.click();
+  await expect(input).toHaveValue('https://example.com/docs');
+  await input.fill('https://changed.example');
+  await page.keyboard.press('Escape');
+
+  await expect(popover).toBeHidden();
+  await expect(canvas).toBeFocused();
+  await expect.poll(() => firstTextMark(page, '#editor-null', 'link')).toMatchObject({
+    attrs: {
+      href: 'https://example.com/docs',
+    },
+  });
+
+  await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
+  await link.click();
+  await unlink.click();
+
+  await expect(popover).toBeHidden();
+  await expect(canvas).toBeFocused();
+  await expect.poll(() => firstTextMark(page, '#editor-null', 'link')).toBeNull();
 });
 
 function editorFixture() {
@@ -303,4 +368,10 @@ async function firstTextMarkTypes(page, selector) {
   const node = await firstContentNode(page, selector);
 
   return (node?.content?.[0]?.marks ?? []).map((mark) => mark.type).sort();
+}
+
+async function firstTextMark(page, selector, type) {
+  const node = await firstContentNode(page, selector);
+
+  return (node?.content?.[0]?.marks ?? []).find((mark) => mark.type === type) ?? null;
 }

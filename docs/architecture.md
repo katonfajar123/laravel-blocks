@@ -258,6 +258,8 @@ The implemented UI infrastructure adds package-owned Button, IconButton, Toolbar
 
 The implemented rich-text surface adds the first selection bubble toolbar. It appears for non-empty text selections, uses the shared command layer and UI primitives, supports visible Bold and Italic actions, updates canonical hidden JSON, and restores focus to the editor canvas after button activation. Link editing, full mark coverage, keyboard shortcuts, mixed-state polish, and schema-filtered mark availability remain later milestones.
 
+The implemented link surface adds the first external-link editing path. The selected-text toolbar opens a link popover with URL input, open-in-new-tab toggle, Apply, Unlink, validation feedback, Escape cancellation, preserved selection, and focus recovery. The JavaScript link-provider boundary normalizes and validates safe external, root-relative, and anchor links while leaving internal search/autocomplete and public provider APIs to later milestones.
+
 ## Compatibility baseline
 
 The frozen package baseline is:

@@ -58,7 +58,9 @@ Text-capable nodes MUST support:
 
 A selection bubble menu MUST provide fast access to frequent marks. Link editing MUST use a selection-anchored popover with validation, target control, apply/unlink behavior, Escape cancellation, and predictable focus restoration. The editor schema, not the toolbar, determines which marks a node accepts.
 
-The current implementation includes the first visible selection bubble toolbar for Bold and Italic. It appears for a non-empty text selection, routes actions through the shared command layer, updates canonical hidden JSON, and restores focus to the editor canvas. Link editing, the remaining marks, keyboard shortcuts, mixed-selection state, and schema-filtered mark availability remain later milestones.
+The current implementation includes the first visible selection bubble toolbar for Bold, Italic, and Link. It appears for a non-empty text selection, routes actions through the shared command layer, updates canonical hidden JSON, and restores focus to the editor canvas.
+
+The Link control opens a selection-anchored popover with URL input, open-in-new-tab toggle, Apply, Unlink, inline validation feedback, Escape cancellation, and preserved-selection mutation. The current provider boundary validates safe external, root-relative, and anchor links; internal-link search/autocomplete, remaining marks, keyboard shortcuts, mixed-selection state, and schema-filtered mark availability remain later milestones.
 
 ## Settings
 

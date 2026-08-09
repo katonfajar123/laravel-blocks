@@ -1,4 +1,5 @@
 import { EditorContent, useEditor } from '@tiptap/vue-3';
+import Link from '@tiptap/extension-link';
 import StarterKit from '@tiptap/starter-kit';
 import { h, shallowRef } from 'vue';
 
@@ -44,6 +45,11 @@ export const EditorShell = {
     const editor = useEditor({
       extensions: [
         StarterKit,
+        Link.configure({
+          autolink: false,
+          linkOnPaste: false,
+          openOnClick: false,
+        }),
       ],
       content: toTiptapDocument(props.document),
       editorProps: {
