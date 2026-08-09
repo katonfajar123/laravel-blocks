@@ -21,7 +21,9 @@ Blade is part of the core integration:
 />
 ```
 
-Package views use Laravel's namespace and override conventions. Custom PHP blocks may point at application Blade views.
+The editor, assets, and content Blade components are package-owned surfaces. They are registered as class-based components and are not a supported application view override API.
+
+Custom PHP blocks may point at application Blade views, and frontend block renderer views may be published and overridden under the documented block-view path.
 
 ## Livewire
 
@@ -63,7 +65,7 @@ Media adapters implement the core media contract and may live in separate packag
 
 ## CSS integration
 
-Core SHOULD ship minimal namespaced styles and semantic markup. It must not assume Tailwind classes in public views. Applications can override block views or map configured design tokens to their own design system.
+Core SHOULD ship namespaced editor styles and semantic renderer markup. It must not assume Tailwind classes in public block views. Applications can override frontend block views or map configured design tokens to their own design system. Editor control classes are package internals and are not a supported CSS customization contract.
 
 ## Adapter readiness criteria
 

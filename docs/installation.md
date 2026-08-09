@@ -163,13 +163,13 @@ $html = LaravelBlocks::render($post->content);
 
 The Blade component uses the same renderer path as the facade. Current rendering requires application or package blocks to be registered with safe Blade views; the built-in block catalog arrives in later `0.1` batches.
 
-## Publish configuration and views
+## Publish configuration and renderer views
 
 Target commands:
 
 ```bash
 php artisan vendor:publish --tag=laravel-blocks-config
-php artisan vendor:publish --tag=laravel-blocks-views
+php artisan vendor:publish --tag=laravel-blocks-renderer-views
 ```
 
 Published block views live under:
@@ -179,6 +179,8 @@ resources/views/vendor/laravel-blocks/blocks/
 ```
 
 Applications may override presentation there without forking the package.
+
+The editor shell, assets component, content component, toolbar, Inserter, slash menu, Inspector, popovers, core control classes, and bundled editor layout are not published as supported overrides. They remain package-owned so `<x-laravel-blocks::editor>` behaves like one consistent editor product across applications.
 
 ## Optional feature persistence
 

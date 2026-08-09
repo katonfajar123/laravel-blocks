@@ -46,7 +46,7 @@ it('renders the package asset Blade component once with integrity metadata', fun
     $rendered = Blade::render(<<<'BLADE'
         <x-laravel-blocks::assets />
         <x-laravel-blocks::assets />
-        BLADE);
+        BLADE, deleteCachedView: true);
 
     expect(substr_count($rendered, 'laravel-blocks.css?id='))
         ->toBe(1)

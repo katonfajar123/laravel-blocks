@@ -107,6 +107,8 @@ The editor distinguishes package UI from authored content:
 - editor-only selection handles, labels, placeholders, and overlays MUST NOT leak into frontend markup;
 - visual approximation in a generic NodeView MUST clearly indicate when server-rendered output may differ.
 
+The `.lb-*` editor control classes, toolbar structure, Inspector layout, overlay markup, and package design tokens are implementation-owned unless a future documented theming API exposes a specific token or option. Applications should not treat internal editor CSS selectors as a stable customization contract.
+
 ## Responsive behavior
 
 Responsive design preserves capability rather than merely shrinking controls:

@@ -5,6 +5,7 @@ namespace KatonFajar\LaravelBlocks;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\View\Factory as ViewFactory;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use KatonFajar\LaravelBlocks\Assets\AssetManifest;
 use KatonFajar\LaravelBlocks\Blocks\BlockRegistry;
@@ -16,6 +17,9 @@ use KatonFajar\LaravelBlocks\Validation\MarkRegistry;
 use KatonFajar\LaravelBlocks\Validation\MarkValidator;
 use KatonFajar\LaravelBlocks\Validation\NodeValidator;
 use KatonFajar\LaravelBlocks\Validation\ValidationLimits;
+use KatonFajar\LaravelBlocks\View\Components\Assets;
+use KatonFajar\LaravelBlocks\View\Components\Content;
+use KatonFajar\LaravelBlocks\View\Components\Editor;
 
 final class LaravelBlocksServiceProvider extends ServiceProvider
 {
@@ -107,6 +111,7 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadViewsFrom($this->packageViewsPath(), 'laravel-blocks');
+        $this->registerBladeComponents();
 
         if (! $this->app->runningInConsole()) {
             return;
@@ -116,13 +121,27 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
             $this->packageConfigPath() => config_path('laravel-blocks.php'),
         ], 'laravel-blocks-config');
 
-        $this->publishes([
-            $this->packageViewsPath() => resource_path('views/vendor/laravel-blocks'),
-        ], 'laravel-blocks-views');
+        $rendererViews = [
+            $this->packageBlockViewsPath() => resource_path('views/vendor/laravel-blocks/blocks'),
+        ];
+
+        $this->publishes($rendererViews, 'laravel-blocks-renderer-views');
+        $this->publishes($rendererViews, 'laravel-blocks-views');
 
         $this->publishes([
             $this->packageDistPath() => public_path(AssetManifest::PUBLIC_PATH),
         ], 'laravel-blocks-assets');
+    }
+
+    private function registerBladeComponents(): void
+    {
+        Blade::componentNamespace(
+            __NAMESPACE__.'\\View\\Components',
+            'laravel-blocks',
+        );
+        Blade::component(Editor::class, 'laravel-blocks::editor');
+        Blade::component(Assets::class, 'laravel-blocks::assets');
+        Blade::component(Content::class, 'laravel-blocks::content');
     }
 
     private function packageConfigPath(): string
@@ -133,6 +152,11 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
     private function packageViewsPath(): string
     {
         return dirname(__DIR__).'/resources/views';
+    }
+
+    private function packageBlockViewsPath(): string
+    {
+        return dirname(__DIR__).'/resources/views/blocks';
     }
 
     private function packageDistPath(): string

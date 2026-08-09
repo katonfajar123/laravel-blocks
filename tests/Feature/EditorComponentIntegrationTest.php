@@ -1,7 +1,10 @@
 <?php
 
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
 use KatonFajar\LaravelBlocks\Documents\Document;
+use KatonFajar\LaravelBlocks\Facades\LaravelBlocks as LaravelBlocksFacade;
+use Tests\Fixtures\Blocks\ParagraphBlock;
 
 it('renders the editor component with assets, mount payload, and canonical hidden input', function (): void {
     $rendered = Blade::render(<<<'BLADE'
@@ -9,7 +12,7 @@ it('renders the editor component with assets, mount payload, and canonical hidde
             id="editor-a"
             name="content"
         />
-        BLADE);
+        BLADE, deleteCachedView: true);
     $payload = extract_editor_payload($rendered);
 
     expect($rendered)
@@ -55,7 +58,7 @@ it('accepts array values and escapes payload data without corrupting the documen
             :value="$document"
             placeholder="Write safely"
         />
-        BLADE, ['document' => $document]);
+        BLADE, ['document' => $document], deleteCachedView: true);
     $payload = extract_editor_payload($rendered);
 
     expect($rendered)
@@ -82,7 +85,7 @@ it('accepts JSON string values and can omit automatic asset injection', function
             name="summary"
             :value="$document"
         />
-        BLADE, ['document' => $document]);
+        BLADE, ['document' => $document], deleteCachedView: true);
     $payload = extract_editor_payload($rendered);
 
     expect($rendered)
@@ -91,6 +94,58 @@ it('accepts JSON string values and can omit automatic asset injection', function
         ->not->toContain('laravel-blocks.js?id=')
         ->and($payload['document'])
         ->toBe(Document::from($document)->toArray());
+});
+
+it('keeps editor, assets, and content components package-owned despite application view overrides', function (): void {
+    $filesystem = new Filesystem;
+    $overridePath = resource_path('views/vendor/laravel-blocks/components');
+
+    $filesystem->ensureDirectoryExists($overridePath);
+    $filesystem->put($overridePath.'/editor.blade.php', 'OVERRIDDEN EDITOR SHELL');
+    $filesystem->put($overridePath.'/assets.blade.php', 'OVERRIDDEN ASSETS');
+    $filesystem->put($overridePath.'/content.blade.php', 'OVERRIDDEN CONTENT COMPONENT');
+
+    try {
+        $assets = Blade::render('<x-laravel-blocks::assets />', deleteCachedView: true);
+
+        config()->set('laravel-blocks.assets.auto_inject', false);
+
+        $editor = Blade::render(<<<'BLADE'
+            <x-laravel-blocks::editor id="locked-editor" />
+            BLADE, deleteCachedView: true);
+
+        $this->app->make('view')->addNamespace('fixtures', __DIR__.'/../Fixtures/views');
+        LaravelBlocksFacade::register(ParagraphBlock::class);
+
+        $document = [
+            'type' => 'doc',
+            'attrs' => ['schemaVersion' => 1],
+            'content' => [[
+                'type' => 'paragraph',
+                'content' => [[
+                    'type' => 'text',
+                    'text' => 'Package owned content component',
+                ]],
+            ]],
+        ];
+        $content = Blade::render('<x-laravel-blocks::content :content="$document" />', [
+            'document' => $document,
+        ], deleteCachedView: true);
+
+        expect($assets)
+            ->toContain('laravel-blocks.css?id=')
+            ->toContain('laravel-blocks.js?id=')
+            ->not->toContain('OVERRIDDEN ASSETS')
+            ->and($editor)
+            ->toContain('id="locked-editor"')
+            ->toContain('data-laravel-blocks-editor')
+            ->not->toContain('OVERRIDDEN EDITOR SHELL')
+            ->and($content)
+            ->toContain('Package owned content component')
+            ->not->toContain('OVERRIDDEN CONTENT COMPONENT');
+    } finally {
+        $filesystem->deleteDirectory($overridePath);
+    }
 });
 
 /**

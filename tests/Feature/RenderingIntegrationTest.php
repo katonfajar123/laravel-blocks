@@ -193,7 +193,7 @@ it('uses the same renderer path from the Blade content component', function (): 
     $facade = LaravelBlocksFacade::render($document)->toHtml();
     $component = Blade::render('<x-laravel-blocks::content :content="$document" />', [
         'document' => $document,
-    ]);
+    ], deleteCachedView: true);
 
     expect(trim($component))->toBe(trim($facade));
 });

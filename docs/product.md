@@ -47,7 +47,8 @@ Laravel Blocks MUST:
 - allow custom blocks without requiring consumer-authored Vue components for common cases;
 - support nested content as a first-class document capability;
 - expose replaceable contracts for infrastructure such as media management;
-- keep package output overrideable through normal Laravel conventions;
+- keep frontend block output overrideable through normal Laravel conventions;
+- keep the default editor shell, chrome, controls, and interaction model package-owned;
 - ship useful defaults without forcing all blocks into every editor;
 - integrate without required package tables, migrations, or content models;
 - preserve a framework-agnostic boundary for consuming Laravel applications.
@@ -90,6 +91,12 @@ Registration, validation, authorization hooks, dynamic data resolution, media co
 ### The editor is bundled infrastructure
 
 Vue 3, Tiptap 3, ProseMirror, positioning logic, UI primitives, and editor CSS are implementation choices inside the precompiled editor. A consuming application MUST NOT need Node.js, npm, Vue, Tiptap, ProseMirror, Vite configuration, or a frontend build for the default editor.
+
+### The editor surface is product-owned
+
+Laravel Blocks, not the consuming application, owns the default editor shell, canvas structure, toolbar positions, Inserter, slash menu, Inspector, popovers, modals, selection UI, keyboard behavior, responsive behavior, icons, design tokens, and editor control classes. These are product surfaces, not view/CSS override contracts.
+
+Applications extend what the editor can edit: blocks, fields, patterns, media providers, dynamic data, and frontend rendering views. Laravel Blocks decides how those capabilities appear inside the default editor.
 
 ### Capability parity, not visual parity
 

@@ -89,11 +89,11 @@ JSON
   -> validate and normalize attributes
   -> authorize or reject privileged behavior
   -> sanitize values and permitted HTML
-  -> render overrideable Blade view/component
+  -> render package or application block Blade view
   -> HTML
 ```
 
-Editor node views and frontend Blade views are deliberately separate. Interactive editor markup MUST NOT define the frontend HTML contract.
+Editor node views and frontend block Blade views are deliberately separate. Interactive editor markup MUST NOT define the frontend HTML contract, and frontend block view overrides MUST NOT replace the editor shell.
 
 ## Persistence boundary
 
@@ -240,9 +240,9 @@ Laravel package discovery will register `KatonFajar\LaravelBlocks\LaravelBlocksS
 
 - merge package configuration;
 - bind registries, renderer, validator, and media contracts;
-- load namespaced views and Blade components;
+- load namespaced renderer views and package-owned Blade components;
 - register commands and routes when relevant;
-- publish configuration, views, and versioned compiled assets;
+- publish configuration, frontend block renderer views, and versioned compiled assets;
 - register the asset publish tag and inject published CSS/deferred JavaScript once per page through the editor component;
 - register separate publish groups for optional feature migrations without publishing or running them during core installation.
 
@@ -250,7 +250,7 @@ This follows Laravel's documented package discovery and resource-loading mechani
 
 The implemented asset boundary commits `dist/laravel-blocks.js`, `dist/laravel-blocks.css`, and `dist/manifest.json` as the Composer distribution artifact. The service provider registers a `laravel-blocks-assets` publish group, and `AssetManifest` validates the versioned manifest, checksum, integrity, byte size, base URL, and missing/corrupt metadata before returning asset URLs. The package asset Blade component emits the CSS and deferred module script once per page.
 
-The implemented editor shell renders `<x-laravel-blocks::editor>` as a normalized document payload, hidden canonical JSON input, and package-owned Vue/Tiptap mount. The shell proves no-host-build mounting and document synchronization.
+The implemented editor shell renders `<x-laravel-blocks::editor>` as a normalized document payload, hidden canonical JSON input, and package-owned Vue/Tiptap mount. The editor, assets, and content components are class-based package-owned surfaces, so application namespace view overrides cannot replace the master editor shell or renderer entrypoint. Only frontend block renderer views are published as supported overrides.
 
 The implemented editor engine also exposes a shared internal selection and command layer around the mounted Tiptap instance. Command metadata reports active/enabled state and deterministic disabled reasons, while command execution routes focus, bold, italic, link, paragraph, heading, top-level block duplicate/delete/insert/move, manifest block insertion, simple block-attribute updates, undo, and redo through one registry. This is the shared mutation boundary for toolbars, menus, shortcuts, Inserter, slash commands, and Inspector controls.
 
@@ -323,7 +323,7 @@ laravel-blocks/
 |   |   `-- stores/
 |   `-- views/
 |       |-- blocks/
-|       `-- components/
+|       `-- components/ # package-owned editor/content/assets components
 |-- src/
 |   |-- Blocks/
 |   |-- Commands/
@@ -357,7 +357,7 @@ The exact layout may follow Laravel's official package skeleton when bootstrappe
 | --- | --- |
 | Tiptap JSON is canonical | Preserves document structure and supports rendering, APIs, search, and document-schema evolution |
 | Host application owns persistence | Core works with existing models, columns, APIs, and custom repositories without required migrations |
-| Blade renders frontend HTML | Keeps output Laravel-native and overrideable |
+| Blade renders frontend HTML | Keeps output Laravel-native while limiting supported overrides to frontend block views |
 | Vue stays internal | Avoids imposing the editor's frontend framework on consumers |
 | Blocks are registry-driven | Gives validation, editor metadata, and rendering one source of truth |
 | PHP-first custom blocks | Matches Laravel developer workflows and reduces required JavaScript |

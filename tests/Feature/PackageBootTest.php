@@ -26,6 +26,10 @@ it('merges serializable configuration and registers its publish group', function
         LaravelBlocksServiceProvider::class,
         'laravel-blocks-views',
     );
+    $publishedRendererViews = LaravelBlocksServiceProvider::pathsToPublish(
+        LaravelBlocksServiceProvider::class,
+        'laravel-blocks-renderer-views',
+    );
     $publishedAssets = LaravelBlocksServiceProvider::pathsToPublish(
         LaravelBlocksServiceProvider::class,
         'laravel-blocks-assets',
@@ -53,12 +57,18 @@ it('merges serializable configuration and registers its publish group', function
         ])
         ->and($publishedViews)
         ->toBe([
-            $packageRoot.'/resources/views' => resource_path('views/vendor/laravel-blocks'),
+            $packageRoot.'/resources/views/blocks' => resource_path('views/vendor/laravel-blocks/blocks'),
+        ])
+        ->and($publishedRendererViews)
+        ->toBe([
+            $packageRoot.'/resources/views/blocks' => resource_path('views/vendor/laravel-blocks/blocks'),
         ])
         ->and($publishedAssets)
         ->toBe([
             $packageRoot.'/dist' => public_path(AssetManifest::PUBLIC_PATH),
-        ]);
+        ])
+        ->and(array_keys($publishedViews))
+        ->not->toContain($packageRoot.'/resources/views/components');
 });
 
 it('discovers the provider and boots without database artifacts', function (): void {

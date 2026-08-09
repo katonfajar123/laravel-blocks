@@ -7,7 +7,7 @@
 Laravel Blocks is planned as a ready-to-use visual block editor for Laravel. It is designed to give authors a polished Gutenberg-style canvas while letting Laravel applications own their content, models, persistence, Blade output, and custom PHP blocks.
 
 > [!IMPORTANT]
-> This repository currently contains the package/toolchain foundation, canonical Document v1 boundary, PHP Block Registry, server-side schema validator, safe Blade renderer, PHP-to-editor manifest bridge, precompiled asset distribution, a minimal editor shell, the internal editor selection/command layer, the first package-owned UI primitives with shared Popover infrastructure, the first visible rich-text selection toolbar, basic external-link editing through a link popover, basic top-level block controls, a basic manifest-driven block inserter/appender, basic slash commands, and a basic manifest-generated Inspector sidebar. Full mark coverage, nested controls, drag/drop, installer, validation rule, and built-in block catalog remain target milestones until implemented.
+> This repository currently contains the package/toolchain foundation, canonical Document v1 boundary, PHP Block Registry, server-side schema validator, safe Blade renderer, PHP-to-editor manifest bridge, precompiled asset distribution, a minimal editor shell, the internal editor selection/command layer, the first package-owned UI primitives with shared Popover infrastructure, the first visible rich-text selection toolbar, basic external-link editing through a link popover, basic top-level block controls, a basic manifest-driven block inserter/appender, basic slash commands, a basic manifest-generated Inspector sidebar, and a locked package-owned editor surface. Full mark coverage, nested controls, drag/drop, installer, validation rule, and built-in block catalog remain target milestones until implemented.
 
 ## Target developer experience
 
@@ -67,11 +67,17 @@ Laravel Blocks will provide:
 - nested blocks and a curated set of 50 built-in blocks;
 - custom blocks defined primarily in PHP;
 - first-class Blade component and dynamic Eloquent blocks;
-- replaceable media storage and overrideable Blade views;
+- replaceable media storage and overrideable frontend block Blade views;
 - zero required package tables, migrations, or Eloquent models;
 - a simple default experience with extensible advanced APIs.
 
 It is not intended to be a CMS, a full page builder, a generic rich-text wrapper, or a pixel-for-pixel Gutenberg clone. Laravel Blocks copies the lessons, not the screenshot.
+
+## Product-owned editor surface
+
+The default editor is a Laravel Blocks product surface. The editor shell, canvas structure, toolbar layout, Inserter, slash menu, Inspector, popovers, modals, selection UI, keyboard behavior, responsive behavior, icons, design tokens, and `.lb-*` control classes are owned by the package and are not a supported override API.
+
+Applications extend the editor by registering blocks, fields, patterns, media providers, and safe frontend render views. Laravel Blocks renders those capabilities through its master editor UI.
 
 ## Zero-database core
 

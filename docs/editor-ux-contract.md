@@ -10,6 +10,10 @@ WordPress Gutenberg is the behavioral and quality benchmark. Laravel Blocks adop
 
 Capability maturity must be supported by comparison and browser evidence. Visual decisions follow [Laravel Blocks design principles](design-principles.md): comparable ergonomics, independent visual language.
 
+The default editor surface is package-owned. Consumers MUST NOT be expected or supported to replace the editor shell, canvas structure, toolbar layout, Inserter, slash menu, Inspector, popovers, modals, selection UI, core `.lb-*` control classes, responsive behavior, or keyboard behavior through Blade view overrides or arbitrary CSS overrides.
+
+Consumers extend the editor by describing capabilities—blocks, fields, patterns, media providers, and dynamic data. Laravel Blocks renders those capabilities through the master editor UI.
+
 ## Default product promise
 
 After the package is installed, this alone MUST mount the complete default experience:

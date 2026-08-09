@@ -85,7 +85,7 @@ The renderer should use an explicit context value rather than reading arbitrary 
 
 Exact API design is deferred until dynamic blocks in `0.6`.
 
-## View overrides
+## Frontend block view overrides
 
 Package defaults:
 
@@ -102,10 +102,12 @@ resources/views/vendor/laravel-blocks/blocks/
 Target publish command:
 
 ```bash
-php artisan vendor:publish --tag=laravel-blocks-views
+php artisan vendor:publish --tag=laravel-blocks-renderer-views
 ```
 
-View names and their input variables become compatibility-sensitive after `1.0`. Overrides should receive documented view models instead of an unstructured bag of internals.
+Only frontend block renderer views are a supported override surface. The editor, assets, and content Blade components remain package-owned and are resolved by class-based components rather than application override files.
+
+Block view names and their input variables become compatibility-sensitive after `1.0`. Overrides should receive documented view models instead of an unstructured bag of internals.
 
 ## Unknown blocks
 

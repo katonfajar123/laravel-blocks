@@ -32,7 +32,7 @@ This directory is the current source of truth for the intended Laravel Blocks pr
 | Document | Purpose |
 | --- | --- |
 | [Custom blocks](custom-blocks.md) | PHP block API, fields, Blade components, and dynamic blocks |
-| [Rendering](rendering.md) | Validation-to-Blade rendering pipeline and view overrides |
+| [Rendering](rendering.md) | Validation-to-Blade rendering pipeline and frontend block view overrides |
 | [Media](media.md) | Replaceable media manager contract and storage rules |
 | [Patterns and reusable blocks](patterns-and-reusable-blocks.md) | Template insertion and linked shared content semantics |
 | [Integrations](integrations.md) | Framework boundaries and future adapters |
