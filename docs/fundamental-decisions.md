@@ -333,6 +333,8 @@ dist/
 
 A consuming application MUST NOT need Node.js, npm/pnpm/yarn, Vue, Tiptap, ProseMirror, Floating UI, Vite configuration, or a frontend build for the default editor. Package maintainers own source compilation, asset hashing/versioning, browser support, and release-artifact verification.
 
+The implemented B07 boundary commits the `dist/` artifact, generates deterministic SHA-256 manifest metadata during the maintainer build, registers an asset publish group, validates manifest/file integrity at runtime, and exposes asset URLs through the package service/facade plus a small Blade asset component. The full editor mount remains a later milestone.
+
 ## Command and UI boundaries
 
 All mutation surfaces call one command layer over one selection state. Toolbars, popovers, menus, slash commands, the Inserter, Inspector, List View, keyboard shortcuts, and drag/drop MUST NOT implement competing mutations directly against editor state.

@@ -3,6 +3,8 @@
 namespace KatonFajar\LaravelBlocks;
 
 use Illuminate\Contracts\Config\Repository;
+use KatonFajar\LaravelBlocks\Assets\AssetManifest;
+use KatonFajar\LaravelBlocks\Assets\DistributedAsset;
 use KatonFajar\LaravelBlocks\Blocks\Block;
 use KatonFajar\LaravelBlocks\Blocks\BlockMetadata;
 use KatonFajar\LaravelBlocks\Blocks\BlockRegistry;
@@ -25,6 +27,7 @@ final readonly class LaravelBlocks
         private DocumentValidator $validator,
         private DocumentRenderer $renderer,
         private EditorManifestGenerator $manifest,
+        private AssetManifest $assets,
     ) {}
 
     /**
@@ -102,5 +105,20 @@ final readonly class LaravelBlocks
     public function editorManifest(): EditorManifest
     {
         return $this->manifest->generate();
+    }
+
+    public function assets(): AssetManifest
+    {
+        return $this->assets;
+    }
+
+    public function asset(string $name): DistributedAsset
+    {
+        return $this->assets->asset($name);
+    }
+
+    public function assetUrl(string $name): string
+    {
+        return $this->assets->assetUrl($name);
     }
 }

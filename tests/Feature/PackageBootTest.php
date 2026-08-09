@@ -1,5 +1,6 @@
 <?php
 
+use KatonFajar\LaravelBlocks\Assets\AssetManifest;
 use KatonFajar\LaravelBlocks\Facades\LaravelBlocks as LaravelBlocksFacade;
 use KatonFajar\LaravelBlocks\LaravelBlocks;
 use KatonFajar\LaravelBlocks\LaravelBlocksServiceProvider;
@@ -25,6 +26,10 @@ it('merges serializable configuration and registers its publish group', function
         LaravelBlocksServiceProvider::class,
         'laravel-blocks-views',
     );
+    $publishedAssets = LaravelBlocksServiceProvider::pathsToPublish(
+        LaravelBlocksServiceProvider::class,
+        'laravel-blocks-assets',
+    );
 
     expect($configuration)
         ->toBeArray()
@@ -49,6 +54,10 @@ it('merges serializable configuration and registers its publish group', function
         ->and($publishedViews)
         ->toBe([
             $packageRoot.'/resources/views' => resource_path('views/vendor/laravel-blocks'),
+        ])
+        ->and($publishedAssets)
+        ->toBe([
+            $packageRoot.'/dist' => public_path(AssetManifest::PUBLIC_PATH),
         ]);
 });
 

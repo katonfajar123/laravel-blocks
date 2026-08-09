@@ -3,6 +3,8 @@
 namespace KatonFajar\LaravelBlocks\Facades;
 
 use Illuminate\Support\Facades\Facade;
+use KatonFajar\LaravelBlocks\Assets\AssetManifest;
+use KatonFajar\LaravelBlocks\Assets\DistributedAsset;
 use KatonFajar\LaravelBlocks\Blocks\Block;
 use KatonFajar\LaravelBlocks\Blocks\BlockMetadata;
 use KatonFajar\LaravelBlocks\Documents\Document;
@@ -21,6 +23,9 @@ use KatonFajar\LaravelBlocks\Validation\MarkSchema;
  * @method static Document validate(array<array-key, mixed>|string|Document|null $value)
  * @method static RenderedContent render(array<array-key, mixed>|string|Document|null $value, ?RenderContext $context = null)
  * @method static EditorManifest editorManifest()
+ * @method static AssetManifest assets()
+ * @method static DistributedAsset asset(string $name)
+ * @method static string assetUrl(string $name)
  *
  * @see \KatonFajar\LaravelBlocks\LaravelBlocks
  */

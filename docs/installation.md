@@ -3,7 +3,7 @@
 ## Availability
 
 > [!WARNING]
-> Laravel Blocks has not been released. The package foundation, canonical document boundary, block registry, schema validator, and Blade renderer exist; the installer, editor, validation rule, built-in block catalog, and compiled consumer assets below remain milestone targets.
+> Laravel Blocks has not been released. The package foundation, canonical document boundary, block registry, schema validator, Blade renderer, manifest bridge, and compiled asset distribution boundary exist; the installer command, editor, validation rule, and built-in block catalog remain milestone targets.
 
 ## Proposed requirements
 

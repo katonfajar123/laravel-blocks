@@ -1,0 +1,19 @@
+{
+  "version": "0.0.0-development",
+  "assets": {
+    "script": {
+      "file": "laravel-blocks.js",
+      "type": "module",
+      "sha256": "f1e80466802852c2291e59ae0a1ce2e5d59c9c4e89d6cd0984699b0910e40ce3",
+      "integrity": "sha256-f1e80466802852c2291e59ae0a1ce2e5d59c9c4e89d6cd0984699b0910e40ce3",
+      "bytes": 23536
+    },
+    "style": {
+      "file": "laravel-blocks.css",
+      "type": "style",
+      "sha256": "14aa5931987dfe4a7172735406805246e270046dd62d14350a686efa6431a4dc",
+      "integrity": "sha256-14aa5931987dfe4a7172735406805246e270046dd62d14350a686efa6431a4dc",
+      "bytes": 169
+    }
+  }
+}

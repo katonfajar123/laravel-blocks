@@ -6,6 +6,7 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Support\ServiceProvider;
+use KatonFajar\LaravelBlocks\Assets\AssetManifest;
 use KatonFajar\LaravelBlocks\Blocks\BlockRegistry;
 use KatonFajar\LaravelBlocks\Manifest\EditorManifestGenerator;
 use KatonFajar\LaravelBlocks\Rendering\DocumentRenderer;
@@ -25,6 +26,13 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
         $this->app->singleton(
             BlockRegistry::class,
             static fn (Container $app): BlockRegistry => new BlockRegistry($app),
+        );
+        $this->app->singleton(
+            AssetManifest::class,
+            static fn (Container $app): AssetManifest => new AssetManifest(
+                $app->make(Repository::class),
+                dirname(__DIR__).'/dist',
+            ),
         );
 
         $this->app->singleton(MarkRegistry::class);
@@ -89,6 +97,7 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
                 $app->make(DocumentValidator::class),
                 $app->make(DocumentRenderer::class),
                 $app->make(EditorManifestGenerator::class),
+                $app->make(AssetManifest::class),
             ),
         );
 
@@ -110,6 +119,10 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
         $this->publishes([
             $this->packageViewsPath() => resource_path('views/vendor/laravel-blocks'),
         ], 'laravel-blocks-views');
+
+        $this->publishes([
+            $this->packageDistPath() => public_path(AssetManifest::PUBLIC_PATH),
+        ], 'laravel-blocks-assets');
     }
 
     private function packageConfigPath(): string
@@ -120,5 +133,10 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
     private function packageViewsPath(): string
     {
         return dirname(__DIR__).'/resources/views';
+    }
+
+    private function packageDistPath(): string
+    {
+        return dirname(__DIR__).'/dist';
     }
 }

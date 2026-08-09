@@ -248,6 +248,8 @@ Laravel package discovery will register `KatonFajar\LaravelBlocks\LaravelBlocksS
 
 This follows Laravel's documented package discovery and resource-loading mechanisms.
 
+The implemented asset boundary commits `dist/laravel-blocks.js`, `dist/laravel-blocks.css`, and `dist/manifest.json` as the Composer distribution artifact. The service provider registers a `laravel-blocks-assets` publish group, and `AssetManifest` validates the versioned manifest, checksum, integrity, byte size, base URL, and missing/corrupt metadata before returning asset URLs. The package asset Blade component can emit the CSS and deferred module script once per page; the full editor component remains a later runtime milestone.
+
 ## Compatibility baseline
 
 The frozen package baseline is:
