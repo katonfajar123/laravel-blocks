@@ -252,13 +252,17 @@ The implemented asset boundary commits `dist/laravel-blocks.js`, `dist/laravel-b
 
 The implemented editor shell renders `<x-laravel-blocks::editor>` as a normalized document payload, hidden canonical JSON input, and package-owned Vue/Tiptap mount. The shell proves no-host-build mounting and document synchronization.
 
-The implemented editor engine also exposes a shared internal selection and command layer around the mounted Tiptap instance. Command metadata reports active/enabled state and deterministic disabled reasons, while command execution routes focus, bold, italic, paragraph, heading, undo, and redo through one registry. This is an infrastructure boundary for future toolbars, shortcuts, menus, and inspector controls; visible command UI remains a later editor-layer milestone.
+The implemented editor engine also exposes a shared internal selection and command layer around the mounted Tiptap instance. Command metadata reports active/enabled state and deterministic disabled reasons, while command execution routes focus, bold, italic, link, paragraph, heading, top-level block duplicate/delete/insert/move, manifest block insertion, undo, and redo through one registry. This is the shared mutation boundary for toolbars, menus, shortcuts, inserter, and future inspector controls.
 
 The implemented UI infrastructure adds package-owned Button, IconButton, Toolbar, ToolbarGroup, Popover, overlay, and positioning primitives. Popover infrastructure now supports anchor-based placement, Escape dismissal, outside-pointer dismissal, and focus restoration through the precompiled bundle; feature-specific surfaces such as rich-text toolbar, link popover, Inserter, slash command, Inspector, and block menus remain later milestones.
 
 The implemented rich-text surface adds the first selection bubble toolbar. It appears for non-empty text selections, uses the shared command layer and UI primitives, supports visible Bold and Italic actions, updates canonical hidden JSON, and restores focus to the editor canvas after button activation. Link editing, full mark coverage, keyboard shortcuts, mixed-state polish, and schema-filtered mark availability remain later milestones.
 
 The implemented link surface adds the first external-link editing path. The selected-text toolbar opens a link popover with URL input, open-in-new-tab toggle, Apply, Unlink, validation feedback, Escape cancellation, preserved selection, and focus recovery. The JavaScript link-provider boundary normalizes and validates safe external, root-relative, and anchor links while leaving internal search/autocomplete and public provider APIs to later milestones.
+
+The implemented block-editor surface adds the first top-level block control path. The editor derives the current block from the Tiptap selection, draws a visible selection frame, shows a contextual toolbar with the block label and Move Up/Down controls, and exposes an options menu for Duplicate, Insert before, Insert after, and Delete. These controls are limited to top-level blocks; nested wrappers, drag/drop, List View, keyboard reordering, multi-select, and complete block-specific controls remain later milestones.
+
+The implemented inserter surface reads the PHP-generated editor manifest payload and renders a basic Block Appender plus searchable categorized Inserter. Supported manifest entries currently map to bundled Tiptap nodes for `paragraph`, `heading`, `blockquote`, and `codeBlock`; unsupported entries remain visible but disabled with a reason. Slash commands, patterns, reusable blocks, recent/favorites, nested insertion rules, and async provider behavior remain later milestones.
 
 ## Compatibility baseline
 

@@ -3,7 +3,7 @@
 This directory is the current source of truth for the intended Laravel Blocks product and engineering contracts.
 
 > [!NOTE]
-> Laravel Blocks does not have an editor release yet. The package foundation, canonical document boundary, block registry, schema validator, Blade renderer, PHP-to-editor manifest bridge, precompiled asset distribution boundary, minimal editor shell, internal selection/command layer, first UI primitive/Popover infrastructure, first visible rich-text toolbar, and basic link popover are implemented; examples marked **Target API** remain design contracts until their owning milestone lands.
+> Laravel Blocks does not have an editor release yet. The package foundation, canonical document boundary, block registry, schema validator, Blade renderer, PHP-to-editor manifest bridge, precompiled asset distribution boundary, minimal editor shell, internal selection/command layer, first UI primitive/Popover infrastructure, first visible rich-text toolbar, basic link popover, basic top-level block controls, and basic manifest inserter/appender are implemented; examples marked **Target API** remain design contracts until their owning milestone lands.
 
 ## Start here
 

@@ -26,6 +26,8 @@ The block Inserter, Block Appender, and slash menu MUST share the same registry-
 
 Initial categories are Text, Media, Design, Laravel, Dynamic, Interactive, Content, and Marketing. Category names are presentation metadata and do not form part of the stored schema.
 
+The current implementation includes a basic manifest-driven Block Appender and Inserter. It reads the editor manifest payload, groups blocks by category, supports search, keyboard ArrowUp/ArrowDown/Enter/Escape on the search field, inserts supported Tiptap nodes, and shows disabled unsupported manifest blocks with a reason. It currently maps `paragraph`, `heading`, `blockquote`, and `codeBlock`; patterns, reusable blocks, recent/favorites, nested insertion rules, and slash commands remain later milestones.
+
 ## Block operations
 
 The default `1.0` editor MUST include:
@@ -43,6 +45,8 @@ The default `1.0` editor MUST include:
 - undo and redo.
 
 Operations MUST preserve a valid document tree. Dragging MUST show a precise insertion indicator, invalid targets, and autoscroll where needed. An invalid drop target MUST be visibly rejected rather than repaired silently after the drop, and movement MUST have Move Up/Down plus keyboard alternatives.
+
+The current implementation includes basic top-level block controls. A cursor inside a top-level block shows a visible selection frame, contextual block toolbar, type label, Move Up/Down buttons, and an options menu for Duplicate, Insert before, Insert after, and Delete. These actions execute through the shared command registry and update canonical hidden JSON. Nested block controls, drag/drop, keyboard reordering, multi-select, copy/paste, and block-specific toolbars remain later milestones.
 
 ## Inline rich text
 
@@ -114,7 +118,7 @@ The interface MUST expose applicable commands through:
 
 These are multiple entry points to the same command and selection layers. They MUST NOT implement conflicting behavior independently.
 
-The current implementation includes the internal selection snapshot and shared command registry used by those future surfaces. It does not yet expose visible toolbars, keyboard shortcuts, Inserter, Inspector, or block operation UI.
+The current implementation includes the internal selection snapshot and shared command registry plus visible rich-text toolbar, link popover, top-level block toolbar/options, and basic manifest inserter/appender. Keyboard shortcuts, slash commands, Inspector, nested controls, drag/drop, and complete block operation UI remain later milestones.
 
 ## Shared UI infrastructure
 
@@ -122,7 +126,7 @@ Laravel Blocks MUST provide namespaced Button, IconButton, Toolbar, Popover, Too
 
 Popovers MUST be anchor-aware and collision-aware, preserve the editor selection, remain within the viewport, support role-appropriate keyboard navigation and Escape, dismiss predictably, and restore focus to the invoking control or selection. Only true dialogs trap focus. See the detailed [Popover and overlay contract](editor-ux-contract.md#popover-and-overlay-contract).
 
-The current implementation includes the first Button, IconButton, Toolbar, ToolbarGroup, Popover, overlay, and positioning primitives. This proves shared overlay behavior and focus restoration, but does not yet implement feature-specific toolbar, link, Inserter, slash menu, Inspector, or context-menu surfaces.
+The current implementation includes the first Button, IconButton, Toolbar, ToolbarGroup, Popover, overlay, and positioning primitives. Rich-text, link, block toolbar, options menu, and inserter surfaces now use those foundations on basic paths; slash menu, Inspector, full context-menu semantics, and complete responsive/accessibility polish remain later milestones.
 
 ## Autosave and recovery
 

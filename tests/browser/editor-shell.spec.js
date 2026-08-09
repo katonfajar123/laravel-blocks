@@ -24,8 +24,33 @@ const existingDocument = {
 const manifest = {
   manifestVersion: 1,
   documentSchemaVersion: 1,
-  categories: [],
-  blocks: [],
+  categories: [
+    { name: 'text', label: 'Text' },
+    { name: 'design', label: 'Design' },
+  ],
+  blocks: [
+    {
+      name: 'paragraph',
+      label: 'Paragraph',
+      category: 'text',
+      keywords: ['copy'],
+      supports: { inserter: true },
+    },
+    {
+      name: 'heading',
+      label: 'Heading',
+      description: 'Start with a heading',
+      category: 'text',
+      keywords: ['title'],
+      supports: { inserter: true },
+    },
+    {
+      name: 'featureCard',
+      label: 'Feature Card',
+      category: 'design',
+      supports: { inserter: true },
+    },
+  ],
 };
 
 test.beforeAll(async () => {
@@ -208,12 +233,19 @@ test('executes editor mutations through the shared command API', async ({ page }
   expect(snapshot.map((command) => command.name)).toEqual([
     'focus',
     'toggleBold',
-    'toggleItalic',
-    'setLink',
-    'unsetLink',
-    'setParagraph',
-    'setHeading',
-    'undo',
+        'toggleItalic',
+        'setLink',
+        'unsetLink',
+        'duplicateBlock',
+        'deleteBlock',
+        'insertBlockBefore',
+        'insertBlockAfter',
+        'moveBlockUp',
+        'moveBlockDown',
+        'insertManifestBlock',
+        'setParagraph',
+        'setHeading',
+        'undo',
     'redo',
   ]);
 });
@@ -315,6 +347,105 @@ test('edits links through the rich text link popover', async ({ page }) => {
   await expect(popover).toBeHidden();
   await expect(canvas).toBeFocused();
   await expect.poll(() => firstTextMark(page, '#editor-null', 'link')).toBeNull();
+});
+
+test('manages the current top-level block through contextual block controls', async ({ page }) => {
+  await page.goto(baseUrl);
+
+  const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
+  const wrapper = page.locator('#editor-null [data-laravel-blocks-block-wrapper]');
+  const toolbar = page.locator('#editor-null [data-laravel-blocks-block-toolbar]');
+  const options = page.locator('#editor-null [data-laravel-blocks-block-options]');
+  const menu = page.locator('#editor-null [data-laravel-blocks-block-options-menu]');
+
+  await canvas.click();
+  await page.keyboard.type('First block');
+
+  await expect(wrapper).toBeVisible();
+  await expect(toolbar).toBeVisible();
+  await expect(page.locator('#editor-null [data-laravel-blocks-block-label]')).toContainText('Paragraph');
+  await expect(page.locator('#editor-null [data-laravel-blocks-block-command="moveBlockUp"]')).toBeDisabled();
+
+  await options.click();
+  await expect(menu).toBeVisible();
+  await page.locator('#editor-null [data-laravel-blocks-block-menu-command="duplicateBlock"]').click();
+
+  await expect(canvas).toBeFocused();
+  await expect.poll(() => editorDocument(page, '#editor-null')).toMatchObject({
+    content: [
+      { type: 'paragraph', content: [{ type: 'text', text: 'First block' }] },
+      { type: 'paragraph', content: [{ type: 'text', text: 'First block' }] },
+    ],
+  });
+
+  await options.click();
+  await page.locator('#editor-null [data-laravel-blocks-block-menu-command="insertBlockBefore"]').click();
+
+  await expect.poll(() => editorDocument(page, '#editor-null')).toMatchObject({
+    content: [
+      { type: 'paragraph', content: [{ type: 'text', text: 'First block' }] },
+      { type: 'paragraph' },
+      { type: 'paragraph', content: [{ type: 'text', text: 'First block' }] },
+    ],
+  });
+
+  await page.locator('#editor-null [data-laravel-blocks-block-command="moveBlockDown"]').click();
+
+  await expect.poll(() => firstContentNode(page, '#editor-null')).toEqual({
+    type: 'paragraph',
+    content: [{ type: 'text', text: 'First block' }],
+  });
+
+  await options.click();
+  await page.locator('#editor-null [data-laravel-blocks-block-menu-command="deleteBlock"]').click();
+
+  await expect(canvas).toBeFocused();
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content.length).toBe(2);
+});
+
+test('inserts manifest blocks through the appender inserter', async ({ page }) => {
+  await page.goto(baseUrl);
+
+  const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
+  const appender = page.locator('#editor-null [data-laravel-blocks-block-appender]');
+  const inserter = page.locator('#editor-null [data-laravel-blocks-block-inserter]');
+  const search = page.locator('#editor-null [data-laravel-blocks-block-search]');
+  const heading = page.locator('#editor-null [data-laravel-blocks-block-inserter-item="heading"]');
+  const unsupported = page.locator('#editor-null [data-laravel-blocks-block-inserter-item="featureCard"]');
+
+  await canvas.click();
+  await page.keyboard.type('Start');
+
+  await appender.click();
+  await expect(inserter).toBeVisible();
+  await expect(search).toBeFocused();
+
+  await search.fill('heading');
+  await expect(heading).toBeVisible();
+  await expect(heading).toHaveAttribute('aria-disabled', 'false');
+  await page.keyboard.press('Enter');
+
+  await expect(inserter).toBeHidden();
+  await expect(canvas).toBeFocused();
+  await expect.poll(async () => {
+    const document = await editorDocument(page, '#editor-null');
+
+    return document.content.slice(0, 2);
+  }).toEqual([
+    { type: 'paragraph', content: [{ type: 'text', text: 'Start' }] },
+    { type: 'heading', attrs: { level: 2 } },
+  ]);
+
+  await appender.click();
+  await search.fill('feature');
+  await expect(unsupported).toBeDisabled();
+  await expect(unsupported).toHaveAttribute(
+    'data-laravel-blocks-block-inserter-disabled-reason',
+    'This block is not supported by the current editor bundle yet.',
+  );
+
+  await page.keyboard.press('Escape');
+  await expect(inserter).toBeHidden();
 });
 
 function editorFixture() {

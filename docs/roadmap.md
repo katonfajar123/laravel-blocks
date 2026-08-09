@@ -27,7 +27,7 @@ This roadmap defines direction, release composition, and dependency relationship
 
 An in-progress implementation must finish first. Otherwise the highest-value incomplete gap whose dependencies are satisfied is selected, scoped, verified, and evaluated before unrelated work begins.
 
-Package Skeleton, Document Foundation, Block Contract + Registry, Schema Validator, safe Blade Renderer, PHP-to-editor Manifest bridge, Precompiled Asset Distribution, Minimal Editor Shell, the internal selection/command layer, the first package-owned UI primitive/Popover infrastructure, the first visible rich-text selection toolbar, and the basic link popover/provider boundary are complete. The block wrapper and contextual block toolbar are the next dependency-safe editor foundation because text formatting now has a visible surface, while block selection and block-level controls remain absent. Blocks remain later dependency candidates rather than an instruction to advance automatically.
+Package Skeleton, Document Foundation, Block Contract + Registry, Schema Validator, safe Blade Renderer, PHP-to-editor Manifest bridge, Precompiled Asset Distribution, Minimal Editor Shell, the internal selection/command layer, the first package-owned UI primitive/Popover infrastructure, the first visible rich-text selection toolbar, the basic link popover/provider boundary, basic top-level block controls, and the basic manifest-driven inserter/appender are complete. Slash-command insertion is the next dependency-safe editor foundation because block insertion now has a visible appender/inserter surface, while `/` command discovery remains absent. Blocks remain later dependency candidates rather than an instruction to advance automatically.
 
 ## B00 frozen decisions
 

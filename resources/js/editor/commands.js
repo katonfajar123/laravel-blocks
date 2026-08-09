@@ -1,4 +1,6 @@
 import { linkAttributes } from '../rich-text/link-provider.js';
+import { createBlockSelectionState } from '../block-editor/block-selection.js';
+import { blockInsertPayload } from '../block-editor/manifest.js';
 
 function normalLevel(payload) {
   const level = Number(payload?.level ?? 2);
@@ -68,6 +70,140 @@ function simpleCommand(name, label, can, run, active = () => false) {
   });
 }
 
+function activeBlock(editor, payload = {}) {
+  if (payload?.block?.active) {
+    return payload.block;
+  }
+
+  return createBlockSelectionState(editor);
+}
+
+function blockNode(editor, block) {
+  return block?.active ? editor.state.doc.nodeAt(block.from) : null;
+}
+
+function topLevelBlock(editor, payload = {}) {
+  const block = activeBlock(editor, payload);
+  const node = blockNode(editor, block);
+
+  if (!block.active || block.depth !== 1 || !node) {
+    return null;
+  }
+
+  return { block, node };
+}
+
+function canUseTopLevelBlock(editor, payload = {}) {
+  return topLevelBlock(editor, payload) !== null;
+}
+
+function focusBlock(editor, position) {
+  editor.commands.focus();
+
+  if (Number.isInteger(position)) {
+    editor.commands.setTextSelection(Math.max(1, position));
+  }
+}
+
+function dispatchBlockTransaction(editor, transaction, focusPosition) {
+  editor.view.dispatch(transaction.scrollIntoView());
+  focusBlock(editor, focusPosition);
+
+  return true;
+}
+
+function insertParagraph(editor, payload = {}, placement = 'after') {
+  const target = topLevelBlock(editor, payload);
+
+  if (!target) {
+    return false;
+  }
+
+  const position = placement === 'before' ? target.block.from : target.block.to;
+  const paragraph = editor.schema.nodes.paragraph.create();
+  const transaction = editor.state.tr.insert(position, paragraph);
+
+  return dispatchBlockTransaction(editor, transaction, position + 1);
+}
+
+function duplicateBlock(editor, payload = {}) {
+  const target = topLevelBlock(editor, payload);
+
+  if (!target) {
+    return false;
+  }
+
+  const position = target.block.to;
+  const transaction = editor.state.tr.insert(position, target.node.copy(target.node.content));
+
+  return dispatchBlockTransaction(editor, transaction, position + 1);
+}
+
+function deleteBlock(editor, payload = {}) {
+  const target = topLevelBlock(editor, payload);
+
+  if (!target) {
+    return false;
+  }
+
+  const fallback = editor.schema.nodes.paragraph.create();
+  let transaction = editor.state.tr.delete(target.block.from, target.block.to);
+
+  if (transaction.doc.childCount === 0) {
+    transaction = transaction.insert(0, fallback);
+  }
+
+  return dispatchBlockTransaction(editor, transaction, Math.max(1, target.block.from + 1));
+}
+
+function moveBlock(editor, payload = {}, direction = 'up') {
+  const target = topLevelBlock(editor, payload);
+
+  if (!target) {
+    return false;
+  }
+
+  if (direction === 'up' && !target.block.canMoveUp) {
+    return false;
+  }
+
+  if (direction === 'down' && !target.block.canMoveDown) {
+    return false;
+  }
+
+  if (direction === 'up') {
+    const previous = editor.state.doc.child(target.block.index - 1);
+    const insertAt = target.block.from - previous.nodeSize;
+    const transaction = editor.state.tr
+      .delete(target.block.from, target.block.to)
+      .insert(insertAt, target.node);
+
+    return dispatchBlockTransaction(editor, transaction, insertAt + 1);
+  }
+
+  const next = editor.state.doc.child(target.block.index + 1);
+  const insertAt = target.block.from + next.nodeSize;
+  const transaction = editor.state.tr
+    .delete(target.block.from, target.block.to)
+    .insert(insertAt, target.node);
+
+  return dispatchBlockTransaction(editor, transaction, insertAt + 1);
+}
+
+function insertManifestBlock(editor, payload = {}) {
+  const insert = blockInsertPayload(payload.item);
+  const block = activeBlock(editor, payload);
+
+  if (!insert.valid || !block.active) {
+    return false;
+  }
+
+  const position = payload.placement === 'before' ? block.from : block.to;
+  const transaction = editor.state.tr.insert(position, editor.schema.nodeFromJSON(insert.node));
+
+  return dispatchBlockTransaction(editor, transaction, position + 1);
+}
+
 const definitions = [
   simpleCommand(
     'focus',
@@ -124,6 +260,48 @@ const definitions = [
       .extendMarkRange('link')
       .unsetLink()),
     (editor) => Boolean(editor.isActive('link')),
+  ),
+  simpleCommand(
+    'duplicateBlock',
+    'Duplicate',
+    (editor, payload) => canUseTopLevelBlock(editor, payload),
+    (editor, payload) => duplicateBlock(editor, payload),
+  ),
+  simpleCommand(
+    'deleteBlock',
+    'Delete',
+    (editor, payload) => canUseTopLevelBlock(editor, payload),
+    (editor, payload) => deleteBlock(editor, payload),
+  ),
+  simpleCommand(
+    'insertBlockBefore',
+    'Insert before',
+    (editor, payload) => canUseTopLevelBlock(editor, payload),
+    (editor, payload) => insertParagraph(editor, payload, 'before'),
+  ),
+  simpleCommand(
+    'insertBlockAfter',
+    'Insert after',
+    (editor, payload) => canUseTopLevelBlock(editor, payload),
+    (editor, payload) => insertParagraph(editor, payload, 'after'),
+  ),
+  simpleCommand(
+    'moveBlockUp',
+    'Move up',
+    (editor, payload) => Boolean(topLevelBlock(editor, payload)?.block.canMoveUp),
+    (editor, payload) => moveBlock(editor, payload, 'up'),
+  ),
+  simpleCommand(
+    'moveBlockDown',
+    'Move down',
+    (editor, payload) => Boolean(topLevelBlock(editor, payload)?.block.canMoveDown),
+    (editor, payload) => moveBlock(editor, payload, 'down'),
+  ),
+  simpleCommand(
+    'insertManifestBlock',
+    'Insert block',
+    (editor, payload) => blockInsertPayload(payload?.item).valid && activeBlock(editor, payload).active,
+    (editor, payload) => insertManifestBlock(editor, payload),
   ),
   simpleCommand(
     'setParagraph',

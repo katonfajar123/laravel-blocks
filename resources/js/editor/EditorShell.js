@@ -3,6 +3,7 @@ import Link from '@tiptap/extension-link';
 import StarterKit from '@tiptap/starter-kit';
 import { h, shallowRef } from 'vue';
 
+import { BlockInserter, BlockToolbar, createBlockSelectionState } from '../block-editor/index.js';
 import { createDefaultCommandRegistry } from './commands.js';
 import { normalizeDocument, toCanonicalJson, toTiptapDocument } from './document.js';
 import { createSelectionState } from './selection.js';
@@ -29,16 +30,22 @@ export const EditorShell = {
       type: Object,
       required: true,
     },
+    manifest: {
+      type: Object,
+      default: () => ({ manifestVersion: 1, documentSchemaVersion: 1, categories: [], blocks: [] }),
+    },
     placeholder: {
       type: String,
       default: 'Start writing or type / to choose a block',
     },
   },
   setup(props, { expose }) {
+    const blockSelection = shallowRef(createBlockSelectionState(null));
     const commands = shallowRef(null);
     const selection = shallowRef(createSelectionState(null));
 
-    function updateSelection(currentEditor) {
+    function updateEditorState(currentEditor) {
+      blockSelection.value = createBlockSelectionState(currentEditor);
       selection.value = createSelectionState(currentEditor);
     }
 
@@ -61,15 +68,18 @@ export const EditorShell = {
       },
       onCreate: ({ editor: createdEditor }) => {
         commands.value = createDefaultCommandRegistry(createdEditor);
-        updateSelection(createdEditor);
+        updateEditorState(createdEditor);
         syncHiddenInputValue(normalizeDocument(props.document), props.input);
       },
-      onSelectionUpdate: ({ editor: updatedEditor }) => updateSelection(updatedEditor),
-      onTransaction: ({ editor: transactionEditor }) => updateSelection(transactionEditor),
+      onSelectionUpdate: ({ editor: updatedEditor }) => updateEditorState(updatedEditor),
+      onTransaction: ({ editor: transactionEditor }) => updateEditorState(transactionEditor),
       onUpdate: ({ editor: updatedEditor }) => syncHiddenInput(updatedEditor, props.input),
     });
 
     expose({
+      blockSelection() {
+        return blockSelection.value;
+      },
       command(name, payload = {}) {
         return commands.value?.state(name, payload) ?? null;
       },
@@ -100,6 +110,11 @@ export const EditorShell = {
         editor: editor.value,
         selection: selection.value,
       }),
+      h(BlockToolbar, {
+        block: blockSelection.value,
+        commandRegistry: commands.value,
+        editor: editor.value,
+      }),
       editor.value
         ? h(EditorContent, {
           editor: editor.value,
@@ -109,6 +124,11 @@ export const EditorShell = {
           class: 'lb-editor-shell__loading',
           role: 'status',
         }, 'Loading editor...'),
+      h(BlockInserter, {
+        block: blockSelection.value,
+        commandRegistry: commands.value,
+        manifest: props.manifest,
+      }),
     ]);
   },
 };

@@ -59,6 +59,7 @@ export function mountLaravelBlocksEditor(root) {
   const app = createApp(EditorShell, {
     document: payload.document,
     input,
+    manifest: payload.manifest,
     placeholder: payload.placeholder,
   });
 
@@ -72,6 +73,9 @@ export function mountLaravelBlocksEditor(root) {
     },
     commandSnapshot(payloads = {}) {
       return component.commandSnapshot(payloads);
+    },
+    blockSelection() {
+      return component.blockSelection();
     },
     commands: Object.freeze({
       run(name, payload = {}) {
