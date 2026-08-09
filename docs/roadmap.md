@@ -27,7 +27,7 @@ This roadmap defines direction, release composition, and dependency relationship
 
 An in-progress implementation must finish first. Otherwise the highest-value incomplete gap whose dependencies are satisfied is selected, scoped, verified, and evaluated before unrelated work begins.
 
-Package Skeleton, Document Foundation, Block Contract + Registry, Schema Validator, safe Blade Renderer, PHP-to-editor Manifest bridge, Precompiled Asset Distribution, Minimal Editor Shell, the internal selection/command layer, and the first package-owned UI primitive/Popover infrastructure are complete. The rich-text selection toolbar is the next dependency-safe editor foundation because it can now use shared commands and shared Popover behavior instead of direct Tiptap calls or one-off overlays. Blocks remain later dependency candidates rather than an instruction to advance automatically.
+Package Skeleton, Document Foundation, Block Contract + Registry, Schema Validator, safe Blade Renderer, PHP-to-editor Manifest bridge, Precompiled Asset Distribution, Minimal Editor Shell, the internal selection/command layer, the first package-owned UI primitive/Popover infrastructure, and the first visible rich-text selection toolbar are complete. The link popover and link-provider boundary is the next dependency-safe editor foundation because selected text now has a visible toolbar surface and the remaining P0 rich-text gap is link editing. Blocks remain later dependency candidates rather than an instruction to advance automatically.
 
 ## B00 frozen decisions
 

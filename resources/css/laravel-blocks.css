@@ -199,3 +199,27 @@
 .lb-ui-popover[hidden] {
   display: none;
 }
+
+.lb-rich-text-toolbar {
+  padding: 0.25rem;
+}
+
+.lb-rich-text-toolbar .lb-ui-toolbar {
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+.lb-rich-text-toolbar .lb-ui-button {
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+.lb-rich-text-toolbar [data-laravel-blocks-rich-text-command="toggleBold"] {
+  font-weight: 800;
+}
+
+.lb-rich-text-toolbar [data-laravel-blocks-rich-text-command="toggleItalic"] {
+  font-style: italic;
+}

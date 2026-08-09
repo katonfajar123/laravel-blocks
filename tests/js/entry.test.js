@@ -14,5 +14,7 @@ describe('package frontend entry', () => {
     expect(LaravelBlocks.toCanonicalJson).toBeTypeOf('function');
     expect(LaravelBlocks.ui.Popover.name).toBe('LaravelBlocksPopover');
     expect(LaravelBlocks.ui.createPopoverController).toBeTypeOf('function');
+    expect(LaravelBlocks.richText.RichTextToolbar.name).toBe('LaravelBlocksRichTextToolbar');
+    expect(LaravelBlocks.richText.createRichTextToolbarItems).toBeTypeOf('function');
   });
 });

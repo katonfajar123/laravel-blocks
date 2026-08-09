@@ -256,6 +256,8 @@ The implemented editor engine also exposes a shared internal selection and comma
 
 The implemented UI infrastructure adds package-owned Button, IconButton, Toolbar, ToolbarGroup, Popover, overlay, and positioning primitives. Popover infrastructure now supports anchor-based placement, Escape dismissal, outside-pointer dismissal, and focus restoration through the precompiled bundle; feature-specific surfaces such as rich-text toolbar, link popover, Inserter, slash command, Inspector, and block menus remain later milestones.
 
+The implemented rich-text surface adds the first selection bubble toolbar. It appears for non-empty text selections, uses the shared command layer and UI primitives, supports visible Bold and Italic actions, updates canonical hidden JSON, and restores focus to the editor canvas after button activation. Link editing, full mark coverage, keyboard shortcuts, mixed-state polish, and schema-filtered mark availability remain later milestones.
+
 ## Compatibility baseline
 
 The frozen package baseline is:

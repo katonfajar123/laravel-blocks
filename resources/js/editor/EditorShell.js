@@ -5,6 +5,7 @@ import { h, shallowRef } from 'vue';
 import { createDefaultCommandRegistry } from './commands.js';
 import { normalizeDocument, toCanonicalJson, toTiptapDocument } from './document.js';
 import { createSelectionState } from './selection.js';
+import { RichTextToolbar } from '../rich-text/index.js';
 
 function syncHiddenInputValue(value, input) {
   input.value = typeof value === 'string' ? value : JSON.stringify(value);
@@ -88,6 +89,11 @@ export const EditorShell = {
         class: 'lb-editor-shell__chrome',
         'aria-hidden': 'true',
       }, props.placeholder),
+      h(RichTextToolbar, {
+        commandRegistry: commands.value,
+        editor: editor.value,
+        selection: selection.value,
+      }),
       editor.value
         ? h(EditorContent, {
           editor: editor.value,

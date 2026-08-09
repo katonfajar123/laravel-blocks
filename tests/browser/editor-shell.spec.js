@@ -216,6 +216,42 @@ test('executes editor mutations through the shared command API', async ({ page }
   ]);
 });
 
+test('formats selected text through the visible rich text toolbar', async ({ page }) => {
+  await page.goto(baseUrl);
+
+  const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
+  const toolbar = page.locator('#editor-null [data-laravel-blocks-rich-text-toolbar]');
+  const bold = page.locator('#editor-null [data-laravel-blocks-rich-text-command="toggleBold"]');
+  const italic = page.locator('#editor-null [data-laravel-blocks-rich-text-command="toggleItalic"]');
+
+  await expect(toolbar).toBeHidden();
+
+  await canvas.click();
+  await page.keyboard.type('Toolbar text');
+  await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
+
+  await expect(toolbar).toBeVisible();
+  await expect(toolbar).toHaveAttribute('data-laravel-blocks-state', 'open');
+  await expect(bold).toHaveAttribute('aria-pressed', 'false');
+  await expect(italic).toHaveAttribute('aria-pressed', 'false');
+
+  await bold.click();
+
+  await expect(canvas).toBeFocused();
+  await expect(bold).toHaveAttribute('aria-pressed', 'true');
+  await expect.poll(() => firstTextMarkTypes(page, '#editor-null')).toEqual(['bold']);
+
+  await italic.click();
+
+  await expect(canvas).toBeFocused();
+  await expect(italic).toHaveAttribute('aria-pressed', 'true');
+  await expect.poll(() => firstTextMarkTypes(page, '#editor-null')).toEqual(['bold', 'italic']);
+
+  await page.keyboard.press('ArrowRight');
+
+  await expect(toolbar).toBeHidden();
+});
+
 function editorFixture() {
   return `<!doctype html>
 <html lang="en">
@@ -261,4 +297,10 @@ async function firstContentNode(page, selector) {
   const document = await editorDocument(page, selector);
 
   return document.content?.[0] ?? null;
+}
+
+async function firstTextMarkTypes(page, selector) {
+  const node = await firstContentNode(page, selector);
+
+  return (node?.content?.[0]?.marks ?? []).map((mark) => mark.type).sort();
 }
