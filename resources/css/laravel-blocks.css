@@ -51,6 +51,28 @@
   padding: 0.75rem 1rem;
 }
 
+.lb-history-toolbar {
+  background: var(--lb-surface);
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-start;
+  padding: 0.5rem 1rem;
+  pointer-events: none;
+  position: relative;
+  z-index: 60;
+}
+
+.lb-history-toolbar .lb-ui-button,
+.lb-history-toolbar .lb-ui-toolbar {
+  pointer-events: auto;
+}
+
+.lb-history-toolbar .lb-ui-toolbar {
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
 .lb-editor-shell__content {
   min-height: 160px;
   padding: 1rem;

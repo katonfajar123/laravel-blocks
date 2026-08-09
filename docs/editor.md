@@ -120,7 +120,7 @@ The interface MUST expose applicable commands through:
 
 These are multiple entry points to the same command and selection layers. They MUST NOT implement conflicting behavior independently.
 
-The current implementation includes the internal selection snapshot and shared command registry plus visible rich-text toolbar, link popover, top-level block toolbar/options, basic manifest inserter/appender, basic slash commands, and basic generated Inspector controls. Keyboard shortcuts beyond direct command APIs, nested controls, drag/drop, and complete block operation UI remain later milestones.
+The current implementation includes the internal selection snapshot and shared command registry plus visible rich-text toolbar, link popover, top-level block toolbar/options, basic manifest inserter/appender, basic slash commands, basic generated Inspector controls, and basic visible undo/redo controls. Undo and Redo execute through the command registry from the document history toolbar and from Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z. The full shortcut map, nested controls, drag/drop, and complete block operation UI remain later milestones.
 
 ## Shared UI infrastructure
 

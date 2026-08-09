@@ -268,6 +268,8 @@ The implemented slash-command surface reuses that manifest index for `/` discove
 
 The implemented Inspector surface renders a basic sidebar for the selected top-level block. It resolves the selected block's manifest definition, displays Content, Design, and Advanced tabs, maps simple manifest fields to bundled controls, and sends `attrs.*` updates through the shared command registry. Complete Field Engine controls, schema-driven design/advanced supports, validation feedback, document settings, custom extension points, and responsive drawer polish remain later milestones.
 
+The implemented history surface adds visible Undo and Redo controls to the package-owned editor chrome and maps Ctrl/Cmd+Z plus Ctrl/Cmd+Shift+Z to the same command-registry path. These controls update canonical hidden JSON and restore canvas focus on the covered primary paths; the complete shortcut map, announcements, and cross-surface history polish remain later milestones.
+
 ## Compatibility baseline
 
 The frozen package baseline is:

@@ -261,6 +261,55 @@ test('executes editor mutations through the shared command API', async ({ page }
   ]);
 });
 
+test('uses visible history controls and platform history shortcuts', async ({ page }) => {
+  await page.goto(baseUrl);
+
+  const root = page.locator('#editor-null');
+  const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
+  const toolbar = page.locator('#editor-null [data-laravel-blocks-history-toolbar]');
+  const undo = page.locator('#editor-null [data-laravel-blocks-history-command="undo"]');
+  const redo = page.locator('#editor-null [data-laravel-blocks-history-command="redo"]');
+
+  await expect(toolbar).toBeVisible();
+  await expect(undo).toBeDisabled();
+  await expect(redo).toBeDisabled();
+
+  await canvas.click();
+  await page.keyboard.type('History text');
+
+  const typed = await editorInputValue(page, '#editor-null');
+
+  await expect(undo).toBeEnabled();
+  await expect(redo).toBeDisabled();
+
+  await undo.click();
+
+  await expect(canvas).toBeFocused();
+  await expect.poll(() => editorInputValue(page, '#editor-null')).not.toBe(typed);
+  await expect(redo).toBeEnabled();
+
+  await redo.click();
+
+  await expect(canvas).toBeFocused();
+  await expect.poll(() => editorInputValue(page, '#editor-null')).toBe(typed);
+
+  await canvas.click();
+  await page.keyboard.type(' Shortcut');
+
+  const withShortcut = await editorInputValue(page, '#editor-null');
+
+  await page.keyboard.press(process.platform === 'darwin' ? 'Meta+Z' : 'Control+Z');
+
+  await expect(canvas).toBeFocused();
+  await expect.poll(() => editorInputValue(page, '#editor-null')).not.toBe(withShortcut);
+
+  await page.keyboard.press(process.platform === 'darwin' ? 'Meta+Shift+Z' : 'Control+Shift+Z');
+
+  await expect(canvas).toBeFocused();
+  await expect.poll(() => editorInputValue(page, '#editor-null')).toBe(withShortcut);
+  await expect(root.locator('[data-laravel-blocks-history-command="undo"]')).toBeEnabled();
+});
+
 test('formats selected text through the visible rich text toolbar', async ({ page }) => {
   await page.goto(baseUrl);
 

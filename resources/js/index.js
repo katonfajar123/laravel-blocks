@@ -49,6 +49,8 @@ import {
   toCanonicalJson,
   toTiptapDocument,
 } from './editor/document.js';
+import { HistoryToolbar } from './editor/HistoryToolbar.js';
+import { handleHistoryShortcut, historyShortcutCommand } from './editor/keyboard-shortcuts.js';
 import { createSelectionState } from './editor/selection.js';
 import {
   LinkPopover,
@@ -106,6 +108,9 @@ export {
   currentLinkForm,
   emptyDocument,
   filterBlockInserterItems,
+  handleHistoryShortcut,
+  historyShortcutCommand,
+  HistoryToolbar,
   inspectorFieldValue,
   inspectorFieldsForBlock,
   inspectorGroups,

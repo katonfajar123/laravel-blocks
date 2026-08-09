@@ -13,6 +13,8 @@ import {
 } from '../block-editor/index.js';
 import { createDefaultCommandRegistry } from './commands.js';
 import { normalizeDocument, toCanonicalJson, toTiptapDocument } from './document.js';
+import { HistoryToolbar } from './HistoryToolbar.js';
+import { handleHistoryShortcut } from './keyboard-shortcuts.js';
 import { createSelectionState } from './selection.js';
 import { RichTextToolbar } from '../rich-text/index.js';
 
@@ -86,6 +88,7 @@ export const EditorShell = {
   setup(props, { expose }) {
     const blockSelection = shallowRef(createBlockSelectionState(null));
     const commands = shallowRef(null);
+    const editorStateVersion = shallowRef(0);
     const selection = shallowRef(createSelectionState(null));
     const slash = shallowRef({
       activeIndex: 0,
@@ -96,6 +99,7 @@ export const EditorShell = {
     function updateEditorState(currentEditor) {
       blockSelection.value = createBlockSelectionState(currentEditor);
       selection.value = createSelectionState(currentEditor);
+      editorStateVersion.value += 1;
     }
 
     function setSlashState(next) {
@@ -267,6 +271,10 @@ export const EditorShell = {
             return true;
           }
 
+          if (handleHistoryShortcut(event, commands.value)) {
+            return true;
+          }
+
           if (
             event.key === '/'
             && !event.altKey
@@ -325,6 +333,11 @@ export const EditorShell = {
         class: 'lb-editor-shell__chrome',
         'aria-hidden': 'true',
       }, props.placeholder),
+      h(HistoryToolbar, {
+        commandRegistry: commands.value,
+        editor: editor.value,
+        stateVersion: editorStateVersion.value,
+      }),
       h(RichTextToolbar, {
         commandRegistry: commands.value,
         editor: editor.value,
