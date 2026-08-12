@@ -4,28 +4,27 @@ namespace KatonFajar\LaravelBlocks\Blocks\Text;
 
 use KatonFajar\LaravelBlocks\Blocks\Block;
 use KatonFajar\LaravelBlocks\Blocks\BlockSchema;
-use KatonFajar\LaravelBlocks\Validation\AttributeRule;
 
-final class Paragraph extends Block
+final class ListItem extends Block
 {
     public function name(): string
     {
-        return 'paragraph';
+        return 'listItem';
     }
 
     public function label(): string
     {
-        return 'Paragraph';
+        return 'List Item';
     }
 
     public function view(): string
     {
-        return 'laravel-blocks::blocks.paragraph';
+        return 'laravel-blocks::blocks.list-item';
     }
 
     public function description(): string
     {
-        return 'Write a text paragraph.';
+        return 'A structural item inside list blocks.';
     }
 
     public function category(): string
@@ -35,24 +34,28 @@ final class Paragraph extends Block
 
     public function keywords(): array
     {
-        return ['text', 'copy', 'body'];
+        return ['item'];
     }
 
     public function icon(): string
     {
-        return 'paragraph';
+        return 'list';
+    }
+
+    public function supports(): array
+    {
+        return [
+            'inserter' => false,
+            'reusable' => false,
+        ];
     }
 
     public function schema(): BlockSchema
     {
         return new BlockSchema(
-            attributes: [
-                'design' => AttributeRule::object(),
-                'advanced' => AttributeRule::object(),
-            ],
-            allowedParents: ['doc', 'listItem'],
-            allowedChildren: ['text'],
-            allowedMarks: ['bold', 'italic', 'link'],
+            allowedParents: ['bulletList', 'orderedList'],
+            allowedChildren: ['paragraph'],
+            minimumChildren: 1,
             maximumChildren: null,
         );
     }

@@ -226,6 +226,12 @@ describe('block editor helpers', () => {
           category: 'design',
           supports: { inserter: true },
         },
+        {
+          name: 'listItem',
+          label: 'List Item',
+          category: 'text',
+          supports: { inserter: false },
+        },
       ],
     });
 
@@ -247,6 +253,8 @@ describe('block editor helpers', () => {
     ]);
     expect(filterBlockInserterItems(manifest.blocks, 'copy').map((item) => item.name))
       .toEqual(['paragraph']);
+    expect(filterBlockInserterItems(manifest.blocks, 'item').map((item) => item.name))
+      .toEqual([]);
   });
 
   it('maps supported inserter items to Tiptap node payloads', () => {
@@ -257,6 +265,22 @@ describe('block editor helpers', () => {
       node: {
         type: 'heading',
         attrs: { level: 2 },
+      },
+      reason: null,
+      valid: true,
+    });
+
+    expect(blockInsertPayload({
+      name: 'orderedList',
+      supported: true,
+    })).toEqual({
+      node: {
+        type: 'orderedList',
+        attrs: { start: 1, type: null },
+        content: [{
+          type: 'listItem',
+          content: [{ type: 'paragraph' }],
+        }],
       },
       reason: null,
       valid: true,

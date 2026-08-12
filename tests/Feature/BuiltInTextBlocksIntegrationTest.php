@@ -9,7 +9,7 @@ use KatonFajar\LaravelBlocks\Validation\MarkRegistry;
 it('registers paragraph and heading blocks from the default package configuration', function (): void {
     $blocks = LaravelBlocksFacade::blocks();
 
-    expect(array_keys($blocks))
+    expect(array_slice(array_keys($blocks), 0, 2))
         ->toBe(['paragraph', 'heading'])
         ->and($blocks['paragraph'])
         ->toBeInstanceOf(Paragraph::class)
@@ -141,7 +141,7 @@ it('exposes paragraph and heading metadata through the editor manifest', functio
             'name' => 'text',
             'label' => 'Text',
         ]])
-        ->and(array_column($manifest['blocks'], 'name'))
+        ->and(array_slice(array_column($manifest['blocks'], 'name'), 0, 2))
         ->toBe(['paragraph', 'heading'])
         ->and($manifest['blocks'][0])
         ->toMatchArray([

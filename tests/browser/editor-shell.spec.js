@@ -58,6 +58,33 @@ const packageDefaultManifest = {
       keywords: ['title', 'headline', 'section'],
       supports: { inserter: true },
     },
+    {
+      name: 'bulletList',
+      label: 'Bullet List',
+      description: 'Create a bulleted list.',
+      category: 'text',
+      icon: 'list',
+      keywords: ['list', 'bullet', 'unordered'],
+      supports: { inserter: true },
+    },
+    {
+      name: 'orderedList',
+      label: 'Ordered List',
+      description: 'Create a numbered list.',
+      category: 'text',
+      icon: 'list',
+      keywords: ['list', 'numbered', 'ordered'],
+      supports: { inserter: true },
+    },
+    {
+      name: 'listItem',
+      label: 'List Item',
+      description: 'A structural item inside list blocks.',
+      category: 'text',
+      icon: 'list',
+      keywords: ['item'],
+      supports: { inserter: false, reusable: false },
+    },
   ],
 };
 
@@ -69,14 +96,6 @@ const manifest = {
   ],
   blocks: [
     ...packageDefaultManifest.blocks,
-    {
-      name: 'bulletList',
-      label: 'List',
-      description: 'Create a bulleted list',
-      category: 'text',
-      keywords: ['list'],
-      supports: { inserter: true },
-    },
     {
       name: 'featureCard',
       label: 'Feature Card',
@@ -782,6 +801,80 @@ test('uses the package default text manifest for appender, slash, and inspector 
     { type: 'paragraph', content: [{ type: 'text', text: 'Default paragraph' }] },
     { type: 'heading', attrs: { level: 4 } },
   ]);
+});
+
+test('uses the package default list manifest through appender and slash flows', async ({ page }) => {
+  await page.goto(`${baseUrl}/default`);
+
+  const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
+  const appender = page.locator('#editor-null [data-laravel-blocks-block-appender]');
+  const inserter = page.locator('#editor-null [data-laravel-blocks-block-inserter]');
+  const search = page.locator('#editor-null [data-laravel-blocks-block-search]');
+  const bulletList = page.locator('#editor-null [data-laravel-blocks-block-inserter-item="bulletList"]');
+  const listItem = page.locator('#editor-null [data-laravel-blocks-block-inserter-item="listItem"]');
+
+  await canvas.click();
+  await page.keyboard.type('Default list seed');
+  await appender.click();
+  await expect(inserter).toBeVisible();
+  await search.fill('item');
+
+  await expect(listItem).toHaveCount(0);
+  await expect(page.locator('#editor-null [data-laravel-blocks-block-inserter-empty]')).toBeVisible();
+
+  await search.fill('bullet');
+  await expect(bulletList).toBeVisible();
+  await expect(bulletList).toHaveAttribute('aria-disabled', 'false');
+  await page.keyboard.press('Enter');
+
+  await expect(inserter).toBeHidden();
+  await expect(canvas).toBeFocused();
+  await expect.poll(async () => {
+    const document = await editorDocument(page, '#editor-null');
+
+    return document.content.slice(0, 2);
+  }).toEqual([
+    { type: 'paragraph', content: [{ type: 'text', text: 'Default list seed' }] },
+    {
+      type: 'bulletList',
+      content: [{
+        type: 'listItem',
+        content: [{ type: 'paragraph' }],
+      }],
+    },
+  ]);
+
+  await page.goto(`${baseUrl}/default`);
+
+  const slash = page.locator('#editor-null [data-laravel-blocks-slash-command]');
+  const orderedList = page.locator('#editor-null [data-laravel-blocks-slash-item="orderedList"]');
+
+  await canvas.click();
+  await page.keyboard.press('/');
+  await page.keyboard.type('item');
+
+  await expect(page.locator('#editor-null [data-laravel-blocks-slash-item="listItem"]')).toHaveCount(0);
+  await expect(page.locator('#editor-null [data-laravel-blocks-slash-empty]')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(slash).toBeHidden();
+
+  await page.keyboard.press('/');
+  await page.keyboard.type('numbered');
+  await expect(orderedList).toBeVisible();
+  await expect(orderedList).toHaveAttribute('data-laravel-blocks-slash-item-state', 'active');
+  await page.keyboard.press('Enter');
+
+  await expect(slash).toBeHidden();
+  await expect(canvas).toBeFocused();
+  await expect.poll(() => firstContentNode(page, '#editor-null')).toEqual({
+    type: 'orderedList',
+    attrs: { start: 1, type: null },
+    content: [{
+      type: 'listItem',
+      content: [{ type: 'paragraph' }],
+    }],
+  });
 });
 
 test('replaces an empty text block through slash commands', async ({ page }) => {

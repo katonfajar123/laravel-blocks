@@ -2,7 +2,7 @@
 
 ## Status
 
-The product scope contains 50 built-in blocks, delivered incrementally. Paragraph and Heading are implemented as the initial package-owned text blocks and are registered by default. The remaining catalog blocks arrive in later batches.
+The product scope contains 50 built-in blocks, delivered incrementally. Paragraph, Heading, Bullet List, Ordered List, and structural List Item are implemented as the initial package-owned text blocks and are registered by default. The remaining catalog blocks arrive in later batches.
 
 ## Catalog
 
@@ -82,21 +82,30 @@ The schema also reserves `doc` and `text`. These lower-camel identifiers are per
 | --- | --- | --- | --- |
 | `paragraph` | `KatonFajar\LaravelBlocks\Blocks\Text\Paragraph` | `laravel-blocks::blocks.paragraph` | Text category, Inserter/slash enabled, no Inspector fields |
 | `heading` | `KatonFajar\LaravelBlocks\Blocks\Text\Heading` | `laravel-blocks::blocks.heading` | Text category, Inserter/slash enabled, Content field `attrs.level` with H1-H6 values |
+| `bulletList` | `KatonFajar\LaravelBlocks\Blocks\Text\BulletList` | `laravel-blocks::blocks.bullet-list` | Text category, Inserter/slash enabled, no Inspector fields |
+| `orderedList` | `KatonFajar\LaravelBlocks\Blocks\Text\OrderedList` | `laravel-blocks::blocks.ordered-list` | Text category, Inserter/slash enabled, no Inspector fields |
+| `listItem` | `KatonFajar\LaravelBlocks\Blocks\Text\ListItem` | `laravel-blocks::blocks.list-item` | Structural child for list blocks, hidden from Inserter/slash |
 
-Both blocks allow top-level document placement, text children, the current editor marks (`bold`, `italic`, `link`), and optional empty `design` and `advanced` attribute objects. Heading requires `attrs.level` to be one of `1` through `6`. Mark-specific server HTML rendering and the complete built-in mark catalog remain separate follow-up work.
+Paragraph allows top-level and list-item placement; Heading allows top-level placement. Both accept text children, the current editor marks (`bold`, `italic`, `link`), and optional empty `design` and `advanced` attribute objects. Heading requires `attrs.level` to be one of `1` through `6`. Bullet List and Ordered List allow top-level placement and require one or more `listItem` children; `listItem` is structural, may only appear inside lists, and currently accepts paragraph children only. Mark-specific server HTML rendering and the complete built-in mark catalog remain separate follow-up work.
 
 ## Registration
 
 The shipped configuration registers the first text blocks in this order:
 
 ```php
+use KatonFajar\LaravelBlocks\Blocks\Text\BulletList;
 use KatonFajar\LaravelBlocks\Blocks\Text\Heading;
+use KatonFajar\LaravelBlocks\Blocks\Text\ListItem;
+use KatonFajar\LaravelBlocks\Blocks\Text\OrderedList;
 use KatonFajar\LaravelBlocks\Blocks\Text\Paragraph;
 
 return [
     'blocks' => [
         Paragraph::class,
         Heading::class,
+        BulletList::class,
+        OrderedList::class,
+        ListItem::class,
     ],
 ];
 ```

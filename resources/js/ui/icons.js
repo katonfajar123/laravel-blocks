@@ -32,7 +32,7 @@ export function blockIconName(type) {
     codeBlock: 'code',
     heading: 'heading',
     list: 'list',
-    orderedList: 'paragraph',
+    orderedList: 'list',
     paragraph: 'paragraph',
     quote: 'quote',
   }[type] ?? 'paragraph';

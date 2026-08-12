@@ -2,7 +2,7 @@
 
 ## Status
 
-The core renderer is implemented for registered block nodes, escaped text, deterministic unknown-block policies, typed view failures, package-owned Paragraph/Heading views, default validation schemas for the current editor marks, `LaravelBlocks::render(...)`, and `<x-laravel-blocks::content>`.
+The core renderer is implemented for registered block nodes, escaped text, deterministic unknown-block policies, typed view failures, package-owned Paragraph, Heading, Bullet List, Ordered List, and List Item views, default validation schemas for the current editor marks, `LaravelBlocks::render(...)`, and `<x-laravel-blocks::content>`.
 
 The remaining built-in block views, mark-specific rich-text HTML output, dynamic block authorization, media resolution, and render caching remain later milestone work.
 

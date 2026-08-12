@@ -11,6 +11,9 @@ return [
     'blocks' => [
         \KatonFajar\LaravelBlocks\Blocks\Text\Paragraph::class,
         \KatonFajar\LaravelBlocks\Blocks\Text\Heading::class,
+        \KatonFajar\LaravelBlocks\Blocks\Text\BulletList::class,
+        \KatonFajar\LaravelBlocks\Blocks\Text\OrderedList::class,
+        \KatonFajar\LaravelBlocks\Blocks\Text\ListItem::class,
     ],
 
     'marks' => [
@@ -46,7 +49,7 @@ return [
 ];
 ```
 
-Testbench verifies merge behavior, serialization, default Paragraph/Heading and current editor mark registration, active document limits, renderer policy behavior, asset base URL behavior, editor asset auto-injection opt-out, and config/view/asset publish groups. The `document.unknown_blocks` values/default and precompiled asset-loading boundary are frozen contracts; the current editor runtime remains incomplete until later UI and block milestones land.
+Testbench verifies merge behavior, serialization, default Paragraph/Heading/List and current editor mark registration, active document limits, renderer policy behavior, asset base URL behavior, editor asset auto-injection opt-out, and config/view/asset publish groups. The `document.unknown_blocks` values/default and precompiled asset-loading boundary are frozen contracts; the current editor runtime remains incomplete until later UI and block milestones land.
 
 ## Planned expanded configuration
 
@@ -166,6 +169,9 @@ The active `blocks` list registers package defaults and controls editor manifest
 'blocks' => [
     Paragraph::class,
     Heading::class,
+    BulletList::class,
+    OrderedList::class,
+    ListItem::class,
 ],
 ```
 
@@ -181,7 +187,7 @@ The active `marks` list registers the current editor mark schemas used by the bu
 ],
 ```
 
-These schemas allow Paragraph and Heading documents containing Bold, Italic, and absolute `http`, `https`, `mailto`, or `tel` Link marks to validate. Link mark HTML rendering and relative/anchor URL validation remain separate renderer work.
+These schemas allow Paragraph, Heading, and list-backed text documents containing Bold, Italic, and absolute `http`, `https`, `mailto`, or `tel` Link marks to validate. Link mark HTML rendering and relative/anchor URL validation remain separate renderer work.
 
 ## Per-editor configuration
 

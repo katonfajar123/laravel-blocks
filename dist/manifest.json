@@ -4,9 +4,9 @@
     "script": {
       "file": "laravel-blocks.js",
       "type": "module",
-      "sha256": "1990de98abed8b3d04a956e136d20522fb9b3aff6ec54329be267772eb872791",
-      "integrity": "sha256-GZDemKvtiz0EqVbhNtIFIvubOv9uxUMpviZ3cuuHJ5E=",
-      "bytes": 500479
+      "sha256": "afe398de6ab89914754680f4c11fdd8cd76a4a81c03d41d42d28a23c8c455b46",
+      "integrity": "sha256-r+OY3mq4mRR1RoD0wR/djNdqSoHAPUHULSiiPIxFW0Y=",
+      "bytes": 500566
     },
     "style": {
       "file": "laravel-blocks.css",

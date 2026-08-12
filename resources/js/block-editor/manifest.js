@@ -15,6 +15,14 @@ const supportedInsertPayloads = Object.freeze({
     type: 'heading',
     attrs: { level: 2 },
   }),
+  orderedList: () => ({
+    type: 'orderedList',
+    attrs: { start: 1, type: null },
+    content: [{
+      type: 'listItem',
+      content: [{ type: 'paragraph' }],
+    }],
+  }),
   paragraph: () => ({ type: 'paragraph' }),
 });
 
@@ -36,18 +44,20 @@ function normalizeBlock(block, categories) {
   const inserterEnabled = block?.supports?.inserter !== false;
   const category = categories.get(block?.category) ?? normalizeCategory({ name: block?.category || 'blocks' });
 
+  if (!inserterEnabled) {
+    return null;
+  }
+
   return Object.freeze({
     category: category.name,
     categoryLabel: category.label,
     description: block?.description ? String(block.description) : '',
-    disabledReason: inserterEnabled
-      ? supported ? null : 'This block is not supported by the current editor bundle yet.'
-      : 'This block is hidden from the inserter.',
+    disabledReason: supported ? null : 'This block is not supported by the current editor bundle yet.',
     icon: block?.icon ? String(block.icon) : null,
     keywords: Array.isArray(block?.keywords) ? block.keywords.map(String) : [],
     label: String(block?.label || name || 'Block'),
     name,
-    supported: supported && inserterEnabled,
+    supported,
   });
 }
 
@@ -60,7 +70,7 @@ export function normalizeEditorManifest(manifest = {}) {
 
   const blocks = (Array.isArray(manifest.blocks) ? manifest.blocks : [])
     .map((block) => normalizeBlock(block, categories))
-    .filter((block) => block.name !== '');
+    .filter((block) => block !== null && block.name !== '');
 
   return Object.freeze({
     blocks: Object.freeze(blocks),

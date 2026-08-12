@@ -6,26 +6,26 @@ use KatonFajar\LaravelBlocks\Blocks\Block;
 use KatonFajar\LaravelBlocks\Blocks\BlockSchema;
 use KatonFajar\LaravelBlocks\Validation\AttributeRule;
 
-final class Paragraph extends Block
+final class OrderedList extends Block
 {
     public function name(): string
     {
-        return 'paragraph';
+        return 'orderedList';
     }
 
     public function label(): string
     {
-        return 'Paragraph';
+        return 'Ordered List';
     }
 
     public function view(): string
     {
-        return 'laravel-blocks::blocks.paragraph';
+        return 'laravel-blocks::blocks.ordered-list';
     }
 
     public function description(): string
     {
-        return 'Write a text paragraph.';
+        return 'Create a numbered list.';
     }
 
     public function category(): string
@@ -35,24 +35,26 @@ final class Paragraph extends Block
 
     public function keywords(): array
     {
-        return ['text', 'copy', 'body'];
+        return ['list', 'numbered', 'ordered'];
     }
 
     public function icon(): string
     {
-        return 'paragraph';
+        return 'list';
     }
 
     public function schema(): BlockSchema
     {
         return new BlockSchema(
             attributes: [
+                'start' => AttributeRule::integer(minimum: 1),
+                'type' => AttributeRule::string(nullable: true, allowedValues: ['1', 'a', 'A', 'i', 'I']),
                 'design' => AttributeRule::object(),
                 'advanced' => AttributeRule::object(),
             ],
-            allowedParents: ['doc', 'listItem'],
-            allowedChildren: ['text'],
-            allowedMarks: ['bold', 'italic', 'link'],
+            allowedParents: ['doc'],
+            allowedChildren: ['listItem'],
+            minimumChildren: 1,
             maximumChildren: null,
         );
     }

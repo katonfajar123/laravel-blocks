@@ -6,26 +6,26 @@ use KatonFajar\LaravelBlocks\Blocks\Block;
 use KatonFajar\LaravelBlocks\Blocks\BlockSchema;
 use KatonFajar\LaravelBlocks\Validation\AttributeRule;
 
-final class Paragraph extends Block
+final class BulletList extends Block
 {
     public function name(): string
     {
-        return 'paragraph';
+        return 'bulletList';
     }
 
     public function label(): string
     {
-        return 'Paragraph';
+        return 'Bullet List';
     }
 
     public function view(): string
     {
-        return 'laravel-blocks::blocks.paragraph';
+        return 'laravel-blocks::blocks.bullet-list';
     }
 
     public function description(): string
     {
-        return 'Write a text paragraph.';
+        return 'Create a bulleted list.';
     }
 
     public function category(): string
@@ -35,12 +35,12 @@ final class Paragraph extends Block
 
     public function keywords(): array
     {
-        return ['text', 'copy', 'body'];
+        return ['list', 'bullet', 'unordered'];
     }
 
     public function icon(): string
     {
-        return 'paragraph';
+        return 'list';
     }
 
     public function schema(): BlockSchema
@@ -50,9 +50,9 @@ final class Paragraph extends Block
                 'design' => AttributeRule::object(),
                 'advanced' => AttributeRule::object(),
             ],
-            allowedParents: ['doc', 'listItem'],
-            allowedChildren: ['text'],
-            allowedMarks: ['bold', 'italic', 'link'],
+            allowedParents: ['doc'],
+            allowedChildren: ['listItem'],
+            minimumChildren: 1,
             maximumChildren: null,
         );
     }

@@ -3,7 +3,7 @@
 ## Availability
 
 > [!WARNING]
-> Laravel Blocks has not been released. The package foundation, canonical document boundary, block registry, schema validator, Blade renderer, manifest bridge, compiled asset distribution boundary, minimal editor shell, shared command layer, rich-text/link controls, basic top-level block controls, basic manifest inserter/appender, basic slash commands, a basic manifest-generated Inspector, basic undo/redo controls, top-level drag/drop, Document/List View, and default Paragraph/Heading blocks exist; the installer command, complete editor UX, validation rule, and remaining built-in block catalog remain milestone targets.
+> Laravel Blocks has not been released. The package foundation, canonical document boundary, block registry, schema validator, Blade renderer, manifest bridge, compiled asset distribution boundary, minimal editor shell, shared command layer, rich-text/link controls, basic top-level block controls, basic manifest inserter/appender, basic slash commands, a basic manifest-generated Inspector, basic undo/redo controls, top-level drag/drop, Document/List View, and default Paragraph/Heading/List blocks exist; the installer command, complete editor UX, validation rule, and remaining built-in block catalog remain milestone targets.
 
 ## Proposed requirements
 
@@ -141,7 +141,7 @@ $post->update([
 
 The component MUST accept an associative array, non-blank JSON string, or `null` as its initial value and normalize it through `Document::from(...)`. A normal browser form submits canonical document JSON as a string. The application decides whether to retain that string or normalize it to an array for its persistence layer.
 
-The current implementation mounts a package-owned Vue/Tiptap shell, emits an escaped manifest/document payload with default Paragraph/Heading blocks, auto-loads compiled assets when enabled, synchronizes a hidden input to canonical document JSON, and includes the shared command layer, basic rich-text/link controls, basic top-level block controls, a basic manifest-driven appender/inserter, basic slash commands, a basic manifest-generated Inspector, basic visible undo/redo controls with Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z, top-level drag/drop, and Document/List View. It does not yet include nested controls, the complete shortcut map, complete built-in block catalog, or polished editing controls.
+The current implementation mounts a package-owned Vue/Tiptap shell, emits an escaped manifest/document payload with default Paragraph/Heading/List blocks, auto-loads compiled assets when enabled, synchronizes a hidden input to canonical document JSON, and includes the shared command layer, basic rich-text/link controls, basic top-level block controls, a basic manifest-driven appender/inserter, basic slash commands, a basic manifest-generated Inspector, basic visible undo/redo controls with Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z, top-level drag/drop, and Document/List View. It does not yet include nested controls, the complete shortcut map, complete built-in block catalog, or polished editing controls.
 
 The component MUST mount the complete package-owned canvas, toolbars, overlays, Inserter, Inspector, List View, media UI, and accessible interaction layer defined by the [Editor UX contract](editor-ux-contract.md). No consumer frontend assembly is part of the quick start.
 
@@ -161,7 +161,7 @@ use KatonFajar\LaravelBlocks\Facades\LaravelBlocks;
 $html = LaravelBlocks::render($post->content);
 ```
 
-The Blade component uses the same renderer path as the facade. Current rendering includes package-owned Paragraph and Heading views plus any application blocks registered with safe Blade views. The remaining built-in block catalog arrives in later batches.
+The Blade component uses the same renderer path as the facade. Current rendering includes package-owned Paragraph, Heading, Bullet List, Ordered List, and List Item views plus any application blocks registered with safe Blade views. The remaining built-in block catalog arrives in later batches.
 
 ## Publish configuration and renderer views
 

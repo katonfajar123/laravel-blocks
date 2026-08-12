@@ -1,12 +1,18 @@
 <?php
 
+use KatonFajar\LaravelBlocks\Blocks\Text\BulletList;
 use KatonFajar\LaravelBlocks\Blocks\Text\Heading;
+use KatonFajar\LaravelBlocks\Blocks\Text\ListItem;
+use KatonFajar\LaravelBlocks\Blocks\Text\OrderedList;
 use KatonFajar\LaravelBlocks\Blocks\Text\Paragraph;
 
 return [
     'blocks' => [
         Paragraph::class,
         Heading::class,
+        BulletList::class,
+        OrderedList::class,
+        ListItem::class,
     ],
 
     'marks' => [

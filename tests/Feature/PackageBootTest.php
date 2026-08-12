@@ -1,7 +1,10 @@
 <?php
 
 use KatonFajar\LaravelBlocks\Assets\AssetManifest;
+use KatonFajar\LaravelBlocks\Blocks\Text\BulletList;
 use KatonFajar\LaravelBlocks\Blocks\Text\Heading;
+use KatonFajar\LaravelBlocks\Blocks\Text\ListItem;
+use KatonFajar\LaravelBlocks\Blocks\Text\OrderedList;
 use KatonFajar\LaravelBlocks\Blocks\Text\Paragraph;
 use KatonFajar\LaravelBlocks\Facades\LaravelBlocks as LaravelBlocksFacade;
 use KatonFajar\LaravelBlocks\LaravelBlocks;
@@ -43,6 +46,9 @@ it('merges serializable configuration and registers its publish group', function
         ->toBe([
             Paragraph::class,
             Heading::class,
+            BulletList::class,
+            OrderedList::class,
+            ListItem::class,
         ])
         ->and($configuration['marks'])
         ->toBe(['bold', 'italic', 'link'])
