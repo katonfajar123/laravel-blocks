@@ -2,7 +2,7 @@
 
 ## Status
 
-The product scope contains 50 built-in blocks, delivered incrementally. They are not currently implemented. The first editor milestone intentionally starts with six foundational blocks.
+The product scope contains 50 built-in blocks, delivered incrementally. Paragraph and Heading are implemented as the initial package-owned text blocks and are registered by default. The remaining catalog blocks arrive in later batches.
 
 ## Catalog
 
@@ -76,33 +76,32 @@ Milestone assignments after `0.4` may move as the PHP extension APIs become conc
 
 The schema also reserves `doc` and `text`. These lower-camel identifiers are persisted contracts; labels remain localizable. Renaming a stored identifier after content is emitted requires a forward document-schema transform.
 
+## Implemented initial text blocks
+
+| Document node | PHP class | Renderer view | Manifest behavior |
+| --- | --- | --- | --- |
+| `paragraph` | `KatonFajar\LaravelBlocks\Blocks\Text\Paragraph` | `laravel-blocks::blocks.paragraph` | Text category, Inserter/slash enabled, no Inspector fields |
+| `heading` | `KatonFajar\LaravelBlocks\Blocks\Text\Heading` | `laravel-blocks::blocks.heading` | Text category, Inserter/slash enabled, Content field `attrs.level` with H1-H6 values |
+
+Both blocks allow top-level document placement, text children, the current editor marks (`bold`, `italic`, `link`), and optional empty `design` and `advanced` attribute objects. Heading requires `attrs.level` to be one of `1` through `6`. Mark-specific server HTML rendering and the complete built-in mark catalog remain separate follow-up work.
+
 ## Registration
 
-Applications can choose a subset of registered blocks:
+The shipped configuration registers the first text blocks in this order:
 
 ```php
-use KatonFajar\LaravelBlocks\Blocks\Design\Columns;
-use KatonFajar\LaravelBlocks\Blocks\Design\Section;
-use KatonFajar\LaravelBlocks\Blocks\Media\Gallery;
-use KatonFajar\LaravelBlocks\Blocks\Media\Image;
 use KatonFajar\LaravelBlocks\Blocks\Text\Heading;
 use KatonFajar\LaravelBlocks\Blocks\Text\Paragraph;
-use KatonFajar\LaravelBlocks\Blocks\Text\Quote;
 
 return [
     'blocks' => [
         Paragraph::class,
         Heading::class,
-        Quote::class,
-        Image::class,
-        Gallery::class,
-        Columns::class,
-        Section::class,
     ],
 ];
 ```
 
-Namespaces are illustrative until implementation. Configuration order SHOULD determine inserter order unless an explicit sort value is supplied.
+Applications can choose a subset by overriding `blocks` in the published config. An empty list disables package defaults so the application can register its own blocks in a service provider. Configuration order determines registry and Inserter order unless a later explicit sort value is supplied.
 
 ## Block contract
 

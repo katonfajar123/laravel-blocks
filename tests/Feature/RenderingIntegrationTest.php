@@ -16,6 +16,8 @@ use Tests\Fixtures\Blocks\MissingViewBlock;
 use Tests\Fixtures\Blocks\ParagraphBlock;
 
 beforeEach(function (): void {
+    config()->set('laravel-blocks.blocks', []);
+
     $this->app->make('view')->addNamespace('fixtures', __DIR__.'/../Fixtures/views');
 });
 

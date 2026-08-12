@@ -7,6 +7,8 @@ use KatonFajar\LaravelBlocks\Facades\LaravelBlocks as LaravelBlocksFacade;
 use KatonFajar\LaravelBlocks\LaravelBlocks;
 
 it('shares one registry through the container service and facade', function (): void {
+    config()->set('laravel-blocks.blocks', []);
+
     $registry = $this->app->make(BlockRegistry::class);
     $service = $this->app->make(LaravelBlocks::class);
 

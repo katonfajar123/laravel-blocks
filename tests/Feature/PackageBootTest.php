@@ -1,6 +1,8 @@
 <?php
 
 use KatonFajar\LaravelBlocks\Assets\AssetManifest;
+use KatonFajar\LaravelBlocks\Blocks\Text\Heading;
+use KatonFajar\LaravelBlocks\Blocks\Text\Paragraph;
 use KatonFajar\LaravelBlocks\Facades\LaravelBlocks as LaravelBlocksFacade;
 use KatonFajar\LaravelBlocks\LaravelBlocks;
 use KatonFajar\LaravelBlocks\LaravelBlocksServiceProvider;
@@ -37,6 +39,13 @@ it('merges serializable configuration and registers its publish group', function
 
     expect($configuration)
         ->toBeArray()
+        ->and($configuration['blocks'])
+        ->toBe([
+            Paragraph::class,
+            Heading::class,
+        ])
+        ->and($configuration['marks'])
+        ->toBe(['bold', 'italic', 'link'])
         ->and($configuration['document']['unknown_blocks'])
         ->toBe('throw')
         ->and($configuration['document']['max_bytes'])

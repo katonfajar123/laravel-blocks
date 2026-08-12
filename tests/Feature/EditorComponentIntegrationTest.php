@@ -3,8 +3,6 @@
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Blade;
 use KatonFajar\LaravelBlocks\Documents\Document;
-use KatonFajar\LaravelBlocks\Facades\LaravelBlocks as LaravelBlocksFacade;
-use Tests\Fixtures\Blocks\ParagraphBlock;
 
 it('renders the editor component with assets, mount payload, and canonical hidden input', function (): void {
     $rendered = Blade::render(<<<'BLADE'
@@ -34,6 +32,8 @@ it('renders the editor component with assets, mount payload, and canonical hidde
         ->toBe(1)
         ->and($payload['manifest']['documentSchemaVersion'])
         ->toBe(1)
+        ->and(array_column($payload['manifest']['blocks'], 'name'))
+        ->toBe(['paragraph', 'heading'])
         ->and($payload['placeholder'])
         ->toBe('Start writing or type / to choose a block');
 });
@@ -113,9 +113,6 @@ it('keeps editor, assets, and content components package-owned despite applicati
         $editor = Blade::render(<<<'BLADE'
             <x-laravel-blocks::editor id="locked-editor" />
             BLADE, deleteCachedView: true);
-
-        $this->app->make('view')->addNamespace('fixtures', __DIR__.'/../Fixtures/views');
-        LaravelBlocksFacade::register(ParagraphBlock::class);
 
         $document = [
             'type' => 'doc',

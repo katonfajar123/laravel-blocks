@@ -10,6 +10,10 @@ use KatonFajar\LaravelBlocks\Manifest\EditorManifestGenerator;
 use KatonFajar\LaravelBlocks\Manifest\Exceptions\ManifestException;
 use KatonFajar\LaravelBlocks\Validation\AttributeRule;
 
+beforeEach(function (): void {
+    config()->set('laravel-blocks.blocks', []);
+});
+
 it('generates the frozen editor manifest envelope in deterministic registry order', function (): void {
     $hero = new class extends Block
     {

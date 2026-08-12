@@ -2,12 +2,23 @@
 
 ## Status
 
-The package merges and publishes a small serializable configuration. Document validation limits, renderer unknown-block policy, asset auto-injection, and the asset base URL used by the distribution resolver are active; values whose consuming subsystem has not been implemented yet remain inert defaults, not claims that optional persistence or complete editor UX exists.
+The package merges and publishes a small serializable configuration. Default block and mark registration, document validation limits, renderer unknown-block policy, asset auto-injection, and the asset base URL used by the distribution resolver are active; values whose consuming subsystem has not been implemented yet remain inert defaults, not claims that optional persistence or complete editor UX exists.
 
 The implemented file is:
 
 ```php
 return [
+    'blocks' => [
+        \KatonFajar\LaravelBlocks\Blocks\Text\Paragraph::class,
+        \KatonFajar\LaravelBlocks\Blocks\Text\Heading::class,
+    ],
+
+    'marks' => [
+        'bold',
+        'italic',
+        'link',
+    ],
+
     'document' => [
         'max_bytes' => 1_048_576,
         'max_nodes' => 10_000,
@@ -35,7 +46,7 @@ return [
 ];
 ```
 
-Testbench verifies merge behavior, serialization, active document limits, renderer policy behavior, asset base URL behavior, editor asset auto-injection opt-out, and config/view/asset publish groups. The `document.unknown_blocks` values/default and precompiled asset-loading boundary are frozen contracts; the current editor runtime is only a minimal shell until later UI milestones land.
+Testbench verifies merge behavior, serialization, default Paragraph/Heading and current editor mark registration, active document limits, renderer policy behavior, asset base URL behavior, editor asset auto-injection opt-out, and config/view/asset publish groups. The `document.unknown_blocks` values/default and precompiled asset-loading boundary are frozen contracts; the current editor runtime remains incomplete until later UI and block milestones land.
 
 ## Planned expanded configuration
 
@@ -149,21 +160,28 @@ The `media.disk` setting configures the default Laravel Filesystem adapter. It d
 
 ## Block selection
 
-Applications should be able to opt into a curated subset. The final API may use block classes directly:
+The active `blocks` list registers package defaults and controls editor manifest order. Published configuration should use block class strings:
 
 ```php
 'blocks' => [
-    'defaults' => false,
-    'enabled' => [
-        Paragraph::class,
-        Heading::class,
-        Image::class,
-        Quote::class,
-    ],
+    Paragraph::class,
+    Heading::class,
 ],
 ```
 
-Application service providers remain the right place for registrations that need runtime objects, callbacks, model classes, or container resolution.
+Applications can remove entries to ship a smaller authoring surface. Setting `blocks` to an empty array disables package defaults so a service provider can register application blocks explicitly. Application service providers remain the right place for registrations that need runtime objects, callbacks, model classes, or container resolution.
+
+The active `marks` list registers the current editor mark schemas used by the bundled toolbar:
+
+```php
+'marks' => [
+    'bold',
+    'italic',
+    'link',
+],
+```
+
+These schemas allow Paragraph and Heading documents containing Bold, Italic, and absolute `http`, `https`, `mailto`, or `tel` Link marks to validate. Link mark HTML rendering and relative/anchor URL validation remain separate renderer work.
 
 ## Per-editor configuration
 

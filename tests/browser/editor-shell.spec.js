@@ -21,34 +21,28 @@ const existingDocument = {
   }],
 };
 
-const manifest = {
+const packageDefaultManifest = {
   manifestVersion: 1,
   documentSchemaVersion: 1,
   categories: [
     { name: 'text', label: 'Text' },
-    { name: 'design', label: 'Design' },
   ],
   blocks: [
     {
       name: 'paragraph',
       label: 'Paragraph',
+      description: 'Write a text paragraph.',
       category: 'text',
-      keywords: ['copy'],
-      supports: { inserter: true },
-    },
-    {
-      name: 'bulletList',
-      label: 'List',
-      description: 'Create a bulleted list',
-      category: 'text',
-      keywords: ['list'],
+      icon: 'paragraph',
+      keywords: ['text', 'copy', 'body'],
       supports: { inserter: true },
     },
     {
       name: 'heading',
       label: 'Heading',
-      description: 'Start with a heading',
+      description: 'Introduce a section with a heading.',
       category: 'text',
+      icon: 'heading',
       fields: [{
         constraints: { allowedValues: [1, 2, 3, 4, 5, 6] },
         default: 2,
@@ -57,9 +51,30 @@ const manifest = {
         label: 'Level',
         name: 'level',
         path: 'attrs.level',
+        required: true,
         type: 'select',
+        ui: {},
       }],
-      keywords: ['title'],
+      keywords: ['title', 'headline', 'section'],
+      supports: { inserter: true },
+    },
+  ],
+};
+
+const manifest = {
+  ...packageDefaultManifest,
+  categories: [
+    ...packageDefaultManifest.categories,
+    { name: 'design', label: 'Design' },
+  ],
+  blocks: [
+    ...packageDefaultManifest.blocks,
+    {
+      name: 'bulletList',
+      label: 'List',
+      description: 'Create a bulleted list',
+      category: 'text',
+      keywords: ['list'],
       supports: { inserter: true },
     },
     {
@@ -92,6 +107,13 @@ test.beforeAll(async () => {
     if (url.pathname === '/') {
       response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       response.end(editorFixture());
+
+      return;
+    }
+
+    if (url.pathname === '/default') {
+      response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      response.end(editorFixture(packageDefaultManifest));
 
       return;
     }
@@ -701,6 +723,67 @@ test('inserts manifest blocks through the appender inserter', async ({ page }) =
   await expect(inserter).toBeHidden();
 });
 
+test('uses the package default text manifest for appender, slash, and inspector flows', async ({ page }) => {
+  await page.goto(`${baseUrl}/default`);
+
+  const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
+  const appender = page.locator('#editor-null [data-laravel-blocks-block-appender]');
+  const inserter = page.locator('#editor-null [data-laravel-blocks-block-inserter]');
+  const search = page.locator('#editor-null [data-laravel-blocks-block-search]');
+  const inspector = page.locator('#editor-null [data-laravel-blocks-inspector]');
+  const toggle = page.locator('#editor-null [data-laravel-blocks-inspector-toggle]');
+  const level = page.locator('#editor-null [data-laravel-blocks-inspector-field="level"]');
+
+  await canvas.click();
+  await page.keyboard.type('Default paragraph');
+
+  await appender.click();
+  await expect(inserter).toBeVisible();
+  await search.fill('paragraph');
+  await page.keyboard.press('Enter');
+
+  await expect(inserter).toBeHidden();
+  await expect(canvas).toBeFocused();
+  await expect.poll(async () => {
+    const document = await editorDocument(page, '#editor-null');
+
+    return document.content.slice(0, 2);
+  }).toEqual([
+    { type: 'paragraph', content: [{ type: 'text', text: 'Default paragraph' }] },
+    { type: 'paragraph' },
+  ]);
+
+  await page.keyboard.press('/');
+  await page.keyboard.type('hea');
+  await page.keyboard.press('Enter');
+
+  await expect.poll(async () => {
+    const document = await editorDocument(page, '#editor-null');
+
+    return document.content.slice(0, 2);
+  }).toEqual([
+    { type: 'paragraph', content: [{ type: 'text', text: 'Default paragraph' }] },
+    { type: 'heading', attrs: { level: 2 } },
+  ]);
+
+  await expect(inspector).toBeHidden();
+  await toggle.click();
+  await expect(inspector).toBeVisible();
+  await expect(level).toHaveValue('2');
+
+  await level.selectOption('4');
+
+  await expect(canvas).toBeFocused();
+  await expect.poll(async () => {
+    const document = await editorDocument(page, '#editor-null');
+
+    return document.content.slice(0, 2);
+  }).toEqual([
+    { type: 'paragraph', content: [{ type: 'text', text: 'Default paragraph' }] },
+    { type: 'heading', attrs: { level: 4 } },
+  ]);
+});
+
 test('replaces an empty text block through slash commands', async ({ page }) => {
   await page.goto(baseUrl);
 
@@ -787,7 +870,7 @@ test('edits selected block fields through the manifest-generated inspector', asy
     .toContainText('No advanced settings');
 });
 
-function editorFixture() {
+function editorFixture(editorManifest = manifest) {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -796,19 +879,19 @@ function editorFixture() {
   <link rel="stylesheet" href="/dist/laravel-blocks.css">
 </head>
 <body>
-  ${editorRoot('editor-null', 'content', emptyDocument)}
-  ${editorRoot('editor-json', 'body', existingDocument)}
+  ${editorRoot('editor-null', 'content', emptyDocument, editorManifest)}
+  ${editorRoot('editor-json', 'body', existingDocument, editorManifest)}
   <script type="module" src="/dist/laravel-blocks.js"></script>
 </body>
 </html>`;
 }
 
-function editorRoot(id, name, document) {
+function editorRoot(id, name, document, editorManifest) {
   const payload = JSON.stringify({
     id,
     name,
     document,
-    manifest,
+    manifest: editorManifest,
     placeholder: 'Start writing or type / to choose a block',
   });
   const hiddenValue = JSON.stringify(document).replaceAll('"', '&quot;');

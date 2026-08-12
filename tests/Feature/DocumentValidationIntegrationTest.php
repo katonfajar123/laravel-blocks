@@ -12,6 +12,9 @@ use KatonFajar\LaravelBlocks\Validation\MarkSchema;
 use KatonFajar\LaravelBlocks\Validation\ValidationLimits;
 
 it('shares validator dependencies and validates through the service and facade', function (): void {
+    config()->set('laravel-blocks.blocks', []);
+    config()->set('laravel-blocks.marks', []);
+
     LaravelBlocksFacade::register(B04FeatureParagraphBlock::class);
     LaravelBlocksFacade::registerMarks(new MarkSchema('bold'));
 

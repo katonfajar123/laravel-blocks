@@ -7,13 +7,17 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use InvalidArgumentException;
 use KatonFajar\LaravelBlocks\Assets\AssetManifest;
+use KatonFajar\LaravelBlocks\Blocks\Block;
 use KatonFajar\LaravelBlocks\Blocks\BlockRegistry;
 use KatonFajar\LaravelBlocks\Manifest\EditorManifestGenerator;
 use KatonFajar\LaravelBlocks\Rendering\DocumentRenderer;
+use KatonFajar\LaravelBlocks\Validation\AttributeRule;
 use KatonFajar\LaravelBlocks\Validation\AttributeValidator;
 use KatonFajar\LaravelBlocks\Validation\DocumentValidator;
 use KatonFajar\LaravelBlocks\Validation\MarkRegistry;
+use KatonFajar\LaravelBlocks\Validation\MarkSchema;
 use KatonFajar\LaravelBlocks\Validation\MarkValidator;
 use KatonFajar\LaravelBlocks\Validation\NodeValidator;
 use KatonFajar\LaravelBlocks\Validation\ValidationLimits;
@@ -31,6 +35,8 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
             BlockRegistry::class,
             static fn (Container $app): BlockRegistry => new BlockRegistry($app),
         );
+        $this->registerConfiguredBlocks();
+
         $this->app->singleton(
             AssetManifest::class,
             static fn (Container $app): AssetManifest => new AssetManifest(
@@ -40,6 +46,8 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
         );
 
         $this->app->singleton(MarkRegistry::class);
+        $this->registerConfiguredMarks();
+
         $this->app->singleton(
             EditorManifestGenerator::class,
             static fn (Container $app): EditorManifestGenerator => new EditorManifestGenerator(
@@ -142,6 +150,70 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
         Blade::component(Editor::class, 'laravel-blocks::editor');
         Blade::component(Assets::class, 'laravel-blocks::assets');
         Blade::component(Content::class, 'laravel-blocks::content');
+    }
+
+    private function registerConfiguredBlocks(): void
+    {
+        $this->app->afterResolving(
+            BlockRegistry::class,
+            static function (BlockRegistry $registry, Container $app): void {
+                $configuredBlocks = $app->make(Repository::class)
+                    ->get('laravel-blocks.blocks', []);
+
+                if (! is_array($configuredBlocks) || $configuredBlocks === []) {
+                    return;
+                }
+
+                /** @var array<array-key, class-string<Block>|Block> $configuredBlocks */
+                $registry->register($configuredBlocks);
+            },
+        );
+    }
+
+    private function registerConfiguredMarks(): void
+    {
+        $this->app->afterResolving(
+            MarkRegistry::class,
+            static function (MarkRegistry $registry, Container $app): void {
+                $configuredMarks = $app->make(Repository::class)
+                    ->get('laravel-blocks.marks', []);
+
+                if (! is_array($configuredMarks) || $configuredMarks === []) {
+                    return;
+                }
+
+                $schemas = array_map(
+                    static fn (mixed $mark): MarkSchema => self::configuredMarkSchema($mark),
+                    array_values($configuredMarks),
+                );
+
+                $registry->register($schemas);
+            },
+        );
+    }
+
+    private static function configuredMarkSchema(mixed $mark): MarkSchema
+    {
+        if ($mark instanceof MarkSchema) {
+            return $mark;
+        }
+
+        if ($mark === 'link') {
+            return new MarkSchema('link', [
+                'href' => AttributeRule::url(
+                    allowedSchemes: ['https', 'http', 'mailto', 'tel'],
+                    required: true,
+                ),
+                'target' => AttributeRule::string(nullable: true, allowedValues: ['_blank']),
+                'rel' => AttributeRule::string(nullable: true, allowedValues: ['noopener noreferrer']),
+            ]);
+        }
+
+        if (is_string($mark)) {
+            return new MarkSchema($mark);
+        }
+
+        throw new InvalidArgumentException('Configured Laravel Blocks marks must be mark names or MarkSchema instances.');
     }
 
     private function packageConfigPath(): string

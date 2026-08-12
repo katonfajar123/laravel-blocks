@@ -1,6 +1,20 @@
 <?php
 
+use KatonFajar\LaravelBlocks\Blocks\Text\Heading;
+use KatonFajar\LaravelBlocks\Blocks\Text\Paragraph;
+
 return [
+    'blocks' => [
+        Paragraph::class,
+        Heading::class,
+    ],
+
+    'marks' => [
+        'bold',
+        'italic',
+        'link',
+    ],
+
     'document' => [
         'max_bytes' => 1_048_576,
         'max_nodes' => 10_000,
