@@ -4,16 +4,16 @@
     "script": {
       "file": "laravel-blocks.js",
       "type": "module",
-      "sha256": "2fa7731be09420182882d41a8967d403519f3df24547e605c99bfdf71b01b4a3",
-      "integrity": "sha256-L6dzG+CUIBgogtQaiWfUA1GfPfJFR+YFyZv99xsBtKM=",
-      "bytes": 489640
+      "sha256": "d37f1b7d02931a39e51eb74c156b3d4d09b4a944131df1d751db8bb29502e3bd",
+      "integrity": "sha256-038bfQKTGjnlHrdMFWs9TQm0qUQTHfHXUduLspUC470=",
+      "bytes": 495578
     },
     "style": {
       "file": "laravel-blocks.css",
       "type": "style",
-      "sha256": "c79a0d082b7f1fddc1f75d10c8e00732b2fd51c413e7b8b9afb9208bad60244f",
-      "integrity": "sha256-x5oNCCt/H93B910QyOAHMrL9UcQT57i5r7kgi61gJE8=",
-      "bytes": 20494
+      "sha256": "efacbcfd044c8b43be2abcb1b3622350121e98a2cf352cd7ed52ba48c1aee9e0",
+      "integrity": "sha256-76y8/QRMi0O+Kryxs2IjUBIemKLPNSzX7VK6SMGu6eA=",
+      "bytes": 21446
     }
   }
 }

@@ -102,6 +102,7 @@ describe('editor command registry', () => {
         'insertBlockAfter',
         'moveBlockUp',
         'moveBlockDown',
+        'moveBlockToIndex',
         'insertManifestBlock',
         'updateBlockAttrs',
         'setParagraph',

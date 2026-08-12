@@ -9,7 +9,13 @@ import {
   blockIconName,
   targetIsInside,
 } from '../ui/index.js';
-import { blockFrameStyle, blockToolbarStyle } from './block-selection.js';
+import {
+  createBlockDragState,
+  createEmptyBlockDragState,
+  dropIndicatorStyle,
+  topLevelDropTarget,
+} from './block-drag.js';
+import { blockFrameStyle, blockRect, blockToolbarStyle } from './block-selection.js';
 
 const transformItems = Object.freeze([
   Object.freeze({
@@ -82,6 +88,9 @@ export const BlockToolbar = {
   setup(props, { expose }) {
     const externalOverlayOpen = ref(false);
     const frameStyle = ref({});
+    const drag = shallowRef(createEmptyBlockDragState());
+    const dragBlock = shallowRef(null);
+    const dragHandle = ref(null);
     const linkPopoverOpen = ref(false);
     const linkSelection = shallowRef(null);
     const moreOpen = ref(false);
@@ -89,6 +98,7 @@ export const BlockToolbar = {
     const toolbar = ref(null);
     const toolbarStyle = ref({});
     const transformOpen = ref(false);
+    let activePointerId = null;
 
     function closeMenus() {
       moreOpen.value = false;
@@ -97,6 +107,104 @@ export const BlockToolbar = {
 
     function hidden() {
       return !props.block.active || props.suppressed || externalOverlayOpen.value;
+    }
+
+    function canDragBlock() {
+      return props.block.active && props.block.depth === 1 && props.block.siblingCount > 1 && !props.suppressed;
+    }
+
+    function pointerTarget(event) {
+      return globalThis.document?.elementFromPoint?.(event.clientX, event.clientY) ?? event.target;
+    }
+
+    function removeDragListeners() {
+      globalThis.document?.removeEventListener?.('pointermove', handleDocumentPointerMove, true);
+      globalThis.document?.removeEventListener?.('pointerup', handleDocumentPointerUp, true);
+      globalThis.document?.removeEventListener?.('pointercancel', handleDocumentPointerCancel, true);
+      globalThis.document?.body?.classList?.remove?.('lb-is-dragging-block');
+    }
+
+    function clearDrag() {
+      if (activePointerId !== null) {
+        try {
+          dragHandle.value?.releasePointerCapture?.(activePointerId);
+        } catch {
+          // Pointer capture can already be released by the browser.
+        }
+      }
+
+      activePointerId = null;
+      drag.value = createEmptyBlockDragState();
+      dragBlock.value = null;
+      removeDragListeners();
+      nextTick(updatePosition);
+    }
+
+    function updateDropTarget(event) {
+      const state = topLevelDropTarget({
+        block: dragBlock.value,
+        clientY: event.clientY,
+        editor: props.editor,
+        eventTarget: pointerTarget(event),
+      });
+
+      drag.value = state;
+
+      return state;
+    }
+
+    function beginDrag(event) {
+      if (event.button !== 0 || !canDragBlock()) {
+        return;
+      }
+
+      event.preventDefault();
+      closeMenus();
+      linkPopoverOpen.value = false;
+      dragBlock.value = props.block;
+      drag.value = createBlockDragState(props.block);
+      activePointerId = event.pointerId;
+      event.currentTarget?.setPointerCapture?.(event.pointerId);
+      globalThis.document?.addEventListener?.('pointermove', handleDocumentPointerMove, true);
+      globalThis.document?.addEventListener?.('pointerup', handleDocumentPointerUp, true);
+      globalThis.document?.addEventListener?.('pointercancel', handleDocumentPointerCancel, true);
+      globalThis.document?.body?.classList?.add?.('lb-is-dragging-block');
+      nextTick(updatePosition);
+    }
+
+    function handleDocumentPointerMove(event) {
+      if (activePointerId !== event.pointerId) {
+        return;
+      }
+
+      event.preventDefault();
+      updateDropTarget(event);
+    }
+
+    function handleDocumentPointerUp(event) {
+      if (activePointerId !== event.pointerId) {
+        return;
+      }
+
+      event.preventDefault();
+      const state = updateDropTarget(event);
+
+      if (state.valid) {
+        run('moveBlockToIndex', {
+          block: dragBlock.value,
+          toIndex: state.targetIndex,
+        });
+      }
+
+      clearDrag();
+    }
+
+    function handleDocumentPointerCancel(event) {
+      if (activePointerId !== event.pointerId) {
+        return;
+      }
+
+      clearDrag();
     }
 
     function handleOverlayOpen(event) {
@@ -271,6 +379,7 @@ export const BlockToolbar = {
       globalThis.document?.removeEventListener?.('pointerdown', handleOutsidePointer, true);
       globalThis.document?.removeEventListener?.('laravel-blocks:overlay-open', handleOverlayOpen);
       globalThis.document?.removeEventListener?.('laravel-blocks:overlay-close', handleOverlayClose);
+      removeDragListeners();
     });
 
     watch(
@@ -376,9 +485,23 @@ export const BlockToolbar = {
               label: 'Move block',
             }, {
               default: () => [
-                h(Icon, {
-                  name: 'dragHandle',
-                  size: 18,
+                h(IconButton, {
+                  class: 'lb-block-toolbar__drag-handle',
+                  disabled: !canDragBlock(),
+                  label: 'Drag block',
+                  pressed: drag.value.active,
+                  size: 'sm',
+                  title: canDragBlock() ? 'Drag block' : 'Drag block needs another top-level block.',
+                  variant: drag.value.active ? 'primary' : 'ghost',
+                  'data-laravel-blocks-block-drag-handle': '',
+                  onMousedown: (event) => event.preventDefault(),
+                  onPointerdown: beginDrag,
+                  ref: dragHandle,
+                }, {
+                  default: () => h(Icon, {
+                    name: 'dragHandle',
+                    size: 18,
+                  }),
                 }),
                 iconCommand('moveBlockUp', 'arrowUp', 'Move block up'),
                 iconCommand('moveBlockDown', 'arrowDown', 'Move block down'),
@@ -466,6 +589,21 @@ export const BlockToolbar = {
           open: linkPopoverOpen.value,
           selection: linkSelection.value,
         }),
+      ]),
+      h('div', {
+        class: [
+          'lb-block-drop-indicator',
+          drag.value.valid ? 'lb-block-drop-indicator--valid' : 'lb-block-drop-indicator--invalid',
+        ],
+        'data-laravel-blocks-block-drop-index': drag.value.targetIndex,
+        'data-laravel-blocks-block-drop-indicator': '',
+        'data-laravel-blocks-block-drop-state': drag.value.valid ? 'valid' : 'invalid',
+        hidden: !drag.value.active,
+        style: dropIndicatorStyle(drag.value, blockRect(props.editor, dragBlock.value ?? props.block)),
+      }, [
+        h('span', {
+          class: 'lb-block-drop-indicator__label',
+        }, drag.value.valid ? 'Drop here' : drag.value.reason),
       ]),
     ]);
   },

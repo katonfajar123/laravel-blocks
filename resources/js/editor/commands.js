@@ -1,5 +1,6 @@
 import { linkAttributes } from '../rich-text/link-provider.js';
 import { createBlockSelectionState } from '../block-editor/block-selection.js';
+import { topLevelBlockRanges } from '../block-editor/block-drag.js';
 import { blockInsertPayload } from '../block-editor/manifest.js';
 
 function normalLevel(payload) {
@@ -190,6 +191,69 @@ function moveBlock(editor, payload = {}, direction = 'up') {
   return dispatchBlockTransaction(editor, transaction, insertAt + 1);
 }
 
+function topLevelPositionAt(doc, index) {
+  const ranges = topLevelBlockRanges({ state: { doc } });
+
+  if (index <= 0) {
+    return 0;
+  }
+
+  if (index >= ranges.length) {
+    return ranges.at(-1)?.to ?? 0;
+  }
+
+  return ranges[index]?.from ?? 0;
+}
+
+function normalizedTopLevelDropIndex(editor, payload = {}) {
+  const target = topLevelBlock(editor, payload);
+  const toIndex = Number(payload?.toIndex);
+
+  if (!target || !Number.isInteger(toIndex)) {
+    return null;
+  }
+
+  const childCount = editor.state.doc.childCount;
+
+  if (toIndex < 0 || toIndex > childCount) {
+    return null;
+  }
+
+  if (toIndex === target.block.index || toIndex === target.block.index + 1) {
+    return null;
+  }
+
+  return {
+    adjustedIndex: toIndex > target.block.index ? toIndex - 1 : toIndex,
+    target,
+    toIndex,
+  };
+}
+
+function canMoveBlockToIndex(editor, payload = {}) {
+  return normalizedTopLevelDropIndex(editor, payload) !== null;
+}
+
+function moveBlockToIndex(editor, payload = {}) {
+  const movement = normalizedTopLevelDropIndex(editor, payload);
+
+  if (!movement) {
+    return false;
+  }
+
+  const transaction = editor.state.tr.delete(
+    movement.target.block.from,
+    movement.target.block.to,
+  );
+  const insertAt = topLevelPositionAt(transaction.doc, movement.adjustedIndex);
+
+  return dispatchBlockTransaction(
+    editor,
+    transaction.insert(insertAt, movement.target.node.copy(movement.target.node.content)),
+    insertAt + 1,
+  );
+}
+
 function insertManifestBlock(editor, payload = {}) {
   const insert = blockInsertPayload(payload.item);
   const block = activeBlock(editor, payload);
@@ -357,6 +421,12 @@ const definitions = [
     'Move down',
     (editor, payload) => Boolean(topLevelBlock(editor, payload)?.block.canMoveDown),
     (editor, payload) => moveBlock(editor, payload, 'down'),
+  ),
+  simpleCommand(
+    'moveBlockToIndex',
+    'Move block',
+    (editor, payload) => canMoveBlockToIndex(editor, payload),
+    (editor, payload) => moveBlockToIndex(editor, payload),
   ),
   simpleCommand(
     'insertManifestBlock',

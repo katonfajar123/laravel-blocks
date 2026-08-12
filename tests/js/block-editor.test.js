@@ -6,12 +6,14 @@ import {
   blockInserterItems,
   coerceInspectorFieldValue,
   createBlockSelectionState,
+  dropTargetFromRects,
   filterBlockInserterItems,
   inspectorFieldValue,
   inspectorFieldsForBlock,
   inspectorGroups,
   normalizeEditorManifest,
   slashCommandItems,
+  topLevelBlockRanges,
 } from '../../resources/js/block-editor/index.js';
 
 describe('block editor helpers', () => {
@@ -40,6 +42,94 @@ describe('block editor helpers', () => {
     });
     expect(Object.isFrozen(selection)).toBe(true);
     expect(Object.isFrozen(selection.attrs)).toBe(true);
+  });
+
+  it('derives top-level block ranges for drag transactions', () => {
+    const ranges = topLevelBlockRanges({
+      state: {
+        doc: {
+          childCount: 3,
+          child: (index) => [
+            fakeBlockNode({ nodeSize: 8, type: 'paragraph' }),
+            fakeBlockNode({ nodeSize: 12, type: 'heading' }),
+            fakeBlockNode({ nodeSize: 10, type: 'codeBlock' }),
+          ][index],
+        },
+      },
+    });
+
+    expect(ranges).toEqual([
+      {
+        from: 0,
+        index: 0,
+        label: 'Paragraph',
+        nodeSize: 8,
+        to: 8,
+        type: 'paragraph',
+      },
+      {
+        from: 8,
+        index: 1,
+        label: 'Heading',
+        nodeSize: 12,
+        to: 20,
+        type: 'heading',
+      },
+      {
+        from: 20,
+        index: 2,
+        label: 'Code Block',
+        nodeSize: 10,
+        to: 30,
+        type: 'codeBlock',
+      },
+    ]);
+    expect(Object.isFrozen(ranges)).toBe(true);
+  });
+
+  it('calculates valid and invalid top-level drop targets', () => {
+    const block = {
+      active: true,
+      depth: 1,
+      index: 1,
+    };
+    const rects = [
+      fakeDropRect({ bottom: 40, index: 0, top: 0 }),
+      fakeDropRect({ bottom: 90, index: 1, top: 50 }),
+      fakeDropRect({ bottom: 140, index: 2, top: 100 }),
+    ];
+
+    expect(dropTargetFromRects({
+      block,
+      clientY: 10,
+      rects,
+    })).toMatchObject({
+      draggingIndex: 1,
+      placement: 'before',
+      targetIndex: 0,
+      valid: true,
+    });
+
+    expect(dropTargetFromRects({
+      block,
+      clientY: 60,
+      rects,
+    })).toMatchObject({
+      placement: 'before',
+      reason: 'Drop would keep the block in the same position.',
+      targetIndex: 1,
+      valid: false,
+    });
+
+    expect(dropTargetFromRects({
+      block,
+      clientY: 135,
+      rects,
+    })).toMatchObject({
+      placement: 'after',
+      targetIndex: 3,
+      valid: true,
+    });
   });
 
   it('normalizes manifest blocks into searchable inserter items', () => {
@@ -216,6 +306,30 @@ function fakeEditorAtBlock({
           node: (depth) => (depth === 1 ? block : doc),
         },
       },
+    },
+  };
+}
+
+function fakeBlockNode({ nodeSize, type }) {
+  return {
+    attrs: {},
+    isBlock: true,
+    nodeSize,
+    textContent: '',
+    type: { name: type },
+  };
+}
+
+function fakeDropRect({ bottom, index, top }) {
+  return {
+    index,
+    rect: {
+      bottom,
+      height: bottom - top,
+      left: 80,
+      right: 520,
+      top,
+      width: 440,
     },
   };
 }

@@ -46,7 +46,9 @@ The default `1.0` editor MUST include:
 
 Operations MUST preserve a valid document tree. Dragging MUST show a precise insertion indicator, invalid targets, and autoscroll where needed. An invalid drop target MUST be visibly rejected rather than repaired silently after the drop, and movement MUST have Move Up/Down plus keyboard alternatives.
 
-The current implementation includes basic top-level block controls. A cursor inside a top-level block shows one unified contextual toolbar with Transform To, Move Up/Down, common inline formatting, Link, and a More menu for Duplicate, Insert before, Insert after, and Delete. The active block no longer draws a hard canvas stroke; the toolbar is the primary selection affordance. These actions execute through the shared command registry and update canonical hidden JSON. Nested block controls, drag/drop, keyboard reordering, multi-select, copy/paste, and block-specific command filtering remain later milestones.
+The current implementation includes basic top-level block controls. A cursor inside a top-level block shows one unified contextual toolbar with Transform To, a drag handle, Move Up/Down, common inline formatting, Link, and a More menu for Duplicate, Insert before, Insert after, and Delete. The active block no longer draws a hard canvas stroke; the toolbar is the primary selection affordance. These actions execute through the shared command registry and update canonical hidden JSON.
+
+Pointer drag/drop is currently a basic top-level foundation: the contextual drag handle can move one selected top-level block before or after another top-level block, shows an insertion indicator, rejects no-op or off-canvas drops without changing the document, and keeps the hidden canonical JSON synchronized. Nested drag/drop, autoscroll, multi-select, touch polish, keyboard reordering, announcements, copy/paste, and block-specific command filtering remain later milestones.
 
 ## Inline rich text
 

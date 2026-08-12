@@ -15,6 +15,14 @@ export {
   createEmptyBlockSelection,
 } from './block-selection.js';
 export {
+  createBlockDragState,
+  createEmptyBlockDragState,
+  dropIndicatorStyle,
+  dropTargetFromRects,
+  topLevelBlockRanges,
+  topLevelDropTarget,
+} from './block-drag.js';
+export {
   blockInsertPayload,
   blockInserterItems,
   filterBlockInserterItems,

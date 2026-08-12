@@ -260,6 +260,7 @@ test('executes editor mutations through the shared command API', async ({ page }
         'insertBlockAfter',
         'moveBlockUp',
         'moveBlockDown',
+        'moveBlockToIndex',
         'insertManifestBlock',
         'updateBlockAttrs',
         'setParagraph',
@@ -513,6 +514,76 @@ test('manages the current top-level block through contextual block controls', as
   await expect.poll(async () => (await editorDocument(page, '#editor-null')).content.length).toBe(2);
 });
 
+test('reorders top-level blocks through pointer drag and drop feedback', async ({ page }) => {
+  await page.goto(baseUrl);
+
+  const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
+  const dragHandle = page.locator('#editor-null [data-laravel-blocks-block-drag-handle]');
+  const indicator = page.locator('#editor-null [data-laravel-blocks-block-drop-indicator]');
+
+  await page.evaluate(() => {
+    const editor = document.querySelector('#editor-null').__laravelBlocksEditor.editor();
+
+    editor.commands.setContent({
+      type: 'doc',
+      content: [
+        { type: 'paragraph', content: [{ type: 'text', text: 'First block' }] },
+        { type: 'paragraph', content: [{ type: 'text', text: 'Second block' }] },
+        { type: 'paragraph', content: [{ type: 'text', text: 'Third block' }] },
+      ],
+    });
+    editor.commands.focus('end');
+  });
+
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content.map(textForNode))
+    .toEqual(['First block', 'Second block', 'Third block']);
+
+  await expect(dragHandle).toBeEnabled();
+
+  const initialHandleBox = await dragHandle.boundingBox();
+  const thirdBlockBox = await canvas.locator(':scope > *').nth(2).boundingBox();
+
+  expect(initialHandleBox).not.toBeNull();
+  expect(thirdBlockBox).not.toBeNull();
+
+  await page.mouse.move(
+    initialHandleBox.x + (initialHandleBox.width / 2),
+    initialHandleBox.y + (initialHandleBox.height / 2),
+  );
+  await page.mouse.down();
+  await page.mouse.move(thirdBlockBox.x + (thirdBlockBox.width / 2), thirdBlockBox.y + 2, { steps: 4 });
+
+  await expect(indicator).toBeVisible();
+  await expect(indicator).toHaveAttribute('data-laravel-blocks-block-drop-state', 'invalid');
+
+  await page.mouse.up();
+
+  await expect(indicator).toBeHidden();
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content.map(textForNode))
+    .toEqual(['First block', 'Second block', 'Third block']);
+
+  const handleBox = await dragHandle.boundingBox();
+  const firstBlockBox = await canvas.locator(':scope > *').first().boundingBox();
+
+  expect(handleBox).not.toBeNull();
+  expect(firstBlockBox).not.toBeNull();
+
+  await page.mouse.move(handleBox.x + (handleBox.width / 2), handleBox.y + (handleBox.height / 2));
+  await page.mouse.down();
+  await page.mouse.move(firstBlockBox.x + (firstBlockBox.width / 2), firstBlockBox.y + 2, { steps: 6 });
+
+  await expect(indicator).toBeVisible();
+  await expect(indicator).toHaveAttribute('data-laravel-blocks-block-drop-state', 'valid');
+  await expect(indicator).toHaveAttribute('data-laravel-blocks-block-drop-index', '0');
+
+  await page.mouse.up();
+
+  await expect(indicator).toBeHidden();
+  await expect(canvas).toBeFocused();
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content.map(textForNode))
+    .toEqual(['Third block', 'First block', 'Second block']);
+});
+
 test('inserts manifest blocks through the appender inserter', async ({ page }) => {
   await page.goto(baseUrl);
 
@@ -702,4 +773,10 @@ async function firstTextMark(page, selector, type) {
   const node = await firstContentNode(page, selector);
 
   return (node?.content?.[0]?.marks ?? []).find((mark) => mark.type === type) ?? null;
+}
+
+function textForNode(node) {
+  return (node.content ?? [])
+    .map((child) => child.text ?? textForNode(child))
+    .join('');
 }

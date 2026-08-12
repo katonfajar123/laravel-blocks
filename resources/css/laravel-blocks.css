@@ -1065,6 +1065,11 @@
   color: #4f46e5;
 }
 
+.lb-is-dragging-block {
+  cursor: grabbing;
+  user-select: none;
+}
+
 .lb-contextual-toolbar__bold {
   font-size: 1.05rem;
   font-weight: 800;
@@ -1154,6 +1159,61 @@
   background: var(--lb-accent);
   color: #ffffff;
   outline: none;
+}
+
+.lb-block-toolbar__drag-handle {
+  cursor: grab;
+  touch-action: none;
+}
+
+.lb-block-toolbar__drag-handle[aria-pressed="true"] {
+  cursor: grabbing;
+}
+
+.lb-block-drop-indicator {
+  background: #4f46e5;
+  border-radius: 999px;
+  height: 3px;
+  pointer-events: none;
+  transform: translateY(-50%);
+  z-index: 44;
+}
+
+.lb-block-drop-indicator[hidden] {
+  display: none;
+}
+
+.lb-block-drop-indicator--invalid {
+  background: #dc2626;
+  height: 2px;
+}
+
+.lb-block-drop-indicator__label {
+  background: #dc2626;
+  border-radius: 0.25rem;
+  color: #ffffff;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  left: 0;
+  line-height: 1;
+  max-width: min(16rem, calc(100vw - 2rem));
+  overflow: hidden;
+  padding: 0.375rem 0.5rem;
+  position: absolute;
+  text-overflow: ellipsis;
+  top: 0.5rem;
+  white-space: nowrap;
+}
+
+.lb-block-drop-indicator--valid .lb-block-drop-indicator__label {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  padding: 0;
+  white-space: nowrap;
+  width: 1px;
 }
 
 .lb-block-toolbar__menu {
