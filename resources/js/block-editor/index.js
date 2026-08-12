@@ -1,5 +1,6 @@
 export { BlockInserter } from './BlockInserter.js';
 export { BlockInspector } from './BlockInspector.js';
+export { BlockListView } from './BlockListView.js';
 export { BlockToolbar } from './BlockToolbar.js';
 export {
   SlashCommandMenu,
@@ -22,6 +23,7 @@ export {
   topLevelBlockRanges,
   topLevelDropTarget,
 } from './block-drag.js';
+export { documentListItems } from './block-list.js';
 export {
   blockInsertPayload,
   blockInserterItems,

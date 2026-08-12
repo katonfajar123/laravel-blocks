@@ -250,6 +250,7 @@ test('executes editor mutations through the shared command API', async ({ page }
   });
   expect(snapshot.map((command) => command.name)).toEqual([
     'focus',
+    'selectBlock',
     'toggleBold',
         'toggleItalic',
         'setLink',
@@ -584,6 +585,76 @@ test('reorders top-level blocks through pointer drag and drop feedback', async (
     .toEqual(['Third block', 'First block', 'Second block']);
 });
 
+test('navigates and reorders top-level blocks through document list view', async ({ page }) => {
+  await page.goto(baseUrl);
+
+  const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
+  const toggle = page.locator('#editor-null [data-laravel-blocks-document-list-toggle]');
+  const panel = page.locator('#editor-null [data-laravel-blocks-document-list]');
+  const items = page.locator('#editor-null [data-laravel-blocks-document-list-item]');
+
+  await page.evaluate(() => {
+    const editor = document.querySelector('#editor-null').__laravelBlocksEditor.editor();
+
+    editor.commands.setContent({
+      type: 'doc',
+      content: [
+        { type: 'paragraph', content: [{ type: 'text', text: 'First block' }] },
+        { type: 'paragraph', content: [{ type: 'text', text: 'Second block' }] },
+        { type: 'paragraph', content: [{ type: 'text', text: 'Third block' }] },
+      ],
+    });
+    editor.commands.focus('end');
+  });
+
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content.map(textForNode))
+    .toEqual(['First block', 'Second block', 'Third block']);
+
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await toggle.click();
+
+  await expect(panel).toBeVisible();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(items).toHaveCount(3);
+  await expect(items.nth(0)).toContainText('First block');
+  await expect(items.nth(1)).toContainText('Second block');
+  await expect(items.nth(2)).toHaveAttribute('aria-current', 'true');
+  await expect(items.nth(2)).toBeFocused();
+
+  await page.keyboard.press('Home');
+  await expect(items.nth(0)).toBeFocused();
+  await page.keyboard.press('End');
+  await expect(items.nth(2)).toBeFocused();
+
+  await items.nth(0).click();
+
+  await expect(canvas).toBeFocused();
+  await expect.poll(() => selectedBlockIndex(page, '#editor-null')).toBe(0);
+  await expect(items.nth(0)).toHaveAttribute('aria-current', 'true');
+
+  await page
+    .locator('#editor-null [data-laravel-blocks-document-list-command="moveBlockDown"][data-laravel-blocks-document-list-command-index="0"]')
+    .click();
+
+  await expect(canvas).toBeFocused();
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content.map(textForNode))
+    .toEqual(['Second block', 'First block', 'Third block']);
+  await expect.poll(() => selectedBlockIndex(page, '#editor-null')).toBe(1);
+  await expect(page.locator('#editor-null [data-laravel-blocks-document-list-item-index="1"]'))
+    .toHaveAttribute('aria-current', 'true');
+
+  await panel.locator('[data-laravel-blocks-document-list-close]').click();
+
+  await expect(panel).toBeHidden();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(canvas).toBeFocused();
+
+  await page.keyboard.type(' Recovered');
+
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content.map(textForNode).join('|'))
+    .toContain('Recovered');
+});
+
 test('inserts manifest blocks through the appender inserter', async ({ page }) => {
   await page.goto(baseUrl);
 
@@ -773,6 +844,14 @@ async function firstTextMark(page, selector, type) {
   const node = await firstContentNode(page, selector);
 
   return (node?.content?.[0]?.marks ?? []).find((mark) => mark.type === type) ?? null;
+}
+
+async function selectedBlockIndex(page, selector) {
+  return page.evaluate((rootSelector) => document
+    .querySelector(rootSelector)
+    .__laravelBlocksEditor
+    .blockSelection()
+    .index, selector);
 }
 
 function textForNode(node) {

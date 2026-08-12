@@ -18,6 +18,7 @@ const icons = Object.freeze({
   settings: ['M4 7h10', 'M17 7h3', 'M14 7a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z', 'M4 17h3', 'M10 17h10', 'M7 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z'],
   sparkle: ['M12 3l1.2 4.1L17 9l-3.8 1.9L12 15l-1.2-4.1L7 9l3.8-1.9L12 3Z', 'M19 14l.7 2.1L22 17l-2.3.9L19 20l-.7-2.1L16 17l2.3-.9L19 14Z'],
   undo: ['M9 7l-4 4 4 4', 'M5 11h10a5 5 0 0 1 0 10h-2'],
+  x: ['M6 6l12 12', 'M18 6L6 18'],
 });
 
 export function iconPath(name) {

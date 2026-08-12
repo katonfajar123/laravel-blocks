@@ -6,6 +6,7 @@ import {
   blockInserterItems,
   coerceInspectorFieldValue,
   createBlockSelectionState,
+  documentListItems,
   dropTargetFromRects,
   filterBlockInserterItems,
   inspectorFieldValue,
@@ -85,6 +86,80 @@ describe('block editor helpers', () => {
       },
     ]);
     expect(Object.isFrozen(ranges)).toBe(true);
+  });
+
+  it('derives immutable document list items from top-level blocks', () => {
+    const items = documentListItems({
+      state: {
+        doc: {
+          childCount: 3,
+          child: (index) => [
+            fakeBlockNode({ nodeSize: 8, text: 'First block', type: 'paragraph' }),
+            fakeBlockNode({ nodeSize: 12, text: 'Second block', type: 'heading' }),
+            fakeBlockNode({ nodeSize: 10, type: 'codeBlock' }),
+          ][index],
+        },
+      },
+    }, {
+      active: true,
+      depth: 1,
+      from: 8,
+      index: 1,
+    });
+
+    expect(items).toEqual([
+      {
+        active: true,
+        attrs: {},
+        canMoveDown: true,
+        canMoveUp: false,
+        depth: 1,
+        from: 0,
+        index: 0,
+        label: 'Paragraph',
+        preview: 'First block',
+        selected: false,
+        siblingCount: 3,
+        text: 'First block',
+        to: 8,
+        type: 'paragraph',
+      },
+      {
+        active: true,
+        attrs: {},
+        canMoveDown: true,
+        canMoveUp: true,
+        depth: 1,
+        from: 8,
+        index: 1,
+        label: 'Heading',
+        preview: 'Second block',
+        selected: true,
+        siblingCount: 3,
+        text: 'Second block',
+        to: 20,
+        type: 'heading',
+      },
+      {
+        active: true,
+        attrs: {},
+        canMoveDown: false,
+        canMoveUp: true,
+        depth: 1,
+        from: 20,
+        index: 2,
+        label: 'Code Block',
+        preview: 'Empty block',
+        selected: false,
+        siblingCount: 3,
+        text: '',
+        to: 30,
+        type: 'codeBlock',
+      },
+    ]);
+    expect(Object.isFrozen(items)).toBe(true);
+    expect(Object.isFrozen(items[0])).toBe(true);
+    expect(Object.isFrozen(items[0].attrs)).toBe(true);
   });
 
   it('calculates valid and invalid top-level drop targets', () => {
@@ -310,12 +385,12 @@ function fakeEditorAtBlock({
   };
 }
 
-function fakeBlockNode({ nodeSize, type }) {
+function fakeBlockNode({ nodeSize, text = '', type }) {
   return {
     attrs: {},
     isBlock: true,
     nodeSize,
-    textContent: '',
+    textContent: text,
     type: { name: type },
   };
 }

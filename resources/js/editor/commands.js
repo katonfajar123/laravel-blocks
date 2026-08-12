@@ -113,6 +113,18 @@ function dispatchBlockTransaction(editor, transaction, focusPosition) {
   return true;
 }
 
+function selectBlock(editor, payload = {}) {
+  const target = topLevelBlock(editor, payload);
+
+  if (!target) {
+    return false;
+  }
+
+  focusBlock(editor, target.block.from + 1);
+
+  return true;
+}
+
 function insertParagraph(editor, payload = {}, placement = 'after') {
   const target = topLevelBlock(editor, payload);
 
@@ -335,6 +347,12 @@ const definitions = [
     'Focus',
     (editor) => canRun(editor, (candidate) => !candidate.isDestroyed),
     (editor) => Boolean(editor.commands.focus()),
+  ),
+  simpleCommand(
+    'selectBlock',
+    'Select block',
+    (editor, payload) => canUseTopLevelBlock(editor, payload),
+    (editor, payload) => selectBlock(editor, payload),
   ),
   simpleCommand(
     'toggleBold',

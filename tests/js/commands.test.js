@@ -92,6 +92,7 @@ describe('editor command registry', () => {
     expect(registry.snapshot({ setHeading: { level: 3 } }).map((command) => command.name))
       .toEqual([
         'focus',
+        'selectBlock',
         'toggleBold',
         'toggleItalic',
         'setLink',

@@ -106,6 +106,8 @@ The `1.0` document tools MUST include:
 
 Document/List View MUST mirror the nested block tree, synchronize selection with the canvas, support expand/collapse, provide accessible tree navigation, and expose the same valid reordering commands as direct canvas manipulation.
 
+The current implementation includes a basic Document/List View foundation. The sticky header exposes a List View toggle, the package-owned panel renders top-level blocks in document order with labels, icons, text previews, and selected state, and list item selection focuses the matching canvas block through the shared command registry. The panel also exposes Move Up/Down controls for each top-level block and updates canonical hidden JSON through the same move commands as the contextual toolbar and drag/drop foundation. This is intentionally top-level only; nested tree semantics, expand/collapse, list-view drag/drop, multi-select, locked/hidden/reusable indicators, announcements, and polished responsive/accessibility behavior remain later milestones.
+
 JSON preview is a diagnostic view of the canonical value. HTML preview MUST use the package's safe renderer; it must not independently trust editor-generated HTML.
 
 ## Toolbar model
@@ -121,7 +123,7 @@ The interface MUST expose applicable commands through:
 
 These are multiple entry points to the same command and selection layers. They MUST NOT implement conflicting behavior independently.
 
-The current implementation includes the internal selection snapshot and shared command registry plus a sticky header, unified contextual toolbar, Transform To menu, link popover, basic manifest header Inserter, basic slash commands, basic generated Inspector controls, and visible header Undo/Redo controls. Undo and Redo execute through the command registry from the sticky header and from Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z. The default editor surface is full-width and clean; the Inspector does not open automatically. The full shortcut map, nested controls, drag/drop, and complete block operation UI remain later milestones.
+The current implementation includes the internal selection snapshot and shared command registry plus a sticky header, unified contextual toolbar, Transform To menu, link popover, basic manifest header Inserter, basic slash commands, basic generated Inspector controls, a basic top-level Document/List View, and visible header Undo/Redo controls. Undo and Redo execute through the command registry from the sticky header and from Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z. The default editor surface is full-width and clean; the Inspector and List View do not open automatically. The full shortcut map, nested controls, advanced drag/drop, and complete block operation UI remain later milestones.
 
 ## Shared UI infrastructure
 

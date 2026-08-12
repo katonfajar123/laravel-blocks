@@ -6,6 +6,7 @@ import { h, shallowRef } from 'vue';
 import {
   BlockInserter,
   BlockInspector,
+  BlockListView,
   BlockToolbar,
   SlashCommandMenu,
   createBlockSelectionState,
@@ -88,6 +89,7 @@ export const EditorShell = {
   setup(props, { expose }) {
     const blockSelection = shallowRef(createBlockSelectionState(null));
     const commands = shallowRef(null);
+    const documentListOpen = shallowRef(false);
     const editorStateVersion = shallowRef(0);
     const inspectorOpen = shallowRef(false);
     const selection = shallowRef(createSelectionState(null));
@@ -116,6 +118,16 @@ export const EditorShell = {
         open: false,
         query: '',
       });
+    }
+
+    function setDocumentListOpen(open) {
+      documentListOpen.value = open;
+
+      if (!open) {
+        commands.value?.run?.('focus');
+      }
+
+      return documentListOpen.value;
     }
 
     function slashItems(query = slash.value.query) {
@@ -324,6 +336,11 @@ export const EditorShell = {
       slashCommand() {
         return slash.value;
       },
+      toggleDocumentList(force = null) {
+        return setDocumentListOpen(
+          typeof force === 'boolean' ? force : !documentListOpen.value,
+        );
+      },
       toggleInspector(force = null) {
         inspectorOpen.value = typeof force === 'boolean' ? force : !inspectorOpen.value;
 
@@ -368,6 +385,20 @@ export const EditorShell = {
           class: 'lb-editor-shell__header-end',
         }, [
           h(IconButton, {
+            'aria-expanded': documentListOpen.value ? 'true' : 'false',
+            class: 'lb-editor-shell__document-list-toggle',
+            label: 'Toggle document list view',
+            pressed: documentListOpen.value,
+            title: documentListOpen.value ? 'Hide list view' : 'Show list view',
+            variant: documentListOpen.value ? 'primary' : 'ghost',
+            'data-laravel-blocks-document-list-toggle': '',
+            onClick: () => {
+              setDocumentListOpen(!documentListOpen.value);
+            },
+          }, {
+            default: () => h(Icon, { name: 'list' }),
+          }),
+          h(IconButton, {
             'aria-expanded': inspectorOpen.value ? 'true' : 'false',
             class: 'lb-editor-shell__settings',
             label: 'Toggle settings sidebar',
@@ -403,6 +434,14 @@ export const EditorShell = {
       h('div', {
         class: 'lb-editor-shell__workspace',
       }, [
+        h(BlockListView, {
+          block: blockSelection.value,
+          commandRegistry: commands.value,
+          editor: editor.value,
+          open: documentListOpen.value,
+          stateVersion: editorStateVersion.value,
+          onClose: () => setDocumentListOpen(false),
+        }),
         editor.value
           ? h(EditorContent, {
             editor: editor.value,
