@@ -1,7 +1,7 @@
 import { EditorContent, useEditor } from '@tiptap/vue-3';
 import Link from '@tiptap/extension-link';
 import StarterKit from '@tiptap/starter-kit';
-import { h, shallowRef } from 'vue';
+import { h, onBeforeUnmount, shallowRef } from 'vue';
 
 import {
   BlockInserter,
@@ -10,6 +10,8 @@ import {
   BlockToolbar,
   SlashCommandMenu,
   createBlockSelectionState,
+  createEmptyBlockSelection,
+  createTopLevelHoverBlockSelectionState,
   slashCommandItems,
 } from '../block-editor/index.js';
 import { createDefaultCommandRegistry } from './commands.js';
@@ -91,6 +93,9 @@ export const EditorShell = {
     const commands = shallowRef(null);
     const documentListOpen = shallowRef(false);
     const editorStateVersion = shallowRef(0);
+    const hoverControlsActive = shallowRef(false);
+    const hoverSuppressedUntil = shallowRef(0);
+    const hoveredBlockSelection = shallowRef(createEmptyBlockSelection());
     const inspectorOpen = shallowRef(false);
     const selection = shallowRef(createSelectionState(null));
     const slash = shallowRef({
@@ -98,11 +103,144 @@ export const EditorShell = {
       open: false,
       query: '',
     });
+    let clearHoverTimer = null;
 
     function updateEditorState(currentEditor) {
       blockSelection.value = createBlockSelectionState(currentEditor);
       selection.value = createSelectionState(currentEditor);
       editorStateVersion.value += 1;
+    }
+
+    function keyboardSuppressionActive() {
+      return hoverSuppressedUntil.value > 0 && Date.now() < hoverSuppressedUntil.value;
+    }
+
+    function clearHoveredBlock() {
+      hoveredBlockSelection.value = createEmptyBlockSelection();
+    }
+
+    function cancelClearHoverTimer() {
+      if (clearHoverTimer !== null) {
+        globalThis.clearTimeout?.(clearHoverTimer);
+        clearHoverTimer = null;
+      }
+    }
+
+    function scheduleClearHoveredBlock() {
+      cancelClearHoverTimer();
+      clearHoverTimer = globalThis.setTimeout?.(() => {
+        clearHoverTimer = null;
+
+        if (!hoverControlsActive.value) {
+          clearHoveredBlock();
+        }
+      }, 120) ?? null;
+    }
+
+    function retainHoverControls() {
+      hoverControlsActive.value = true;
+      cancelClearHoverTimer();
+    }
+
+    function releaseHoverControls() {
+      hoverControlsActive.value = false;
+      scheduleClearHoveredBlock();
+    }
+
+    function typingKey(event) {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.isComposing) {
+        return false;
+      }
+
+      return event.key.length === 1 || ['Backspace', 'Delete'].includes(event.key);
+    }
+
+    function markKeyboardActivity(event) {
+      if (!typingKey(event)) {
+        return;
+      }
+
+      hoverSuppressedUntil.value = Date.now() + 350;
+      clearHoveredBlock();
+
+      globalThis.setTimeout?.(() => {
+        if (!keyboardSuppressionActive()) {
+          hoverSuppressedUntil.value = 0;
+        }
+      }, 370);
+    }
+
+    function hasTextSelection() {
+      return Boolean(
+        blockSelection.value.active
+        && selection.value
+        && !selection.value.empty
+        && selection.value.text.length > 0,
+      );
+    }
+
+    function hasEmptyFocusedBlock() {
+      return Boolean(
+        editor.value?.isFocused
+        && !keyboardSuppressionActive()
+        && blockSelection.value.active
+        && blockSelection.value.depth === 1
+        && selection.value?.empty
+        && blockSelection.value.text.trim() === '',
+      );
+    }
+
+    function updateHoveredBlock(event) {
+      if (keyboardSuppressionActive() || hasTextSelection() || slash.value.open) {
+        clearHoveredBlock();
+
+        return;
+      }
+
+      hoveredBlockSelection.value = createTopLevelHoverBlockSelectionState(
+        editor.value,
+        editor.value?.view?.dom,
+        event.target,
+      );
+    }
+
+    function contextualToolbarState() {
+      if (slash.value.open) {
+        return {
+          block: createEmptyBlockSelection(),
+          mode: 'block',
+        };
+      }
+
+      if (hasTextSelection()) {
+        return {
+          block: blockSelection.value,
+          mode: 'inline',
+        };
+      }
+
+      if (hasEmptyFocusedBlock()) {
+        return {
+          block: blockSelection.value,
+          mode: 'empty',
+        };
+      }
+
+      if (
+        hoveredBlockSelection.value.active
+        && selection.value?.empty
+        && !keyboardSuppressionActive()
+      ) {
+        return {
+          block: hoveredBlockSelection.value,
+          mode: 'hover',
+        };
+      }
+
+      return {
+        block: createEmptyBlockSelection(),
+        mode: 'block',
+      };
     }
 
     function setSlashState(next) {
@@ -280,6 +418,8 @@ export const EditorShell = {
           'data-laravel-blocks-canvas': '',
         },
         handleKeyDown: (_, event) => {
+          markKeyboardActivity(event);
+
           if (handleSlashKeydown(event)) {
             return true;
           }
@@ -309,9 +449,18 @@ export const EditorShell = {
         updateEditorState(createdEditor);
         syncHiddenInputValue(normalizeDocument(props.document), props.input);
       },
+      onBlur: ({ editor: blurredEditor }) => {
+        clearHoveredBlock();
+        updateEditorState(blurredEditor);
+      },
+      onFocus: ({ editor: focusedEditor }) => updateEditorState(focusedEditor),
       onSelectionUpdate: ({ editor: updatedEditor }) => updateEditorState(updatedEditor),
       onTransaction: ({ editor: transactionEditor }) => updateEditorState(transactionEditor),
       onUpdate: ({ editor: updatedEditor }) => syncHiddenInput(updatedEditor, props.input),
+    });
+
+    onBeforeUnmount(() => {
+      cancelClearHoverTimer();
     });
 
     expose({
@@ -348,10 +497,13 @@ export const EditorShell = {
       },
     });
 
-    return () => h('div', {
-      class: 'lb-editor-shell',
-      'data-laravel-blocks-shell': '',
-    }, [
+    return () => {
+      const toolbarState = contextualToolbarState();
+
+      return h('div', {
+        class: 'lb-editor-shell',
+        'data-laravel-blocks-shell': '',
+      }, [
       h('div', {
         class: 'lb-editor-shell__header',
         'data-laravel-blocks-editor-header': '',
@@ -415,11 +567,14 @@ export const EditorShell = {
         ]),
       ]),
       h(BlockToolbar, {
-        block: blockSelection.value,
+        block: toolbarState.block,
         commandRegistry: commands.value,
         editor: editor.value,
+        mode: toolbarState.mode,
         selection: selection.value,
         suppressed: slash.value.open,
+        onHoverControlsEnter: retainHoverControls,
+        onHoverControlsLeave: releaseHoverControls,
       }),
       h(SlashCommandMenu, {
         activeIndex: slash.value.activeIndex,
@@ -446,6 +601,8 @@ export const EditorShell = {
           ? h(EditorContent, {
             editor: editor.value,
             class: 'lb-editor-shell__content',
+            onPointerleave: scheduleClearHoveredBlock,
+            onPointermove: updateHoveredBlock,
           })
           : h('div', {
             class: 'lb-editor-shell__loading',
@@ -458,6 +615,7 @@ export const EditorShell = {
           manifest: props.manifest,
         }),
       ]),
-    ]);
+      ]);
+    };
   },
 };

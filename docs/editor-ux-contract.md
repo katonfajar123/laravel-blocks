@@ -184,6 +184,13 @@ Activating Link opens an anchored popover—not a full-screen modal—with:
 
 ## Block toolbar contract
 
+Ordinary collapsed cursor focus inside a non-empty text block MUST NOT expose the block selection frame or a persistent block toolbar. Contextual block chrome appears only from intentional triggers:
+
+- a non-empty text selection exposes inline formatting and link controls near the selection;
+- an empty focused text block exposes a compact inserter/transform affordance and hides as soon as typing starts;
+- pointer hover over a block exposes a lightweight drag handle and options button;
+- explicit block or multi-block selection exposes block-level actions when that selection mode is implemented.
+
 Selecting a block MUST expose a toolbar composed from shared controls plus block-specific commands. It includes, where supported:
 
 - drag handle and Move Up/Down controls;

@@ -96,6 +96,69 @@ export function createBlockSelectionState(editor) {
   return createEmptyBlockSelection();
 }
 
+export function createTopLevelBlockSelectionState(editor, index) {
+  const doc = editor?.state?.doc;
+  const normalizedIndex = Number(index);
+
+  if (
+    !doc
+    || !Number.isInteger(normalizedIndex)
+    || normalizedIndex < 0
+    || normalizedIndex >= doc.childCount
+  ) {
+    return createEmptyBlockSelection();
+  }
+
+  const node = doc.child(normalizedIndex);
+
+  if (!node?.isBlock) {
+    return createEmptyBlockSelection();
+  }
+
+  let from = 0;
+
+  for (let childIndex = 0; childIndex < normalizedIndex; childIndex += 1) {
+    from += Number(doc.child(childIndex)?.nodeSize ?? 0);
+  }
+
+  return Object.freeze({
+    active: true,
+    attrs: Object.freeze({ ...(node.attrs ?? {}) }),
+    canMoveDown: normalizedIndex < doc.childCount - 1,
+    canMoveUp: normalizedIndex > 0,
+    depth: 1,
+    from,
+    index: normalizedIndex,
+    label: labelForType(node.type?.name),
+    siblingCount: doc.childCount,
+    text: node.textContent ?? '',
+    to: from + node.nodeSize,
+    type: node.type?.name ?? 'unknown',
+  });
+}
+
+export function createTopLevelHoverBlockSelectionState(editor, canvas, target) {
+  const isElement = typeof Element !== 'undefined' && target instanceof Element;
+
+  if (!canvas || !target || !isElement || !canvas.contains(target)) {
+    return createEmptyBlockSelection();
+  }
+
+  let element = target;
+
+  while (element && element.parentElement !== canvas) {
+    element = element.parentElement;
+  }
+
+  if (!element || element.parentElement !== canvas) {
+    return createEmptyBlockSelection();
+  }
+
+  const index = Array.prototype.indexOf.call(canvas.children, element);
+
+  return createTopLevelBlockSelectionState(editor, index);
+}
+
 export function blockElement(editor, block) {
   if (!block?.active || !editor?.view?.nodeDOM) {
     return null;

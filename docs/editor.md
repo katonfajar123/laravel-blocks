@@ -46,7 +46,7 @@ The default `1.0` editor MUST include:
 
 Operations MUST preserve a valid document tree. Dragging MUST show a precise insertion indicator, invalid targets, and autoscroll where needed. An invalid drop target MUST be visibly rejected rather than repaired silently after the drop, and movement MUST have Move Up/Down plus keyboard alternatives.
 
-The current implementation includes basic top-level block controls. A cursor inside a top-level block shows one unified contextual toolbar with Transform To, a drag handle, Move Up/Down, common inline formatting, Link, and a More menu for Duplicate, Insert before, Insert after, and Delete. The active block no longer draws a hard canvas stroke; the toolbar is the primary selection affordance. These actions execute through the shared command registry and update canonical hidden JSON.
+The current implementation includes basic top-level block controls gated by explicit user intent. A collapsed cursor inside a non-empty block does not show the block frame or full contextual toolbar. Hovering a top-level block shows a lightweight drag handle and options button; the options menu exposes Transform To, Move Up/Down, Duplicate, Insert before, Insert after, and Delete. Empty focused text blocks show only a compact transform affordance. These actions execute through the shared command registry and update canonical hidden JSON.
 
 Pointer drag/drop is currently a basic top-level foundation: the contextual drag handle can move one selected top-level block before or after another top-level block, shows an insertion indicator, rejects no-op or off-canvas drops without changing the document, and keeps the hidden canonical JSON synchronized. Nested drag/drop, autoscroll, multi-select, touch polish, keyboard reordering, announcements, copy/paste, and block-specific command filtering remain later milestones.
 
@@ -64,7 +64,7 @@ Text-capable nodes MUST support:
 
 A selection bubble menu MUST provide fast access to frequent marks. Link editing MUST use a selection-anchored popover with validation, target control, apply/unlink behavior, Escape cancellation, and predictable focus restoration. The editor schema, not the toolbar, determines which marks a node accepts.
 
-The current implementation routes Bold, Italic, and Link through the unified contextual toolbar rather than a second text-only toolbar. It appears with the selected top-level block, uses selection state for link editing, routes actions through the shared command layer, updates canonical hidden JSON, and restores focus to the editor canvas.
+The current implementation routes Bold, Italic, and Link through the unified contextual toolbar rather than a second text-only toolbar. It appears only for a non-empty text selection, anchors near that selected text, uses selection state for link editing, routes actions through the shared command layer, updates canonical hidden JSON, and restores focus to the editor canvas.
 
 The Link control opens a selection-anchored popover with URL input, open-in-new-tab toggle, Apply, Unlink, inline validation feedback, Escape cancellation, and preserved-selection mutation. The current provider boundary validates safe external, root-relative, and anchor links; internal-link search/autocomplete, remaining marks, keyboard shortcuts, mixed-selection state, and schema-filtered mark availability remain later milestones.
 
@@ -123,7 +123,7 @@ The interface MUST expose applicable commands through:
 
 These are multiple entry points to the same command and selection layers. They MUST NOT implement conflicting behavior independently.
 
-The current implementation includes the internal selection snapshot and shared command registry plus a sticky header, unified contextual toolbar, Transform To menu, link popover, basic manifest header Inserter, basic slash commands, basic generated Inspector controls, a basic top-level Document/List View, and visible header Undo/Redo controls. Undo and Redo execute through the command registry from the sticky header and from Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z. The default editor surface is full-width and clean; the Inspector and List View do not open automatically. The full shortcut map, nested controls, advanced drag/drop, and complete block operation UI remain later milestones.
+The current implementation includes the internal selection snapshot and shared command registry plus a sticky header, intent-gated unified contextual toolbar, Transform To/options menus, link popover, basic manifest header Inserter, basic slash commands, basic generated Inspector controls, a basic top-level Document/List View, and visible header Undo/Redo controls. Undo and Redo execute through the command registry from the sticky header and from Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z. The default editor surface is full-width and clean; collapsed typing does not open block chrome, and the Inspector and List View do not open automatically. The full shortcut map, nested controls, advanced drag/drop, and complete block operation UI remain later milestones.
 
 ## Shared UI infrastructure
 

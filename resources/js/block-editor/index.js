@@ -14,6 +14,8 @@ export {
   blockToolbarStyle,
   createBlockSelectionState,
   createEmptyBlockSelection,
+  createTopLevelBlockSelectionState,
+  createTopLevelHoverBlockSelectionState,
 } from './block-selection.js';
 export {
   createBlockDragState,

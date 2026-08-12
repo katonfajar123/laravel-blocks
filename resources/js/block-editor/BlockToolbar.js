@@ -53,6 +53,15 @@ const optionCommands = [
   ['deleteBlock', 'Delete'],
 ];
 
+const hoverOptionCommands = [
+  ['duplicateBlock', 'Duplicate'],
+  ['insertBlockBefore', 'Insert before'],
+  ['insertBlockAfter', 'Insert after'],
+  ['moveBlockUp', 'Move up'],
+  ['moveBlockDown', 'Move down'],
+  ['deleteBlock', 'Delete'],
+];
+
 function commandState(registry, command, payload = {}) {
   return registry?.state?.(command, payload) ?? {
     active: false,
@@ -80,12 +89,18 @@ export const BlockToolbar = {
       type: Object,
       default: null,
     },
+    mode: {
+      type: String,
+      default: 'block',
+      validator: (value) => ['block', 'empty', 'hover', 'inline'].includes(value),
+    },
     suppressed: {
       type: Boolean,
       default: false,
     },
   },
-  setup(props, { expose }) {
+  emits: ['hoverControlsEnter', 'hoverControlsLeave'],
+  setup(props, { emit, expose }) {
     const externalOverlayOpen = ref(false);
     const frameStyle = ref({});
     const drag = shallowRef(createEmptyBlockDragState());
@@ -93,6 +108,7 @@ export const BlockToolbar = {
     const dragHandle = ref(null);
     const linkPopoverOpen = ref(false);
     const linkSelection = shallowRef(null);
+    const menuPlacement = ref('bottom');
     const moreOpen = ref(false);
     const root = ref(null);
     const toolbar = ref(null);
@@ -109,8 +125,115 @@ export const BlockToolbar = {
       return !props.block.active || props.suppressed || externalOverlayOpen.value;
     }
 
+    function frameHidden() {
+      return hidden() || props.mode !== 'block';
+    }
+
     function canDragBlock() {
       return props.block.active && props.block.depth === 1 && props.block.siblingCount > 1 && !props.suppressed;
+    }
+
+    function currentToolbarRect(fallbackWidth = 560) {
+      return toolbar.value?.getBoundingClientRect?.() ?? { height: 48, width: fallbackWidth };
+    }
+
+    function clampToolbarToViewport({ left, rect, top, viewportPadding = 8 }) {
+      const viewportWidth = globalThis.window?.innerWidth ?? 1024;
+      const viewportHeight = globalThis.window?.innerHeight ?? 768;
+      const toolbarWidth = rect.width ?? 240;
+      const toolbarHeight = rect.height ?? 40;
+      const stickyHeader = globalThis.document?.querySelector?.('[data-laravel-blocks-editor-header]');
+      const stickyHeaderBottom = stickyHeader?.getBoundingClientRect?.().bottom ?? 0;
+      const minimumTop = Math.max(viewportPadding, stickyHeaderBottom + viewportPadding);
+
+      return Object.freeze({
+        left: `${Math.round(Math.min(
+          Math.max(viewportPadding, left),
+          viewportWidth - toolbarWidth - viewportPadding,
+        ))}px`,
+        position: 'fixed',
+        top: `${Math.round(Math.min(
+          Math.max(minimumTop, top),
+          viewportHeight - toolbarHeight - viewportPadding,
+        ))}px`,
+      });
+    }
+
+    function inlineSelectionRect() {
+      if (!props.editor?.view?.coordsAtPos || !props.selection || props.selection.empty) {
+        return null;
+      }
+
+      try {
+        const from = props.editor.view.coordsAtPos(props.selection.from);
+        const to = props.editor.view.coordsAtPos(props.selection.to);
+
+        return Object.freeze({
+          bottom: Math.max(from.bottom, to.bottom),
+          height: Math.max(1, Math.max(from.bottom, to.bottom) - Math.min(from.top, to.top)),
+          left: Math.min(from.left, to.left),
+          right: Math.max(from.right, to.right),
+          top: Math.min(from.top, to.top),
+          width: Math.max(1, Math.max(from.right, to.right) - Math.min(from.left, to.left)),
+        });
+      } catch {
+        return null;
+      }
+    }
+
+    function inlineToolbarStyle() {
+      const rect = inlineSelectionRect() ?? blockRect(props.editor, props.block);
+
+      if (!rect) {
+        return Object.freeze({});
+      }
+
+      const toolbarRect = currentToolbarRect(220);
+
+      return clampToolbarToViewport({
+        left: rect.left + ((rect.width - (toolbarRect.width ?? 220)) / 2),
+        rect: toolbarRect,
+        top: rect.top - (toolbarRect.height ?? 40) - 8,
+      });
+    }
+
+    function hoverToolbarStyle() {
+      const rect = blockRect(props.editor, props.block);
+
+      if (!rect) {
+        return Object.freeze({});
+      }
+
+      const toolbarRect = currentToolbarRect(112);
+      const left = rect.left - (toolbarRect.width ?? 112) - 8;
+
+      return clampToolbarToViewport({
+        left,
+        rect: toolbarRect,
+        top: rect.top + Math.max(0, (rect.height - (toolbarRect.height ?? 40)) / 2),
+      });
+    }
+
+    function updateMenuPlacement() {
+      if (props.mode !== 'hover') {
+        menuPlacement.value = 'bottom';
+
+        return;
+      }
+
+      const toolbarRect = toolbar.value?.getBoundingClientRect?.();
+      const viewportHeight = globalThis.window?.innerHeight ?? 768;
+      const stickyHeader = globalThis.document?.querySelector?.('[data-laravel-blocks-editor-header]');
+      const stickyHeaderBottom = stickyHeader?.getBoundingClientRect?.().bottom ?? 0;
+      const top = toolbarRect?.top ?? Number.parseFloat(toolbarStyle.value.top ?? '0') ?? 0;
+      const bottom = toolbarRect?.bottom ?? top + 48;
+      const menuHeight = 320;
+      const spaceAbove = top - stickyHeaderBottom - 8;
+      const spaceBelow = viewportHeight - bottom - 8;
+
+      menuPlacement.value = spaceBelow < menuHeight && spaceAbove > spaceBelow
+        ? 'top'
+        : 'bottom';
     }
 
     function pointerTarget(event) {
@@ -239,15 +362,33 @@ export const BlockToolbar = {
         return;
       }
 
-      frameStyle.value = blockFrameStyle({
-        block: props.block,
-        editor: props.editor,
-      });
+      frameStyle.value = frameHidden()
+        ? {}
+        : blockFrameStyle({
+          block: props.block,
+          editor: props.editor,
+        });
+
+      if (props.mode === 'inline') {
+        toolbarStyle.value = inlineToolbarStyle();
+        nextTick(updateMenuPlacement);
+
+        return;
+      }
+
+      if (props.mode === 'hover' || props.mode === 'empty') {
+        toolbarStyle.value = hoverToolbarStyle();
+        nextTick(updateMenuPlacement);
+
+        return;
+      }
+
       toolbarStyle.value = blockToolbarStyle({
         block: props.block,
         editor: props.editor,
-        toolbarRect: toolbar.value?.getBoundingClientRect?.() ?? { height: 48, width: 560 },
+        toolbarRect: currentToolbarRect(560),
       });
+      nextTick(updateMenuPlacement);
     }
 
     function run(command, payload = {}) {
@@ -369,6 +510,222 @@ export const BlockToolbar = {
       nextTick(updatePosition);
     }
 
+    function transformMenu() {
+      return h('div', {
+        class: 'lb-block-toolbar__transform-menu',
+        'data-laravel-blocks-block-transform-menu': '',
+        hidden: !transformOpen.value,
+        role: 'menu',
+      }, [
+        h('span', {
+          class: 'lb-block-toolbar__menu-eyebrow',
+        }, 'Transform to'),
+        ...transformItems.map(transformOption),
+      ]);
+    }
+
+    function transformGroup({ empty = false } = {}) {
+      return h(ToolbarGroup, {
+        label: empty ? 'Empty block affordance' : 'Transform block',
+      }, {
+        default: () => [
+          h('button', {
+            'aria-expanded': transformOpen.value ? 'true' : 'false',
+            'aria-haspopup': 'menu',
+            class: [
+              'lb-block-toolbar__transform',
+              empty ? 'lb-block-toolbar__transform--empty' : null,
+            ].filter(Boolean),
+            'data-laravel-blocks-block-transform': '',
+            'data-laravel-blocks-empty-block-affordance': empty ? '' : null,
+            onClick: () => {
+              transformOpen.value = !transformOpen.value;
+              moreOpen.value = false;
+              linkPopoverOpen.value = false;
+              nextTick(updatePosition);
+            },
+            onMousedown: (event) => event.preventDefault(),
+            title: empty ? 'Add or transform empty block' : 'Transform block',
+            type: 'button',
+          }, [
+            h(Icon, {
+              name: empty ? 'plus' : blockIconName(props.block.type),
+              size: 18,
+            }),
+            empty
+              ? null
+              : h('span', {
+                'data-laravel-blocks-block-label': '',
+              }, props.block.label),
+          ]),
+          transformMenu(),
+        ],
+      });
+    }
+
+    function dragHandleButton() {
+      return h(IconButton, {
+        class: 'lb-block-toolbar__drag-handle',
+        disabled: !canDragBlock(),
+        label: 'Drag block',
+        pressed: drag.value.active,
+        size: 'sm',
+        title: canDragBlock() ? 'Drag block' : 'Drag block needs another top-level block.',
+        variant: drag.value.active ? 'primary' : 'ghost',
+        'data-laravel-blocks-block-drag-handle': '',
+        onMousedown: (event) => event.preventDefault(),
+        onPointerdown: beginDrag,
+        ref: dragHandle,
+      }, {
+        default: () => h(Icon, {
+          name: 'dragHandle',
+          size: 18,
+        }),
+      });
+    }
+
+    function moveGroup({ compact = false } = {}) {
+      return h(ToolbarGroup, {
+        label: compact ? 'Block handle' : 'Move block',
+      }, {
+        default: () => compact
+          ? [dragHandleButton()]
+          : [
+            dragHandleButton(),
+            iconCommand('moveBlockUp', 'arrowUp', 'Move block up'),
+            iconCommand('moveBlockDown', 'arrowDown', 'Move block down'),
+          ],
+      });
+    }
+
+    function italicButton() {
+      const state = commandState(props.commandRegistry, 'toggleItalic');
+
+      return h(IconButton, {
+        disabled: !state.enabled,
+        label: 'Italic',
+        pressed: state.active,
+        size: 'sm',
+        title: state.disabledReason || 'Italic',
+        variant: state.active ? 'primary' : 'ghost',
+        'data-laravel-blocks-block-command': 'toggleItalic',
+        'data-laravel-blocks-contextual-command': 'toggleItalic',
+        onClick: () => run('toggleItalic'),
+        onMousedown: (event) => event.preventDefault(),
+      }, {
+        default: () => h('span', {
+          class: 'lb-contextual-toolbar__italic',
+        }, 'I'),
+      });
+    }
+
+    function linkButton() {
+      const state = commandState(props.commandRegistry, 'unsetLink');
+
+      return h(IconButton, {
+        disabled: !props.selection || props.selection.empty,
+        label: 'Link',
+        pressed: state.active,
+        size: 'sm',
+        title: props.selection?.empty ? 'Select text before adding a link.' : 'Link',
+        variant: state.active ? 'primary' : 'ghost',
+        'data-laravel-blocks-block-command': 'openLink',
+        'data-laravel-blocks-contextual-command': 'openLink',
+        onClick: openLinkPopover,
+        onMousedown: (event) => event.preventDefault(),
+      }, {
+        default: () => h(Icon, { name: 'link' }),
+      });
+    }
+
+    function inlineGroup({ includeAssistant = false } = {}) {
+      return h(ToolbarGroup, {
+        label: 'Inline formatting',
+      }, {
+        default: () => [
+          includeAssistant
+            ? h(IconButton, {
+              disabled: true,
+              label: 'AI assistant',
+              size: 'sm',
+              title: 'AI assistant is not implemented yet.',
+              variant: 'ghost',
+            }, {
+              default: () => h(Icon, { name: 'sparkle' }),
+            })
+            : null,
+          boldButton(),
+          italicButton(),
+          linkButton(),
+        ].filter(Boolean),
+      });
+    }
+
+    function moreGroup({ includeTransform = false, commands = optionCommands } = {}) {
+      return h(ToolbarGroup, {
+        label: 'More block options',
+      }, {
+        default: () => [
+          h(IconButton, {
+            label: 'More options',
+            pressed: moreOpen.value,
+            size: 'sm',
+            'data-laravel-blocks-block-options': '',
+            onClick: () => {
+              moreOpen.value = !moreOpen.value;
+              transformOpen.value = false;
+              linkPopoverOpen.value = false;
+              nextTick(updatePosition);
+            },
+            onMousedown: (event) => event.preventDefault(),
+          }, {
+            default: () => h(Icon, { name: 'moreVertical' }),
+          }),
+          h('div', {
+            class: 'lb-block-toolbar__menu',
+            'data-laravel-blocks-block-options-menu': '',
+            'data-laravel-blocks-block-options-menu-placement': menuPlacement.value,
+            hidden: !moreOpen.value,
+            role: 'menu',
+          }, [
+            includeTransform
+              ? [
+                h('span', {
+                  class: 'lb-block-toolbar__menu-eyebrow',
+                }, 'Transform to'),
+                ...transformItems.map(transformOption),
+              ]
+              : null,
+            ...commands.map(([command, label]) => option(command, label)),
+          ].flat().filter(Boolean)),
+        ],
+      });
+    }
+
+    function toolbarGroups() {
+      if (props.mode === 'inline') {
+        return [inlineGroup()];
+      }
+
+      if (props.mode === 'hover') {
+        return [
+          moveGroup({ compact: true }),
+          moreGroup({ includeTransform: true, commands: hoverOptionCommands }),
+        ];
+      }
+
+      if (props.mode === 'empty') {
+        return [transformGroup({ empty: true })];
+      }
+
+      return [
+        transformGroup(),
+        moveGroup(),
+        inlineGroup({ includeAssistant: true }),
+        moreGroup(),
+      ];
+    }
+
     onMounted(() => {
       globalThis.document?.addEventListener?.('pointerdown', handleOutsidePointer, true);
       globalThis.document?.addEventListener?.('laravel-blocks:overlay-open', handleOverlayOpen);
@@ -390,6 +747,7 @@ export const BlockToolbar = {
         props.block.type,
         props.block.index,
         props.block.siblingCount,
+        props.mode,
         props.selection?.from,
         props.selection?.to,
         props.selection?.empty,
@@ -418,7 +776,10 @@ export const BlockToolbar = {
 
     return () => h('div', {
       'data-laravel-blocks-block-controls': '',
+      'data-laravel-blocks-block-controls-mode': props.mode,
       hidden: hidden(),
+      onPointerenter: () => emit('hoverControlsEnter'),
+      onPointerleave: () => emit('hoverControlsLeave'),
       ref: root,
     }, [
       h('div', {
@@ -426,13 +787,19 @@ export const BlockToolbar = {
         class: 'lb-block-selection-frame',
         'data-laravel-blocks-block-wrapper': '',
         'data-laravel-blocks-block-type': props.block.type,
-        hidden: hidden(),
+        hidden: frameHidden(),
         style: frameStyle.value,
       }),
       h('div', {
-        class: 'lb-ui-popover lb-block-toolbar lb-contextual-toolbar',
+        class: [
+          'lb-ui-popover',
+          'lb-block-toolbar',
+          'lb-contextual-toolbar',
+          `lb-block-toolbar--${props.mode}`,
+        ],
         'data-laravel-blocks-block-toolbar': '',
         'data-laravel-blocks-contextual-toolbar': '',
+        'data-laravel-blocks-contextual-toolbar-mode': props.mode,
         hidden: hidden(),
         ref: toolbar,
         style: toolbarStyle.value,
@@ -440,147 +807,7 @@ export const BlockToolbar = {
         h(Toolbar, {
           label: 'Contextual editor controls',
         }, {
-          default: () => [
-            h(ToolbarGroup, {
-              label: 'Transform block',
-            }, {
-              default: () => [
-                h('button', {
-                  'aria-expanded': transformOpen.value ? 'true' : 'false',
-                  'aria-haspopup': 'menu',
-                  class: 'lb-block-toolbar__transform',
-                  'data-laravel-blocks-block-transform': '',
-                  onClick: () => {
-                    transformOpen.value = !transformOpen.value;
-                    moreOpen.value = false;
-                    linkPopoverOpen.value = false;
-                    nextTick(updatePosition);
-                  },
-                  onMousedown: (event) => event.preventDefault(),
-                  title: 'Transform block',
-                  type: 'button',
-                }, [
-                  h(Icon, {
-                    name: blockIconName(props.block.type),
-                    size: 18,
-                  }),
-                  h('span', {
-                    'data-laravel-blocks-block-label': '',
-                  }, props.block.label),
-                ]),
-                h('div', {
-                  class: 'lb-block-toolbar__transform-menu',
-                  'data-laravel-blocks-block-transform-menu': '',
-                  hidden: !transformOpen.value,
-                  role: 'menu',
-                }, [
-                  h('span', {
-                    class: 'lb-block-toolbar__menu-eyebrow',
-                  }, 'Transform to'),
-                  ...transformItems.map(transformOption),
-                ]),
-              ],
-            }),
-            h(ToolbarGroup, {
-              label: 'Move block',
-            }, {
-              default: () => [
-                h(IconButton, {
-                  class: 'lb-block-toolbar__drag-handle',
-                  disabled: !canDragBlock(),
-                  label: 'Drag block',
-                  pressed: drag.value.active,
-                  size: 'sm',
-                  title: canDragBlock() ? 'Drag block' : 'Drag block needs another top-level block.',
-                  variant: drag.value.active ? 'primary' : 'ghost',
-                  'data-laravel-blocks-block-drag-handle': '',
-                  onMousedown: (event) => event.preventDefault(),
-                  onPointerdown: beginDrag,
-                  ref: dragHandle,
-                }, {
-                  default: () => h(Icon, {
-                    name: 'dragHandle',
-                    size: 18,
-                  }),
-                }),
-                iconCommand('moveBlockUp', 'arrowUp', 'Move block up'),
-                iconCommand('moveBlockDown', 'arrowDown', 'Move block down'),
-              ],
-            }),
-            h(ToolbarGroup, {
-              label: 'Inline formatting',
-            }, {
-              default: () => [
-                h(IconButton, {
-                  disabled: true,
-                  label: 'AI assistant',
-                  size: 'sm',
-                  title: 'AI assistant is not implemented yet.',
-                  variant: 'ghost',
-                }, {
-                  default: () => h(Icon, { name: 'sparkle' }),
-                }),
-                boldButton(),
-                h(IconButton, {
-                  disabled: !commandState(props.commandRegistry, 'toggleItalic').enabled,
-                  label: 'Italic',
-                  pressed: commandState(props.commandRegistry, 'toggleItalic').active,
-                  size: 'sm',
-                  title: commandState(props.commandRegistry, 'toggleItalic').disabledReason || 'Italic',
-                  variant: commandState(props.commandRegistry, 'toggleItalic').active ? 'primary' : 'ghost',
-                  'data-laravel-blocks-block-command': 'toggleItalic',
-                  'data-laravel-blocks-contextual-command': 'toggleItalic',
-                  onClick: () => run('toggleItalic'),
-                  onMousedown: (event) => event.preventDefault(),
-                }, {
-                  default: () => h('span', {
-                    class: 'lb-contextual-toolbar__italic',
-                  }, 'I'),
-                }),
-                h(IconButton, {
-                  disabled: !props.selection || props.selection.empty,
-                  label: 'Link',
-                  pressed: commandState(props.commandRegistry, 'unsetLink').active,
-                  size: 'sm',
-                  title: props.selection?.empty ? 'Select text before adding a link.' : 'Link',
-                  variant: commandState(props.commandRegistry, 'unsetLink').active ? 'primary' : 'ghost',
-                  'data-laravel-blocks-block-command': 'openLink',
-                  'data-laravel-blocks-contextual-command': 'openLink',
-                  onClick: openLinkPopover,
-                  onMousedown: (event) => event.preventDefault(),
-                }, {
-                  default: () => h(Icon, { name: 'link' }),
-                }),
-              ],
-            }),
-            h(ToolbarGroup, {
-              label: 'More block options',
-            }, {
-              default: () => [
-                h(IconButton, {
-                  label: 'More options',
-                  pressed: moreOpen.value,
-                  size: 'sm',
-                  'data-laravel-blocks-block-options': '',
-                  onClick: () => {
-                    moreOpen.value = !moreOpen.value;
-                    transformOpen.value = false;
-                    linkPopoverOpen.value = false;
-                    nextTick(updatePosition);
-                  },
-                  onMousedown: (event) => event.preventDefault(),
-                }, {
-                  default: () => h(Icon, { name: 'moreVertical' }),
-                }),
-                h('div', {
-                  class: 'lb-block-toolbar__menu',
-                  'data-laravel-blocks-block-options-menu': '',
-                  hidden: !moreOpen.value,
-                  role: 'menu',
-                }, optionCommands.map(([command, label]) => option(command, label))),
-              ],
-            }),
-          ],
+          default: toolbarGroups,
         }),
         h(LinkPopover, {
           commandRegistry: props.commandRegistry,

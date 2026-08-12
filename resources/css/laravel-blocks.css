@@ -521,6 +521,12 @@
   display: none;
 }
 
+.lb-block-toolbar--hover .lb-block-toolbar__menu {
+  left: 0.25rem;
+  min-width: 14rem;
+  right: auto;
+}
+
 .lb-block-toolbar__menu-item {
   appearance: none;
   background: transparent;
@@ -1305,6 +1311,12 @@
   outline: none;
 }
 
+.lb-block-toolbar__transform--empty {
+  justify-content: center;
+  min-width: 2.5rem;
+  padding: 0;
+}
+
 .lb-block-toolbar__transform-menu {
   background: #ffffff;
   border: 1px solid #d4d4d8;
@@ -1422,6 +1434,19 @@
   min-width: 12rem;
   right: 0;
   top: calc(100% + 0.5rem);
+}
+
+.lb-block-toolbar--hover .lb-block-toolbar__menu {
+  left: 0;
+  max-height: min(18rem, calc(100vh - 6rem));
+  min-width: 14rem;
+  overflow: auto;
+  right: auto;
+}
+
+.lb-block-toolbar__menu[data-laravel-blocks-block-options-menu-placement="top"] {
+  bottom: calc(100% + 0.5rem);
+  top: auto;
 }
 
 .lb-slash-command {
