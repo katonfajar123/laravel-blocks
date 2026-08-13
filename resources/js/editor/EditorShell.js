@@ -11,6 +11,7 @@ import {
   SlashCommandMenu,
   createBlockSelectionState,
   createEmptyBlockSelection,
+  createTopLevelBlockSelectionState,
   createTopLevelHoverBlockSelectionState,
   slashCommandItems,
 } from '../block-editor/index.js';
@@ -97,6 +98,7 @@ export const EditorShell = {
     const hoverSuppressedUntil = shallowRef(0);
     const hoveredBlockSelection = shallowRef(createEmptyBlockSelection());
     const inspectorOpen = shallowRef(false);
+    const requestedBlockSelection = shallowRef(createEmptyBlockSelection());
     const selection = shallowRef(createSelectionState(null));
     const slash = shallowRef({
       activeIndex: 0,
@@ -124,6 +126,11 @@ export const EditorShell = {
     function updateEditorState(currentEditor) {
       blockSelection.value = createBlockSelectionState(currentEditor);
       selection.value = createSelectionState(currentEditor);
+
+      if (requestedBlockSelection.value.active && blockSelection.value.active) {
+        requestedBlockSelection.value = blockSelection.value;
+      }
+
       editorStateVersion.value += 1;
     }
 
@@ -178,6 +185,7 @@ export const EditorShell = {
 
       hoverSuppressedUntil.value = Date.now() + 350;
       clearHoveredBlock();
+      requestedBlockSelection.value = createEmptyBlockSelection();
 
       globalThis.setTimeout?.(() => {
         if (!keyboardSuppressionActive()) {
@@ -195,17 +203,6 @@ export const EditorShell = {
       );
     }
 
-    function hasEmptyFocusedBlock() {
-      return Boolean(
-        editor.value?.isFocused
-        && !keyboardSuppressionActive()
-        && blockSelection.value.active
-        && blockSelection.value.depth === 1
-        && selection.value?.empty
-        && blockSelection.value.text.trim() === '',
-      );
-    }
-
     function updateHoveredBlock(event) {
       if (keyboardSuppressionActive() || hasTextSelection() || slash.value.open) {
         clearHoveredBlock();
@@ -218,6 +215,26 @@ export const EditorShell = {
         editor.value?.view?.dom,
         event.target,
       ));
+    }
+
+    function clearRequestedBlockControls() {
+      requestedBlockSelection.value = createEmptyBlockSelection();
+    }
+
+    function requestBlockControls(block) {
+      const result = commands.value?.run?.('selectBlock', { block }) ?? { executed: false };
+
+      if (!result.executed) {
+        return false;
+      }
+
+      requestedBlockSelection.value = createTopLevelBlockSelectionState(
+        editor.value,
+        block.index,
+      );
+      clearHoveredBlock();
+
+      return true;
     }
 
     function contextualToolbarState() {
@@ -235,10 +252,10 @@ export const EditorShell = {
         };
       }
 
-      if (hasEmptyFocusedBlock()) {
+      if (requestedBlockSelection.value.active && !keyboardSuppressionActive()) {
         return {
-          block: blockSelection.value,
-          mode: 'empty',
+          block: requestedBlockSelection.value,
+          mode: 'block',
         };
       }
 
@@ -249,7 +266,7 @@ export const EditorShell = {
       ) {
         return {
           block: hoveredBlockSelection.value,
-          mode: 'hover',
+          mode: 'handle',
         };
       }
 
@@ -515,6 +532,11 @@ export const EditorShell = {
 
     return () => {
       const toolbarState = contextualToolbarState();
+      const documentBlockCount = editor.value?.state?.doc?.childCount ?? 0;
+      const trailingBlock = createTopLevelBlockSelectionState(
+        editor.value,
+        documentBlockCount - 1,
+      );
 
       return h('div', {
         class: 'lb-editor-shell',
@@ -525,13 +547,8 @@ export const EditorShell = {
         'data-laravel-blocks-editor-header': '',
       }, [
         h('div', {
-          class: 'lb-editor-shell__header-start',
-        }, [
-          h(BlockInserter, {
-            block: blockSelection.value,
-            commandRegistry: commands.value,
-            manifest: props.manifest,
-          }),
+        class: 'lb-editor-shell__header-start',
+      }, [
           h(HistoryToolbar, {
             commandRegistry: commands.value,
             editor: editor.value,
@@ -591,6 +608,7 @@ export const EditorShell = {
         suppressed: slash.value.open,
         onHoverControlsEnter: retainHoverControls,
         onHoverControlsLeave: releaseHoverControls,
+        onRequestBlockControls: requestBlockControls,
       }),
       h(SlashCommandMenu, {
         activeIndex: slash.value.activeIndex,
@@ -617,6 +635,7 @@ export const EditorShell = {
           ? h(EditorContent, {
             editor: editor.value,
             class: 'lb-editor-shell__content',
+            onPointerdown: clearRequestedBlockControls,
             onPointerleave: scheduleClearHoveredBlock,
             onPointermove: updateHoveredBlock,
           })
@@ -631,6 +650,12 @@ export const EditorShell = {
           manifest: props.manifest,
         }),
       ]),
+      h(BlockInserter, {
+        block: trailingBlock,
+        commandRegistry: commands.value,
+        editor: editor.value,
+        manifest: props.manifest,
+      }),
       ]);
     };
   },

@@ -1,6 +1,7 @@
 import { computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import { Icon, IconButton, blockIconName, targetIsInside } from '../ui/index.js';
+import { blockRect } from './block-selection.js';
 import { blockInserterItems, filterBlockInserterItems } from './manifest.js';
 
 function groupedItems(items) {
@@ -32,6 +33,10 @@ export const BlockInserter = {
       type: Object,
       default: null,
     },
+    editor: {
+      type: Object,
+      default: null,
+    },
     manifest: {
       type: Object,
       default: () => ({}),
@@ -41,13 +46,46 @@ export const BlockInserter = {
     const activeIndex = ref(0);
     const input = ref(null);
     const open = ref(false);
+    const placement = ref('bottom');
     const query = ref('');
     const root = ref(null);
+    const rootStyle = ref({});
 
     const items = computed(() => blockInserterItems(props.manifest));
     const filtered = computed(() => filterBlockInserterItems(items.value, query.value));
     const groups = computed(() => groupedItems(filtered.value));
     const activeItem = computed(() => filtered.value[activeIndex.value] ?? null);
+
+    function updatePosition() {
+      const rect = blockRect(props.editor, props.block);
+
+      if (!rect) {
+        rootStyle.value = {};
+
+        return;
+      }
+
+      const viewportPadding = 8;
+      const buttonSize = 40;
+      const gap = 8;
+      const viewportWidth = globalThis.window?.innerWidth ?? 1024;
+      const viewportHeight = globalThis.window?.innerHeight ?? 768;
+      const left = Math.min(
+        Math.max(viewportPadding, rect.right - buttonSize),
+        viewportWidth - buttonSize - viewportPadding,
+      );
+      const top = Math.min(
+        Math.max(viewportPadding, rect.bottom + gap),
+        viewportHeight - buttonSize - viewportPadding,
+      );
+
+      placement.value = top + buttonSize + 420 > viewportHeight ? 'top' : 'bottom';
+      rootStyle.value = Object.freeze({
+        left: `${Math.round(left)}px`,
+        position: 'fixed',
+        top: `${Math.round(top)}px`,
+      });
+    }
 
     function close(reason = 'programmatic') {
       open.value = false;
@@ -67,6 +105,7 @@ export const BlockInserter = {
 
     function show() {
       open.value = true;
+      updatePosition();
       globalThis.document?.dispatchEvent?.(new CustomEvent('laravel-blocks:overlay-open', {
         detail: {
           source: 'block-inserter',
@@ -142,11 +181,28 @@ export const BlockInserter = {
 
     onMounted(() => {
       globalThis.document?.addEventListener?.('pointerdown', handleOutsidePointer, true);
+      globalThis.addEventListener?.('resize', updatePosition);
+      globalThis.addEventListener?.('scroll', updatePosition, true);
+      nextTick(updatePosition);
     });
 
     onBeforeUnmount(() => {
       globalThis.document?.removeEventListener?.('pointerdown', handleOutsidePointer, true);
+      globalThis.removeEventListener?.('resize', updatePosition);
+      globalThis.removeEventListener?.('scroll', updatePosition, true);
     });
+
+    watch(
+      () => [
+        props.block.active,
+        props.block.from,
+        props.block.to,
+        props.block.index,
+        props.editor,
+      ],
+      () => nextTick(updatePosition),
+      { immediate: true },
+    );
 
     expose({
       close,
@@ -161,9 +217,12 @@ export const BlockInserter = {
     });
 
     return () => h('div', {
-      class: 'lb-block-inserter',
+      class: 'lb-block-inserter lb-block-inserter--trailing',
+      'data-laravel-blocks-block-appender-root': '',
+      'data-laravel-blocks-block-appender-placement': placement.value,
       'data-laravel-blocks-block-inserter-root': '',
       ref: root,
+      style: rootStyle.value,
     }, [
       h(IconButton, {
         'aria-expanded': open.value ? 'true' : 'false',
@@ -172,6 +231,7 @@ export const BlockInserter = {
         'data-laravel-blocks-block-appender': '',
         label: 'Add block',
         onClick: toggle,
+        title: 'Add block after the final block',
         variant: 'ghost',
       }, {
         default: () => h(Icon, { name: 'plus' }),

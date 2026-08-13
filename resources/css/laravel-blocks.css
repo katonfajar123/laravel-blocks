@@ -521,12 +521,6 @@
   display: none;
 }
 
-.lb-block-toolbar--hover .lb-block-toolbar__menu {
-  left: 0.25rem;
-  min-width: 14rem;
-  right: auto;
-}
-
 .lb-block-toolbar__menu-item {
   appearance: none;
   background: transparent;
@@ -1108,29 +1102,6 @@
   width: 3rem;
 }
 
-.lb-editor-shell__header .lb-block-inserter {
-  display: flex;
-  gap: 0;
-  padding: 0;
-  position: relative;
-}
-
-.lb-editor-shell__header .lb-block-inserter__button {
-  background: var(--lb-accent);
-  border-radius: 0.25rem;
-  color: var(--lb-accent-contrast);
-  min-height: 3rem;
-  opacity: 1;
-  width: 3rem;
-}
-
-.lb-editor-shell__header .lb-block-inserter__button:hover:not(:disabled),
-.lb-editor-shell__header .lb-block-inserter__button:focus-visible,
-.lb-editor-shell__header .lb-block-inserter__button[aria-expanded="true"] {
-  background: #4338ca;
-  color: #ffffff;
-}
-
 .lb-block-inserter__popover {
   border-radius: 0.375rem;
   box-shadow:
@@ -1237,8 +1208,10 @@
   border: 1px solid #27272a;
   border-radius: 0.25rem;
   box-shadow: 0 12px 32px rgb(15 23 42 / 0.12);
+  max-width: calc(100vw - 1rem);
   opacity: 1;
   padding: 0;
+  width: max-content;
 }
 
 .lb-contextual-toolbar .lb-ui-toolbar {
@@ -1252,6 +1225,11 @@
   gap: 0;
   min-height: 3.25rem;
   padding-inline: 0.375rem;
+}
+
+.lb-block-toolbar__transform-group,
+.lb-block-toolbar__heading-level-group {
+  position: relative;
 }
 
 .lb-contextual-toolbar .lb-ui-toolbar-group + .lb-ui-toolbar-group {
@@ -1269,6 +1247,28 @@
 .lb-contextual-toolbar .lb-ui-button--primary {
   background: #eef2ff;
   color: #4f46e5;
+}
+
+.lb-block-hover-handle {
+  background: #ffffff;
+  border: 1px solid #a1a1aa;
+  border-radius: 0.25rem;
+  box-shadow: 0 6px 18px rgb(15 23 42 / 0.1);
+  color: #3f3f46;
+  min-height: 2.5rem;
+  opacity: 1;
+  width: 2.5rem;
+  z-index: 44;
+}
+
+.lb-block-hover-handle:hover:not(:disabled),
+.lb-block-hover-handle:focus-visible {
+  background: #f4f4f5;
+  border-color: #52525b;
+}
+
+.lb-block-hover-handle[hidden] {
+  display: none;
 }
 
 .lb-is-dragging-block {
@@ -1311,12 +1311,6 @@
   outline: none;
 }
 
-.lb-block-toolbar__transform--empty {
-  justify-content: center;
-  min-width: 2.5rem;
-  padding: 0;
-}
-
 .lb-block-toolbar__transform-menu {
   background: #ffffff;
   border: 1px solid #d4d4d8;
@@ -1333,6 +1327,36 @@
   padding: 0.875rem 0.625rem;
   position: absolute;
   top: calc(100% + 0.5rem);
+}
+
+.lb-block-toolbar__heading-level {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: 0.25rem;
+  color: #18181b;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  min-height: 2.5rem;
+  min-width: 2.75rem;
+  padding: 0 0.625rem;
+}
+
+.lb-block-toolbar__heading-level:hover,
+.lb-block-toolbar__heading-level:focus-visible,
+.lb-block-toolbar__heading-level[aria-expanded="true"] {
+  background: #f4f4f5;
+  outline: none;
+}
+
+.lb-block-toolbar__heading-menu {
+  left: 0;
+  min-width: 5rem;
+}
+
+.lb-block-toolbar__heading-menu .lb-block-toolbar__transform-item {
+  grid-template-columns: 1fr;
 }
 
 .lb-block-toolbar__transform-menu[hidden] {
@@ -1436,10 +1460,46 @@
   top: calc(100% + 0.5rem);
 }
 
-.lb-block-toolbar--hover .lb-block-toolbar__menu {
+.lb-block-toolbar__menu {
   max-height: min(18rem, calc(100vh - 6rem));
   min-width: 14rem;
   overflow: auto;
+}
+
+.lb-block-inserter--trailing {
+  display: block;
+  padding: 0;
+  z-index: 60;
+}
+
+.lb-block-inserter--trailing .lb-block-inserter__button {
+  background: #ffffff;
+  border: 1px solid #a1a1aa;
+  border-radius: 0.25rem;
+  color: #27272a;
+  min-height: 2.5rem;
+  opacity: 1;
+  width: 2.5rem;
+}
+
+.lb-block-inserter--trailing .lb-block-inserter__button:hover:not(:disabled),
+.lb-block-inserter--trailing .lb-block-inserter__button:focus-visible,
+.lb-block-inserter--trailing .lb-block-inserter__button[aria-expanded="true"] {
+  background: #f4f4f5;
+  border-color: #52525b;
+  color: #18181b;
+}
+
+.lb-block-inserter--trailing .lb-block-inserter__popover {
+  left: auto;
+  right: 0;
+  top: calc(100% + 0.5rem);
+}
+
+.lb-block-inserter--trailing[data-laravel-blocks-block-appender-placement="top"]
+  .lb-block-inserter__popover {
+  bottom: calc(100% + 0.5rem);
+  top: auto;
 }
 
 .lb-block-toolbar__menu[data-laravel-blocks-block-options-menu-placement="top"] {

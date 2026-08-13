@@ -375,34 +375,38 @@ test('formats selected text through the unified contextual toolbar', async ({ pa
   const toolbar = page.locator('#editor-null [data-laravel-blocks-contextual-toolbar]');
   const richToolbar = page.locator('#editor-null [data-laravel-blocks-rich-text-toolbar]');
   const emptyAffordance = page.locator('#editor-null [data-laravel-blocks-empty-block-affordance]');
+  const transform = page.locator('#editor-null [data-laravel-blocks-block-transform]');
+  const dragHandle = page.locator('#editor-null [data-laravel-blocks-block-drag-handle]');
+  const options = page.locator('#editor-null [data-laravel-blocks-block-options]');
   const bold = page.locator('#editor-null [data-laravel-blocks-contextual-command="toggleBold"]');
   const italic = page.locator('#editor-null [data-laravel-blocks-contextual-command="toggleItalic"]');
 
   await expect(richToolbar).toHaveCount(0);
+  await expect(toolbar).toHaveCount(1);
+  await expect(frame).toHaveCount(0);
+  await expect(emptyAffordance).toHaveCount(0);
   await expect(toolbar).toBeHidden();
 
   await canvas.click();
   await page.keyboard.type('Toolbar text');
 
-  await expect(emptyAffordance).toBeHidden();
-  await expect(frame).toBeHidden();
   await expect(toolbar).toBeHidden();
 
   await page.keyboard.press('Enter');
-  await expect(emptyAffordance).toBeVisible();
-  await expect(toolbar).toHaveAttribute('data-laravel-blocks-contextual-toolbar-mode', 'empty');
+  await expect(toolbar).toBeHidden();
+  await expect(page.locator('#editor-null [data-laravel-blocks-block-appender]')).toBeVisible();
 
   await page.keyboard.type('More text');
 
-  await expect(emptyAffordance).toBeHidden();
-  await expect(frame).toBeHidden();
   await expect(toolbar).toBeHidden();
 
   await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
 
   await expect(toolbar).toBeVisible();
   await expect(toolbar).toHaveAttribute('data-laravel-blocks-contextual-toolbar-mode', 'inline');
-  await expect(frame).toBeHidden();
+  await expect(transform).toBeVisible();
+  await expect(dragHandle).toBeVisible();
+  await expect(options).toBeVisible();
   await expect(bold).toHaveAttribute('aria-pressed', 'false');
   await expect(italic).toHaveAttribute('aria-pressed', 'false');
 
@@ -498,11 +502,11 @@ test('transforms the current block through the unified contextual toolbar', asyn
   await canvas.click();
   await page.keyboard.type('Transform me');
 
-  await expect(frame).toBeHidden();
+  await expect(frame).toHaveCount(0);
   await expect(toolbar).toBeHidden();
 
   await revealHoverToolbar(page, '#editor-null');
-  await expect(toolbar).toHaveAttribute('data-laravel-blocks-contextual-toolbar-mode', 'hover');
+  await expect(toolbar).toHaveAttribute('data-laravel-blocks-contextual-toolbar-mode', 'block');
   await expect(transform).toBeVisible();
   await transform.click();
   await expect(menu).toBeVisible();
@@ -517,6 +521,19 @@ test('transforms the current block through the unified contextual toolbar', asyn
   });
 
   await revealHoverToolbar(page, '#editor-null');
+  const headingLevel = page.locator('#editor-null [data-laravel-blocks-heading-level]');
+
+  await expect(headingLevel).toHaveText('H2');
+  await headingLevel.click();
+  await page.locator('#editor-null [data-laravel-blocks-heading-level-option="4"]').click();
+
+  await expect.poll(() => firstContentNode(page, '#editor-null')).toMatchObject({
+    type: 'heading',
+    attrs: { level: 4 },
+  });
+
+  await revealHoverToolbar(page, '#editor-null');
+  await page.screenshot({ path: 'test-results/unified-toolbar-heading.png', fullPage: false });
   await transform.click();
   await expect(menu).toBeVisible();
   await page.locator('#editor-null [data-laravel-blocks-block-transform-item="setParagraph"]').click();
@@ -527,13 +544,14 @@ test('transforms the current block through the unified contextual toolbar', asyn
   });
 
   await expect(menu).toBeHidden();
+  await revealHoverToolbar(page, '#editor-null');
+  await expect(headingLevel).toHaveCount(0);
 });
 
 test('manages the current top-level block through contextual block controls', async ({ page }) => {
   await page.goto(baseUrl);
 
   const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
-  const wrapper = page.locator('#editor-null [data-laravel-blocks-block-wrapper]');
   const toolbar = page.locator('#editor-null [data-laravel-blocks-block-toolbar]');
   const transform = page.locator('#editor-null [data-laravel-blocks-block-transform]');
   const options = page.locator('#editor-null [data-laravel-blocks-block-options]');
@@ -552,11 +570,9 @@ test('manages the current top-level block through contextual block controls', as
     editor.commands.focus('start');
   });
 
-  await expect(wrapper).toBeHidden();
   await expect(toolbar).toBeHidden();
 
   await revealHoverToolbar(page, '#editor-null', 0);
-  await expect(wrapper).toBeHidden();
   await expect(toolbar.locator('svg.lb-ui-icon')).not.toHaveCount(0);
   await expect(transform).toBeVisible();
   await expect(page.locator('#editor-null [data-laravel-blocks-block-drag-handle]')).toBeEnabled();
@@ -614,6 +630,33 @@ test('manages the current top-level block through contextual block controls', as
   await expect(canvas).toBeFocused();
   await expect.poll(async () => (await editorDocument(page, '#editor-null')).content.map(textForNode))
     .toEqual(['Second block', 'First block', '']);
+});
+
+test('adapts the single contextual toolbar to the active block type', async ({ page }) => {
+  await page.goto(baseUrl);
+
+  await page.evaluate(() => {
+    const editor = document.querySelector('#editor-null').__laravelBlocksEditor.editor();
+
+    editor.commands.setContent({
+      type: 'doc',
+      content: [{
+        type: 'codeBlock',
+        content: [{ type: 'text', text: 'const answer = 42;' }],
+      }],
+    });
+    editor.commands.setTextSelection(1);
+  });
+
+  const toolbar = await revealHoverToolbar(page, '#editor-null');
+
+  await expect(toolbar).toHaveCount(1);
+  await expect(toolbar.locator('[data-laravel-blocks-block-transform]')).toBeVisible();
+  await expect(toolbar.locator('[data-laravel-blocks-block-options]')).toBeVisible();
+  await expect(toolbar.locator('[data-laravel-blocks-heading-level]')).toHaveCount(0);
+  await expect(toolbar.locator('[data-laravel-blocks-contextual-command="toggleBold"]')).toHaveCount(0);
+  await expect(toolbar.locator('[data-laravel-blocks-contextual-command="toggleItalic"]')).toHaveCount(0);
+  await expect(toolbar.locator('[data-laravel-blocks-contextual-command="openLink"]')).toHaveCount(0);
 });
 
 test('reorders top-level blocks through pointer drag and drop feedback', async ({ page }) => {
@@ -768,10 +811,26 @@ test('inserts manifest blocks through the appender inserter', async ({ page }) =
   const heading = page.locator('#editor-null [data-laravel-blocks-block-inserter-item="heading"]');
   const unsupported = page.locator('#editor-null [data-laravel-blocks-block-inserter-item="featureCard"]');
 
+  await expect(page.locator('#editor-null [data-laravel-blocks-editor-header] [data-laravel-blocks-block-appender]'))
+    .toHaveCount(0);
+  await expect(page.locator('#editor-null [data-laravel-blocks-contextual-toolbar] [data-laravel-blocks-block-appender]'))
+    .toHaveCount(0);
+  await expect(appender).toBeVisible();
+
   await canvas.click();
   await page.keyboard.type('Start');
 
   await expect(appender.locator('svg.lb-ui-icon path')).toHaveCount(2);
+
+  const lastBlockBox = await canvas.locator(':scope > *').last().boundingBox();
+  const appenderBox = await appender.boundingBox();
+
+  expect(lastBlockBox).not.toBeNull();
+  expect(appenderBox).not.toBeNull();
+  expect(appenderBox.x + appenderBox.width).toBeCloseTo(lastBlockBox.x + lastBlockBox.width, 0);
+  expect(appenderBox.y).toBeGreaterThan(lastBlockBox.y + lastBlockBox.height);
+
+  await page.screenshot({ path: 'test-results/trailing-appender.png', fullPage: false });
   await appender.click();
   await expect(inserter).toBeVisible();
   await expect(search).toBeFocused();
@@ -1095,11 +1154,17 @@ async function selectedBlockIndex(page, selector) {
 async function revealHoverToolbar(page, selector, blockIndex = 0) {
   const toolbar = page.locator(`${selector} [data-laravel-blocks-contextual-toolbar]`);
   const block = page.locator(`${selector} [data-laravel-blocks-canvas] > *`).nth(blockIndex);
+  const handle = page.locator(`${selector} [data-laravel-blocks-block-hover-handle]`);
 
+  await block.click();
+  await expect(toolbar).toBeHidden();
   await page.waitForTimeout(400);
   await block.hover();
+  await expect(handle).toBeVisible();
+  await handle.click();
   await expect(toolbar).toBeVisible();
-  await expect(toolbar).toHaveAttribute('data-laravel-blocks-contextual-toolbar-mode', 'hover');
+  await expect(handle).toBeHidden();
+  await expect(toolbar).toHaveAttribute('data-laravel-blocks-contextual-toolbar-mode', 'block');
 
   return toolbar;
 }

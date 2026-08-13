@@ -236,11 +236,7 @@ export function blockToolbarStyle({
   const stickyHeaderBottom = stickyHeader?.getBoundingClientRect?.().bottom ?? 0;
   const minimumTop = Math.max(viewportPadding, stickyHeaderBottom + viewportPadding);
   const preferredTop = rect.top - toolbarHeight - offset;
-  const fallbackTop = Math.min(
-    rect.bottom + offset,
-    (globalThis.window?.innerHeight ?? 768) - toolbarHeight - viewportPadding,
-  );
-  const top = preferredTop < minimumTop ? Math.max(minimumTop, fallbackTop) : preferredTop;
+  const top = preferredTop < minimumTop ? minimumTop : preferredTop;
   const left = Math.min(
     Math.max(viewportPadding, rect.left),
     viewportWidth - (toolbarRect.width ?? 240) - viewportPadding,

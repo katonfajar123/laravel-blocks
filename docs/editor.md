@@ -26,7 +26,7 @@ The block Inserter, Block Appender, and slash menu MUST share the same registry-
 
 Initial categories are Text, Media, Design, Laravel, Dynamic, Interactive, Content, and Marketing. Category names are presentation metadata and do not form part of the stored schema.
 
-The current implementation includes a manifest-driven header Inserter and slash command menu. These surfaces read the editor manifest payload, group or filter blocks by category/search query, insert supported Tiptap nodes through the shared command layer, and show disabled unsupported manifest blocks with a reason. The header Inserter opens as an icon grid with search and a Browse all affordance, while the slash menu opens as a compact keyboard-first list from `/` in an empty top-level text block. Slash commands support query typing, ArrowUp/ArrowDown, Enter, Escape, Backspace, and pointer insertion, and replace the triggering empty block with the selected supported node. The bundle currently maps `paragraph`, `heading`, `bulletList`, `orderedList`, `blockquote`, and `codeBlock`; package manifest entries marked `supports.inserter: false` are hidden from the Inserter/slash surfaces for structural nodes such as `listItem`. Patterns, reusable blocks, recent/favorites, nested insertion rules, Home/End behavior, IME polish, and async provider behavior remain later milestones.
+The current implementation includes a manifest-driven trailing Inserter and slash command menu. These surfaces read the editor manifest payload, group or filter blocks by category/search query, insert supported Tiptap nodes through the shared command layer, and show disabled unsupported manifest blocks with a reason. One standalone plus button sits after the final top-level block and opens the icon-grid Inserter with search and a Browse all affordance; it is not part of the header or contextual toolbar. The slash menu opens as a compact keyboard-first list from `/` in an empty top-level text block. Slash commands support query typing, ArrowUp/ArrowDown, Enter, Escape, Backspace, and pointer insertion, and replace the triggering empty block with the selected supported node. The bundle currently maps `paragraph`, `heading`, `bulletList`, `orderedList`, `blockquote`, and `codeBlock`; package manifest entries marked `supports.inserter: false` are hidden from the Inserter/slash surfaces for structural nodes such as `listItem`. Patterns, reusable blocks, recent/favorites, nested insertion rules, Home/End behavior, IME polish, and async provider behavior remain later milestones.
 
 ## Block operations
 
@@ -46,7 +46,7 @@ The default `1.0` editor MUST include:
 
 Operations MUST preserve a valid document tree. Dragging MUST show a precise insertion indicator, invalid targets, and autoscroll where needed. An invalid drop target MUST be visibly rejected rather than repaired silently after the drop, and movement MUST have Move Up/Down plus keyboard alternatives.
 
-The current implementation includes basic top-level block controls gated by explicit user intent. A collapsed cursor inside a non-empty block does not show the block frame or contextual toolbar. Hovering a top-level block shows a compact contextual toolbar with Transform To, drag/move controls, and an options menu for Move Up/Down, Duplicate, Insert before, Insert after, and Delete. Empty focused text blocks show only a compact transform affordance. These actions execute through the shared command registry, keep hover/menu handoff stable, avoid forced scroll jumps, and update canonical hidden JSON.
+The current implementation includes basic top-level block controls gated by explicit user intent. A collapsed cursor, including one inside an empty block, does not show the contextual toolbar. Hovering a top-level block shows one lightweight handle; activating it opens the single complete contextual toolbar with Transform To, drag/move controls, applicable block-specific controls, and an options menu for Move Up/Down, Duplicate, Insert before, Insert after, and Delete. Heading blocks expose H1-H6 in that toolbar, supported text blocks include Bold, Italic, and Link, and Code omits unsupported marks. These actions execute through the shared command registry, keep handle/menu handoff stable, avoid forced scroll jumps, and update canonical hidden JSON.
 
 Pointer drag/drop is currently a basic top-level foundation: the contextual drag handle can move one selected top-level block before or after another top-level block, shows an insertion indicator, rejects no-op or off-canvas drops without changing the document, and keeps the hidden canonical JSON synchronized. Nested drag/drop, autoscroll, multi-select, touch polish, keyboard reordering, announcements, copy/paste, and block-specific command filtering remain later milestones.
 
@@ -64,7 +64,7 @@ Text-capable nodes MUST support:
 
 A selection bubble menu MUST provide fast access to frequent marks. Link editing MUST use a selection-anchored popover with validation, target control, apply/unlink behavior, Escape cancellation, and predictable focus restoration. The editor schema, not the toolbar, determines which marks a node accepts.
 
-The current implementation routes Bold, Italic, and Link through the unified contextual toolbar rather than a second text-only toolbar. It appears only for a non-empty text selection, anchors near that selected text, uses selection state for link editing, routes actions through the shared command layer, updates canonical hidden JSON, and restores focus to the editor canvas.
+The current implementation routes Bold, Italic, and Link through the unified contextual toolbar rather than a second text-only toolbar. A non-empty text selection opens the same complete toolbar composition used for block controls, with only the groups valid for the selected block. Link editing uses selection state, routes actions through the shared command layer, updates canonical hidden JSON, and restores focus to the editor canvas.
 
 The Link control opens a selection-anchored popover with URL input, open-in-new-tab toggle, Apply, Unlink, inline validation feedback, Escape cancellation, and preserved-selection mutation. The current provider boundary validates safe external, root-relative, and anchor links; internal-link search/autocomplete, remaining marks, keyboard shortcuts, mixed-selection state, and schema-filtered mark availability remain later milestones.
 
@@ -114,7 +114,7 @@ JSON preview is a diagnostic view of the canonical value. HTML preview MUST use 
 
 The interface MUST expose applicable commands through:
 
-- a sticky document header for global controls such as Inserter, Undo, Redo, and Settings;
+- a sticky document header for global controls such as Undo, Redo, and Settings;
 - one contextual toolbar for the active block and text selection;
 - the settings sidebar;
 - slash commands;
@@ -123,7 +123,7 @@ The interface MUST expose applicable commands through:
 
 These are multiple entry points to the same command and selection layers. They MUST NOT implement conflicting behavior independently.
 
-The current implementation includes the internal selection snapshot and shared command registry plus a sticky header, intent-gated unified contextual toolbar, Transform To/options menus, link popover, basic manifest header Inserter, basic slash commands, basic generated Inspector controls, a basic top-level Document/List View, and visible header Undo/Redo controls. Undo and Redo execute through the command registry from the sticky header and from Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z. The default editor surface is full-width and clean; collapsed typing does not open block chrome, and the Inspector and List View do not open automatically. The full shortcut map, nested controls, advanced drag/drop, and complete block operation UI remain later milestones.
+The current implementation includes the internal selection snapshot and shared command registry plus a sticky header, one intent-gated adaptive contextual toolbar, Transform To/options menus, link popover, a basic trailing manifest Inserter, basic slash commands, basic generated Inspector controls, a basic top-level Document/List View, and visible header Undo/Redo controls. Undo and Redo execute through the command registry from the sticky header and from Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z. The default editor surface is full-width and clean; collapsed typing does not open block chrome, the standalone plus remains after the final block, and the Inspector and List View do not open automatically. The full shortcut map, nested controls, advanced drag/drop, and complete block operation UI remain later milestones.
 
 ## Shared UI infrastructure
 

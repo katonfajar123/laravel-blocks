@@ -186,9 +186,9 @@ Activating Link opens an anchored popover—not a full-screen modal—with:
 
 Ordinary collapsed cursor focus inside a non-empty text block MUST NOT expose the block selection frame or a persistent block toolbar. Contextual block chrome appears only from intentional triggers:
 
-- a non-empty text selection exposes inline formatting and link controls near the selection;
-- an empty focused text block exposes a compact inserter/transform affordance and hides as soon as typing starts;
-- pointer hover over a block exposes a lightweight drag handle and options button;
+- a non-empty text selection exposes one contextual toolbar containing the applicable block and inline controls;
+- an empty focused text block keeps the toolbar hidden; the trailing document appender remains the insertion path;
+- pointer hover over a block exposes one lightweight block handle that opens the contextual toolbar when activated;
 - explicit block or multi-block selection exposes block-level actions when that selection mode is implemented.
 
 Selecting a block MUST expose a toolbar composed from shared controls plus block-specific commands. It includes, where supported:
@@ -236,7 +236,7 @@ The Inserter MUST provide:
 - an insertion preview or description sufficient to distinguish similar items;
 - focus return to the inserted block.
 
-The block appender MUST expose an obvious insertion target at valid empty and trailing positions without permanently cluttering the canvas.
+The default block appender MUST be a standalone plus control after the final block. It MUST NOT be rendered as a contextual toolbar or as a second permanent header Inserter, and it MUST expose valid empty and trailing insertion without permanently cluttering the canvas.
 
 ## Slash-command contract
 
