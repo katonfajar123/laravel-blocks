@@ -68,7 +68,7 @@ export const BlockInserter = {
       }
 
       const viewportPadding = 8;
-      const buttonSize = 34;
+      const buttonSize = 36;
       const gap = 8;
       const viewportWidth = globalThis.window?.innerWidth ?? 1024;
       const viewportHeight = globalThis.window?.innerHeight ?? 768;

@@ -78,6 +78,10 @@ The UI system owns at least these token families:
 
 Exact token values are introduced with the relevant UI implementation. Minor token decisions must preserve these principles; changing the product's visual direction requires explicit maintainer approval.
 
+Current editor chrome uses a rounded floating control language: contextual toolbars and compact popovers use large radii in the 16-24px range, thin low-contrast borders, and soft elevation instead of hard strokes or heavy shadows. Active controls use a high-contrast amber state with dark text, while inactive controls stay muted slate with subtle hover fill. Toolbar groups use thin dividers to separate command families without making the chrome visually louder than the canvas.
+
+Editor icons are stroke-based SVGs with round caps/joins and are organized as one isolated icon module per symbol behind the shared `Icon` primitive. The icon registry may aggregate those modules for rendering, but new icons should not be added as anonymous path arrays in a monolithic sprite file.
+
 ## Interaction styling rules
 
 - Hover MUST enhance discoverability but MUST NOT be the only way to reveal an essential keyboard action.

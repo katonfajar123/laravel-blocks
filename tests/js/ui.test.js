@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   Button,
+  Icon,
   IconButton,
   Popover,
   Toolbar,
@@ -9,15 +10,18 @@ import {
   computePopoverStyle,
   createOverlayController,
   createPopoverController,
+  iconPath,
   normalizePopoverPlacement,
   targetIsInside,
 } from '../../resources/js/ui/index.js';
+import { iconDefinitions } from '../../resources/js/ui/icons/index.js';
 
 describe('editor UI primitives', () => {
   it('exposes named Vue primitives with stable default props', () => {
     expect(Button.name).toBe('LaravelBlocksButton');
     expect(Button.props.variant.default).toBe('neutral');
     expect(Button.props.size.default).toBe('md');
+    expect(Icon.name).toBe('LaravelBlocksIcon');
     expect(IconButton.name).toBe('LaravelBlocksIconButton');
     expect(IconButton.props.label.required).toBe(true);
     expect(Toolbar.name).toBe('LaravelBlocksToolbar');
@@ -25,6 +29,20 @@ describe('editor UI primitives', () => {
     expect(ToolbarGroup.name).toBe('LaravelBlocksToolbarGroup');
     expect(Popover.name).toBe('LaravelBlocksPopover');
     expect(Popover.props.placement.default).toBe('bottom-start');
+  });
+
+  it('uses modular stroke icon definitions behind the stable icon facade', () => {
+    expect(Object.keys(iconDefinitions)).toContain('highlighter');
+    expect(iconDefinitions.highlighter).toMatchObject({
+      name: 'highlighter',
+    });
+    expect(iconDefinitions.highlighter.paths).toEqual(iconPath('highlighter'));
+    expect(iconPath('unknown-icon')).toEqual(iconPath('paragraph'));
+
+    for (const definition of Object.values(iconDefinitions)) {
+      expect(definition.paths.length).toBeGreaterThan(0);
+      expect(Object.isFrozen(definition.paths)).toBe(true);
+    }
   });
 
   it('normalizes and computes deterministic popover placement', () => {

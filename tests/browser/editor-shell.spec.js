@@ -519,12 +519,41 @@ test('formats selected text through the unified contextual toolbar', async ({ pa
   await expect(bold).toHaveAttribute('aria-pressed', 'false');
   await expect(italic).toHaveAttribute('aria-pressed', 'false');
   await expect(highlight).toHaveAttribute('aria-pressed', 'false');
+  await expect(bold.locator('[data-laravel-blocks-icon="bold"]')).toBeVisible();
+  await expect(italic.locator('[data-laravel-blocks-icon="italic"]')).toBeVisible();
+
+  const toolbarVisual = await toolbar.evaluate((element) => {
+    const style = window.getComputedStyle(element);
+    const divider = element.querySelector('.lb-ui-toolbar-group + .lb-ui-toolbar-group');
+    const dividerStyle = divider ? window.getComputedStyle(divider) : null;
+    const icon = element.querySelector('[data-laravel-blocks-icon="bold"]');
+
+    return {
+      borderLeftWidth: Number.parseFloat(style.borderLeftWidth),
+      borderRadius: Number.parseFloat(style.borderTopLeftRadius),
+      boxShadow: style.boxShadow,
+      dividerWidth: Number.parseFloat(dividerStyle?.borderLeftWidth ?? '0'),
+      iconFill: icon?.getAttribute('fill'),
+      iconStrokeLinecap: icon?.getAttribute('stroke-linecap'),
+      iconStrokeWidth: Number.parseFloat(icon?.getAttribute('stroke-width') ?? '0'),
+    };
+  });
+
+  expect(toolbarVisual.borderLeftWidth).toBeGreaterThanOrEqual(1);
+  expect(toolbarVisual.borderRadius).toBeGreaterThanOrEqual(20);
+  expect(toolbarVisual.boxShadow).not.toBe('none');
+  expect(toolbarVisual.dividerWidth).toBeGreaterThanOrEqual(1);
+  expect(toolbarVisual.iconFill).toBe('none');
+  expect(toolbarVisual.iconStrokeLinecap).toBe('round');
+  expect(toolbarVisual.iconStrokeWidth).toBeGreaterThanOrEqual(1.5);
+  expect(toolbarVisual.iconStrokeWidth).toBeLessThanOrEqual(2);
 
   await bold.click();
 
   await expect(canvas).toBeFocused();
   await expect(bold).toHaveAttribute('aria-pressed', 'true');
   await expect.poll(() => firstTextMarkTypes(page, '#editor-null')).toEqual(['bold']);
+  await expect(bold).toHaveCSS('background-color', 'rgb(247, 184, 75)');
 
   await italic.click();
 
@@ -538,6 +567,7 @@ test('formats selected text through the unified contextual toolbar', async ({ pa
   await expect(highlight).toHaveAttribute('aria-pressed', 'true');
   await expect.poll(() => firstTextMarkTypes(page, '#editor-null')).toEqual(['bold', 'highlight', 'italic']);
   await expect(canvas.locator('mark.lb-editor-highlight').first()).toBeVisible();
+  await expect(highlight).toHaveCSS('background-color', 'rgb(247, 184, 75)');
 
   await page.keyboard.press('ArrowRight');
 
@@ -938,7 +968,11 @@ test('inserts manifest blocks through the appender inserter', async ({ page }) =
   await canvas.click();
   await page.keyboard.type('Start');
 
-  await expect(appender.locator('svg.lb-ui-icon path')).toHaveCount(2);
+  const plusIcon = appender.locator('svg.lb-ui-icon[data-laravel-blocks-icon="plus"]');
+
+  await expect(plusIcon.locator('path')).toHaveCount(2);
+  await expect(plusIcon).toHaveAttribute('fill', 'none');
+  await expect(plusIcon).toHaveAttribute('stroke-linecap', 'round');
 
   const lastBlockBox = await canvas.locator(':scope > *').last().boundingBox();
   const appenderBox = await appender.boundingBox();
@@ -956,10 +990,22 @@ test('inserts manifest blocks through the appender inserter', async ({ page }) =
     .toHaveAttribute('data-laravel-blocks-block-appender-placement', /top|bottom/);
 
   const inserterBox = await inserter.boundingBox();
+  const inserterVisual = await inserter.evaluate((element) => {
+    const style = window.getComputedStyle(element);
+
+    return {
+      borderLeftWidth: Number.parseFloat(style.borderLeftWidth),
+      borderRadius: Number.parseFloat(style.borderTopLeftRadius),
+      boxShadow: style.boxShadow,
+    };
+  });
 
   expect(inserterBox).not.toBeNull();
   expect(inserterBox.width).toBeLessThanOrEqual(330);
   expect(inserterBox.height).toBeLessThanOrEqual(360);
+  expect(inserterVisual.borderLeftWidth).toBeGreaterThanOrEqual(1);
+  expect(inserterVisual.borderRadius).toBeGreaterThanOrEqual(20);
+  expect(inserterVisual.boxShadow).not.toBe('none');
 
   await search.fill('heading');
   await expect(heading).toBeVisible();
@@ -1357,6 +1403,20 @@ test('replaces an empty text block through slash commands', async ({ page }) => 
 
   await expect(slash).toBeVisible();
   await expect(query).toHaveAttribute('data-laravel-blocks-slash-query', '');
+
+  const slashVisual = await slash.evaluate((element) => {
+    const style = window.getComputedStyle(element);
+
+    return {
+      borderLeftWidth: Number.parseFloat(style.borderLeftWidth),
+      borderRadius: Number.parseFloat(style.borderTopLeftRadius),
+      boxShadow: style.boxShadow,
+    };
+  });
+
+  expect(slashVisual.borderLeftWidth).toBeGreaterThanOrEqual(1);
+  expect(slashVisual.borderRadius).toBeGreaterThanOrEqual(20);
+  expect(slashVisual.boxShadow).not.toBe('none');
 
   await page.keyboard.type('feature');
 

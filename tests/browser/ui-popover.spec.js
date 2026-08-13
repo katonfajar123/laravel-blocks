@@ -64,6 +64,20 @@ test('runs popover infrastructure from the built package bundle', async ({ page 
   await expect(popover).toHaveAttribute('data-laravel-blocks-placement', 'bottom-start');
   await expect(popover).toHaveCSS('position', 'fixed');
 
+  const visual = await popover.evaluate((element) => {
+    const style = window.getComputedStyle(element);
+
+    return {
+      borderLeftWidth: Number.parseFloat(style.borderLeftWidth),
+      borderRadius: Number.parseFloat(style.borderTopLeftRadius),
+      boxShadow: style.boxShadow,
+    };
+  });
+
+  expect(visual.borderLeftWidth).toBeGreaterThanOrEqual(1);
+  expect(visual.borderRadius).toBeGreaterThanOrEqual(20);
+  expect(visual.boxShadow).not.toBe('none');
+
   await page.locator('#inside-popover').focus();
   await page.keyboard.press('Escape');
 

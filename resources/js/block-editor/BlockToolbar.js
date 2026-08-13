@@ -495,9 +495,10 @@ export const BlockToolbar = {
         onClick: () => run('toggleBold'),
         onMousedown: (event) => event.preventDefault(),
       }, {
-        default: () => h('span', {
-          class: 'lb-contextual-toolbar__bold',
-        }, 'B'),
+        default: () => h(Icon, {
+          name: 'bold',
+          size: 18,
+        }),
       });
     }
 
@@ -666,9 +667,10 @@ export const BlockToolbar = {
         onClick: () => run('toggleItalic'),
         onMousedown: (event) => event.preventDefault(),
       }, {
-        default: () => h('span', {
-          class: 'lb-contextual-toolbar__italic',
-        }, 'I'),
+        default: () => h(Icon, {
+          name: 'italic',
+          size: 18,
+        }),
       });
     }
 
