@@ -65,7 +65,7 @@ final class Heading extends Block
                 'design' => AttributeRule::object(),
                 'advanced' => AttributeRule::object(),
             ],
-            allowedParents: ['doc'],
+            allowedParents: ['doc', 'blockquote'],
             allowedChildren: ['text'],
             allowedMarks: ['bold', 'italic', 'link'],
             maximumChildren: null,

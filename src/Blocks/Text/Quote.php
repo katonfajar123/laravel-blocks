@@ -6,26 +6,26 @@ use KatonFajar\LaravelBlocks\Blocks\Block;
 use KatonFajar\LaravelBlocks\Blocks\BlockSchema;
 use KatonFajar\LaravelBlocks\Validation\AttributeRule;
 
-final class BulletList extends Block
+final class Quote extends Block
 {
     public function name(): string
     {
-        return 'bulletList';
+        return 'blockquote';
     }
 
     public function label(): string
     {
-        return 'Bullet List';
+        return 'Quote';
     }
 
     public function view(): string
     {
-        return 'laravel-blocks::blocks.bullet-list';
+        return 'laravel-blocks::blocks.quote';
     }
 
     public function description(): string
     {
-        return 'Create a bulleted list.';
+        return 'Highlight a quotation.';
     }
 
     public function category(): string
@@ -35,12 +35,12 @@ final class BulletList extends Block
 
     public function keywords(): array
     {
-        return ['list', 'bullet', 'unordered'];
+        return ['quote', 'quotation', 'blockquote'];
     }
 
     public function icon(): string
     {
-        return 'list';
+        return 'quote';
     }
 
     public function schema(): BlockSchema
@@ -51,7 +51,14 @@ final class BulletList extends Block
                 'advanced' => AttributeRule::object(),
             ],
             allowedParents: ['doc', 'blockquote'],
-            allowedChildren: ['listItem'],
+            allowedChildren: [
+                'paragraph',
+                'heading',
+                'bulletList',
+                'orderedList',
+                'blockquote',
+                'codeBlock',
+            ],
             minimumChildren: 1,
             maximumChildren: null,
         );

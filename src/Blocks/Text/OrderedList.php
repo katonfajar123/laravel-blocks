@@ -52,7 +52,7 @@ final class OrderedList extends Block
                 'design' => AttributeRule::object(),
                 'advanced' => AttributeRule::object(),
             ],
-            allowedParents: ['doc'],
+            allowedParents: ['doc', 'blockquote'],
             allowedChildren: ['listItem'],
             minimumChildren: 1,
             maximumChildren: null,

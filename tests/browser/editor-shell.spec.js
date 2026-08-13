@@ -85,6 +85,24 @@ const packageDefaultManifest = {
       keywords: ['item'],
       supports: { inserter: false, reusable: false },
     },
+    {
+      name: 'blockquote',
+      label: 'Quote',
+      description: 'Highlight a quotation.',
+      category: 'text',
+      icon: 'quote',
+      keywords: ['quote', 'quotation', 'blockquote'],
+      supports: { inserter: true },
+    },
+    {
+      name: 'codeBlock',
+      label: 'Code',
+      description: 'Display preformatted code.',
+      category: 'text',
+      icon: 'code',
+      keywords: ['code', 'preformatted', 'snippet'],
+      supports: { inserter: true },
+    },
   ],
 };
 
@@ -996,6 +1014,82 @@ test('uses the package default list manifest through appender and slash flows', 
       content: [{ type: 'paragraph' }],
     }],
   });
+});
+
+test('uses the package default quote and code manifest through complete editing flows', async ({ page }) => {
+  await page.goto(`${baseUrl}/default`);
+
+  const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
+  const appender = page.locator('#editor-null [data-laravel-blocks-block-appender]');
+  const inserter = page.locator('#editor-null [data-laravel-blocks-block-inserter]');
+  const search = page.locator('#editor-null [data-laravel-blocks-block-search]');
+  const quote = page.locator('#editor-null [data-laravel-blocks-block-inserter-item="blockquote"]');
+
+  await canvas.click();
+  await page.keyboard.type('Quote seed');
+  await appender.click();
+  await expect(inserter).toBeVisible();
+  await search.fill('quotation');
+  await expect(quote).toBeVisible();
+  await expect(quote).toHaveAttribute('aria-disabled', 'false');
+  await page.keyboard.press('Enter');
+
+  await expect(inserter).toBeHidden();
+  await expect(canvas).toBeFocused();
+  await page.keyboard.type('Quoted line');
+  await page.keyboard.press('ArrowDown');
+
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content).toEqual([
+    { type: 'paragraph', content: [{ type: 'text', text: 'Quote seed' }] },
+    {
+      type: 'blockquote',
+      content: [{
+        type: 'paragraph',
+        content: [{ type: 'text', text: 'Quoted line' }],
+      }],
+    },
+    { type: 'paragraph' },
+  ]);
+
+  const slash = page.locator('#editor-null [data-laravel-blocks-slash-command]');
+  const code = page.locator('#editor-null [data-laravel-blocks-slash-item="codeBlock"]');
+
+  await canvas.locator(':scope > p').last().click();
+  await page.keyboard.press('/');
+  await page.keyboard.type('snippet');
+  await expect(code).toBeVisible();
+  await expect(code).toHaveAttribute('data-laravel-blocks-slash-item-state', 'active');
+  await page.keyboard.press('Enter');
+
+  await expect(slash).toBeHidden();
+  await expect(canvas).toBeFocused();
+  await page.keyboard.type('const total = 2 < 3;');
+
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[2]).toEqual({
+    type: 'codeBlock',
+    attrs: { language: null },
+    content: [{ type: 'text', text: 'const total = 2 < 3;' }],
+  });
+
+  expect(await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('setParagraph'))).toMatchObject({ executed: true });
+  expect(await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('setCodeBlock'))).toMatchObject({ executed: true });
+
+  await expect(canvas).toBeFocused();
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[2].type)
+    .toBe('codeBlock');
+
+  const toolbar = await revealHoverToolbar(page, '#editor-null', 2);
+
+  await expect(toolbar).toHaveCount(1);
+  await expect(toolbar.locator('[data-laravel-blocks-contextual-command="toggleBold"]')).toHaveCount(0);
+  await expect(toolbar.locator('[data-laravel-blocks-contextual-command="toggleItalic"]')).toHaveCount(0);
+  await expect(toolbar.locator('[data-laravel-blocks-contextual-command="openLink"]')).toHaveCount(0);
 });
 
 test('replaces an empty text block through slash commands', async ({ page }) => {

@@ -2,7 +2,7 @@
 
 ## Status
 
-The product scope contains 50 built-in blocks, delivered incrementally. Paragraph, Heading, Bullet List, Ordered List, and structural List Item are implemented as the initial package-owned text blocks and are registered by default. The remaining catalog blocks arrive in later batches.
+The product scope contains 50 built-in blocks, delivered incrementally. Paragraph, Heading, Bullet List, Ordered List, structural List Item, Quote, and Code are implemented as the initial package-owned text blocks and are registered by default. The remaining catalog blocks arrive in later batches.
 
 ## Catalog
 
@@ -85,8 +85,12 @@ The schema also reserves `doc` and `text`. These lower-camel identifiers are per
 | `bulletList` | `KatonFajar\LaravelBlocks\Blocks\Text\BulletList` | `laravel-blocks::blocks.bullet-list` | Text category, Inserter/slash enabled, no Inspector fields |
 | `orderedList` | `KatonFajar\LaravelBlocks\Blocks\Text\OrderedList` | `laravel-blocks::blocks.ordered-list` | Text category, Inserter/slash enabled, no Inspector fields |
 | `listItem` | `KatonFajar\LaravelBlocks\Blocks\Text\ListItem` | `laravel-blocks::blocks.list-item` | Structural child for list blocks, hidden from Inserter/slash |
+| `blockquote` | `KatonFajar\LaravelBlocks\Blocks\Text\Quote` | `laravel-blocks::blocks.quote` | Text category, Inserter/slash enabled, one or more supported block children |
+| `codeBlock` | `KatonFajar\LaravelBlocks\Blocks\Text\Code` | `laravel-blocks::blocks.code` | Text category, Inserter/slash enabled, plain unmarked text with optional language metadata |
 
-Paragraph allows top-level and list-item placement; Heading allows top-level placement. Both accept text children, the current editor marks (`bold`, `italic`, `link`), and optional empty `design` and `advanced` attribute objects. Heading requires `attrs.level` to be one of `1` through `6`. Bullet List and Ordered List allow top-level placement and require one or more `listItem` children; `listItem` is structural, may only appear inside lists, and currently accepts paragraph children only. Mark-specific server HTML rendering and the complete built-in mark catalog remain separate follow-up work.
+Paragraph allows top-level, list-item, and Quote placement; Heading and both List blocks allow top-level and Quote placement. Paragraph and Heading accept text children, the current editor marks (`bold`, `italic`, `link`), and optional empty `design` and `advanced` attribute objects. Heading requires `attrs.level` to be one of `1` through `6`. Bullet List and Ordered List require one or more `listItem` children; `listItem` is structural, may only appear inside lists, and currently accepts paragraph children only.
+
+Quote matches the bundled Tiptap `block+` structure for the currently supported catalog: it requires one or more Paragraph, Heading, Bullet List, Ordered List, Quote, or Code children. Code accepts only unmarked text, may be empty, and accepts an optional nullable `attrs.language` string of at most 100 characters. Its Blade renderer emits escaped `<pre><code>` output and an escaped `language-*` class when language metadata is present. Syntax highlighting, a language picker, citations, Quote variants, nested-block toolbar controls, mark-specific server HTML rendering, and the complete built-in mark catalog remain separate follow-up work.
 
 ## Registration
 
@@ -94,10 +98,12 @@ The shipped configuration registers the first text blocks in this order:
 
 ```php
 use KatonFajar\LaravelBlocks\Blocks\Text\BulletList;
+use KatonFajar\LaravelBlocks\Blocks\Text\Code;
 use KatonFajar\LaravelBlocks\Blocks\Text\Heading;
 use KatonFajar\LaravelBlocks\Blocks\Text\ListItem;
 use KatonFajar\LaravelBlocks\Blocks\Text\OrderedList;
 use KatonFajar\LaravelBlocks\Blocks\Text\Paragraph;
+use KatonFajar\LaravelBlocks\Blocks\Text\Quote;
 
 return [
     'blocks' => [
@@ -106,6 +112,8 @@ return [
         BulletList::class,
         OrderedList::class,
         ListItem::class,
+        Quote::class,
+        Code::class,
     ],
 ];
 ```

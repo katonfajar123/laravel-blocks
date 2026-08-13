@@ -50,7 +50,7 @@ final class Paragraph extends Block
                 'design' => AttributeRule::object(),
                 'advanced' => AttributeRule::object(),
             ],
-            allowedParents: ['doc', 'listItem'],
+            allowedParents: ['doc', 'listItem', 'blockquote'],
             allowedChildren: ['text'],
             allowedMarks: ['bold', 'italic', 'link'],
             maximumChildren: null,
