@@ -7,9 +7,9 @@
 Laravel Blocks is planned as a ready-to-use visual block editor for Laravel. It is designed to give authors a polished Gutenberg-style canvas while letting Laravel applications own their content, models, persistence, Blade output, and custom PHP blocks.
 
 > [!IMPORTANT]
-> This repository currently contains the package/toolchain foundation, canonical Document v1 boundary, PHP Block Registry, server-side schema validator, safe Blade renderer, PHP-to-editor manifest bridge, precompiled asset distribution, a minimal editor shell, the internal editor selection/command layer, the first package-owned UI primitives with shared Popover infrastructure, the first visible rich-text selection toolbar, basic external-link editing through a link popover, basic top-level block controls, a basic manifest-driven block inserter/appender, basic slash commands, a basic manifest-generated Inspector sidebar, a locked package-owned editor surface, basic visible undo/redo controls with platform shortcuts, top-level drag/drop, Document/List View, and default Paragraph, Heading, List, Quote, Code, and Image blocks. Full mark coverage, nested controls, installer, validation rule, media-provider UI, and the remaining built-in block catalog remain target milestones until implemented.
+> This repository currently contains the package/toolchain foundation, canonical Document v1 boundary, PHP Block Registry, server-side schema validator, safe Blade renderer, PHP-to-editor manifest bridge, precompiled asset distribution and installer, a minimal editor shell, the internal editor selection/command layer, package-owned UI primitives with shared Popover infrastructure, rich-text and link controls, top-level block controls, a manifest-driven block inserter/appender, slash commands, a generated Inspector sidebar, visible undo/redo controls with platform shortcuts, top-level drag/drop, Document/List View, and default Paragraph, Heading, List, Quote, Code, and Image blocks. Full mark rendering, nested controls, validation rule, media-provider UI, and the remaining built-in block catalog remain target milestones until implemented.
 
-## Target developer experience
+## Developer experience
 
 Install the package:
 
@@ -111,9 +111,9 @@ The current documentation is a product and engineering specification:
 - [Security](docs/security.md)
 - [Roadmap](docs/roadmap.md)
 
-## Compatibility target
+## Compatibility
 
-The initial package is planned around:
+The package is tested around:
 
 - PHP `^8.2`;
 - Laravel / Illuminate `^11.0|^12.0|^13.0`;
@@ -122,11 +122,11 @@ The initial package is planned around:
 
 | Laravel | Supported PHP | Laravel Blocks |
 | --- | --- | --- |
-| 11.x | 8.2-8.4 | Planned |
-| 12.x | 8.2-8.5 | Planned |
-| 13.x | 8.3-8.5 | Planned |
+| 11.x | 8.2-8.4 | CI matrix |
+| 12.x | 8.2-8.5 | CI matrix |
+| 13.x | 8.3-8.5 | CI matrix |
 
-PHP `^8.2` and the Laravel/Illuminate 11/12/13 target are frozen package constraints. The exact subset of directly used Illuminate components is finalized during implementation, and each claimed framework/PHP combination remains unverified until the full [compatibility matrix](docs/compatibility.md) passes in CI.
+PHP `^8.2` and the Laravel/Illuminate 11/12/13 target are frozen package constraints. The full [compatibility matrix](docs/compatibility.md) is encoded explicitly in CI so invalid Laravel/PHP combinations are never inferred from a permissive job matrix.
 
 ## Package identity
 
@@ -141,6 +141,6 @@ PHP `^8.2` and the Laravel/Illuminate 11/12/13 target are frozen package constra
 
 ## Development status
 
-The fundamental architecture and mandatory Editor UX are specified. The runnable package/toolchain, immutable canonical Document v1 normalization boundary, abstract PHP Block contract, container-backed Block Registry, executable block/mark schemas, server-authoritative document validator, safe Blade renderer, PHP-to-editor Manifest v1 bridge, precompiled asset distribution boundary, minimal Vue/Tiptap editor shell, shared editor selection/command layer, first UI primitive/Popover infrastructure, first visible rich-text toolbar, basic link popover, top-level block controls, manifest-driven inserter/appender, slash commands, manifest-generated Inspector sidebar, visible undo/redo controls with Ctrl/Cmd shortcuts, top-level drag/drop, Document/List View, and package-owned Paragraph, Heading, List, Quote, Code, and URL-backed Image blocks are implemented.
+The fundamental architecture and mandatory Editor UX are specified. The runnable package/toolchain, immutable canonical Document v1 normalization boundary, abstract PHP Block contract, container-backed Block Registry, executable block/mark schemas, server-authoritative document validator, safe Blade renderer, PHP-to-editor Manifest v1 bridge, precompiled asset installer/distribution boundary, minimal Vue/Tiptap editor shell, shared editor selection/command layer, UI primitive/Popover infrastructure, rich-text and link controls, top-level block controls, manifest-driven inserter/appender, slash commands, generated Inspector sidebar, visible undo/redo controls with Ctrl/Cmd shortcuts, top-level drag/drop, Document/List View, and package-owned Paragraph, Heading, List, Quote, Code, and URL-backed Image blocks are implemented.
 
-The next planned `0.1` step is the compatibility, host-persistence, precompiled-installation, and zero-database release gate. See the public [roadmap](docs/roadmap.md) for the planned release sequence.
+The `0.1` release gate is encoded as an explicit Laravel/PHP CI matrix plus host-persistence, precompiled-installation, and zero-database integration tests. No release or version tag is created by that gate. See the public [roadmap](docs/roadmap.md) for the planned release sequence.

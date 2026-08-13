@@ -3,9 +3,9 @@
 ## Availability
 
 > [!WARNING]
-> Laravel Blocks has not been released. The package foundation, canonical document boundary, block registry, schema validator, Blade renderer, manifest bridge, compiled asset distribution boundary, minimal editor shell, shared command layer, rich-text/link controls, basic top-level block controls, basic manifest inserter/appender, basic slash commands, a basic manifest-generated Inspector, basic undo/redo controls, top-level drag/drop, Document/List View, and default Paragraph/Heading/List/Quote/Code/Image blocks exist; the installer command, complete editor UX, validation rule, media-provider UI, and remaining built-in block catalog remain milestone targets.
+> Laravel Blocks has not been released. The package foundation, canonical document boundary, block registry, schema validator, Blade renderer, manifest bridge, compiled asset installer/distribution boundary, editor shell and command layer, current editing controls, top-level drag/drop, Document/List View, and default Paragraph/Heading/List/Quote/Code/Image blocks exist. The complete editor UX, validation rule, media-provider UI, and remaining built-in block catalog remain milestone targets.
 
-## Proposed requirements
+## Requirements
 
 - PHP 8.2 or newer;
 - Laravel 11, 12, or 13;
@@ -16,20 +16,22 @@ Laravel 13 itself requires PHP 8.3 or newer. See the [compatibility matrix](comp
 
 Node, Vue, Tiptap, ProseMirror, positioning logic, UI primitives, and editor CSS are package development dependencies. All essential assets MUST ship precompiled in the Composer distribution. A consuming application MUST NOT need Node.js, npm/pnpm/yarn, Vue, Tiptap, ProseMirror, Vite configuration, or a frontend build for the default editor.
 
-## Target installation
+## Installation
 
 ```bash
 composer require katonfajar/laravel-blocks
 php artisan laravel-blocks:install
 ```
 
-The installer MUST:
+The installer:
 
-1. publish the package configuration idempotently;
-2. publish versioned `laravel-blocks.js`, `laravel-blocks.css`, and their asset manifest to `public/vendor/laravel-blocks`;
-3. report the next integration steps;
-4. remain safe to run more than once;
-5. leave the application's database schema unchanged.
+1. publishes the package configuration without overwriting an existing host copy;
+2. publishes versioned `laravel-blocks.js`, `laravel-blocks.css`, and their asset manifest to `public/vendor/laravel-blocks`;
+3. reports the next Blade integration step;
+4. remains safe to run more than once;
+5. leaves the application's database schema unchanged.
+
+Use `php artisan laravel-blocks:install --force` only when the package config and published assets should intentionally replace existing files. The default command preserves host changes.
 
 Package discovery MUST register the service provider automatically. The Blade editor component MUST load the published CSS and deferred JavaScript once per page and MUST NOT call the consuming application's `@vite` pipeline.
 
@@ -161,14 +163,15 @@ use KatonFajar\LaravelBlocks\Facades\LaravelBlocks;
 $html = LaravelBlocks::render($post->content);
 ```
 
-The Blade component uses the same renderer path as the facade. Current rendering includes package-owned Paragraph, Heading, Bullet List, Ordered List, List Item, Quote, and Code views plus any application blocks registered with safe Blade views. The remaining built-in block catalog arrives in later batches.
+The Blade component uses the same renderer path as the facade. Current rendering includes package-owned Paragraph, Heading, Bullet List, Ordered List, List Item, Quote, Code, and Image views plus any application blocks registered with safe Blade views. The remaining built-in block catalog arrives in later batches.
 
 ## Publish configuration and renderer views
 
-Target commands:
+Optional manual publish commands:
 
 ```bash
 php artisan vendor:publish --tag=laravel-blocks-config
+php artisan vendor:publish --tag=laravel-blocks-assets
 php artisan vendor:publish --tag=laravel-blocks-renderer-views
 ```
 
@@ -190,7 +193,7 @@ Running `php artisan migrate` is therefore a feature-specific application decisi
 
 ## Minimal smoke test
 
-Once `0.1` exists, a successful installation MUST prove all of the following:
+The automated `0.1` release gate proves all of the following:
 
 - the editor loads without requiring the host Vite configuration;
 - a paragraph can be entered and submitted;

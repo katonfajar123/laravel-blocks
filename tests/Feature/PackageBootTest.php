@@ -104,6 +104,8 @@ it('discovers the provider and boots without database artifacts', function (): v
     expect($metadata['extra']['laravel']['providers'])
         ->toContain(LaravelBlocksServiceProvider::class)
         ->and(array_keys($metadata['require']))
+        ->toContain('illuminate/console')
+        ->and(array_keys($metadata['require']))
         ->not->toContain('illuminate/database')
         ->and(is_dir($packageRoot.'/database/migrations'))
         ->toBeFalse()

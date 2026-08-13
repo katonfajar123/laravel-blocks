@@ -27,7 +27,7 @@ This roadmap defines direction, release composition, and dependency relationship
 
 An in-progress implementation must finish first. Otherwise the highest-value incomplete gap whose dependencies are satisfied is selected, scoped, verified, and evaluated before unrelated work begins.
 
-Package Skeleton, Document Foundation, Block Contract + Registry, Schema Validator, safe Blade Renderer, PHP-to-editor Manifest bridge, Precompiled Asset Distribution, Minimal Editor Shell, the internal selection/command layer, the first package-owned UI primitive/Popover infrastructure, the first visible rich-text selection toolbar, the basic link popover/provider boundary, basic top-level block controls, the basic manifest-driven inserter/appender, basic slash-command insertion, the basic manifest-generated Inspector, the locked package-owned editor surface, and basic visible undo/redo controls with platform shortcuts are complete. The next dependency-safe editor foundations are drag/drop and Document/List View. Blocks remain later dependency candidates rather than an instruction to advance automatically.
+Package Skeleton through the URL-backed Image block are implemented, including the precompiled asset boundary, package-owned editor surface, contextual controls, Inserter/slash commands, Inspector, history, top-level drag/drop, and Document/List View. The `0.1` release gate adds executable installation, host-persistence, zero-database, and complete compatibility-matrix evidence before later media and nested-layout work advances.
 
 ## B00 frozen decisions
 
@@ -49,7 +49,7 @@ Package Skeleton, Document Foundation, Block Contract + Registry, Schema Validat
 
 The exact Composer component list is decided from dependencies actually used by the package; it MUST remain inside PHP `^8.2` and Illuminate `^11.0|^12.0|^13.0`.
 
-After the initial Image implementation, the `0.1` release gate runs the complete valid Laravel/PHP matrix, JSON/JSONB and `TEXT`/`LONGTEXT` host round trips, precompiled no-host-build installation, and zero-package-database checks. Final compatibility checks repeat and harden those claims for `1.0`; they do not defer the `0.1` evidence.
+The `0.1` release gate runs the complete valid Laravel/PHP matrix, JSON/JSONB and `TEXT`/`LONGTEXT` host round trips, precompiled no-host-build installation, and zero-package-database checks. Final compatibility checks repeat and harden those claims for `1.0`; they do not defer the `0.1` evidence.
 
 ## Planned Artisan commands
 
@@ -90,7 +90,7 @@ Core test suites should include:
 
 ## Compatibility matrix
 
-The frozen target matrix is PHP 8.2+ with Laravel 11, 12, and 13. CI MUST cover every valid combination defined in [Compatibility](compatibility.md). Target constraints are fixed, but support claims remain planned and unverified until that matrix passes.
+The frozen target matrix is PHP 8.2+ with Laravel 11, 12, and 13. CI covers every valid combination defined in [Compatibility](compatibility.md), while the representative quality job runs static analysis, formatting, frontend unit/build checks, and browser regression coverage.
 
 ## Benchmark refresh
 

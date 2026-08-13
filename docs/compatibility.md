@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Laravel Blocks is planned to support Laravel 11, 12, and 13 from its first stable major release.
+Laravel Blocks targets Laravel 11, 12, and 13 and tests each valid framework/PHP combination in CI.
 
 ```text
 Requirements
@@ -16,9 +16,9 @@ The valid framework and PHP combinations are:
 
 | Laravel | Supported PHP | Laravel Blocks |
 | --- | --- | --- |
-| 11.x | 8.2-8.4 | Planned |
-| 12.x | 8.2-8.5 | Planned |
-| 13.x | 8.3-8.5 | Planned |
+| 11.x | 8.2-8.4 | CI matrix |
+| 12.x | 8.2-8.5 | CI matrix |
+| 13.x | 8.3-8.5 | CI matrix |
 
 The package-level PHP constraint is `^8.2`. Laravel 13 still requires PHP 8.3 or newer through Laravel's own dependency constraints, so Composer will reject Laravel 13 with PHP 8.2.
 
@@ -34,6 +34,7 @@ The current implemented runtime set is:
 {
   "require": {
     "php": "^8.2",
+    "illuminate/console": "^11.0|^12.0|^13.0",
     "illuminate/contracts": "^11.0|^12.0|^13.0",
     "illuminate/support": "^11.0|^12.0|^13.0",
     "illuminate/view": "^11.0|^12.0|^13.0"
@@ -47,6 +48,7 @@ The anticipated upper-bound set is:
 {
   "require": {
     "php": "^8.2",
+    "illuminate/console": "^11.0|^12.0|^13.0",
     "illuminate/contracts": "^11.0|^12.0|^13.0",
     "illuminate/filesystem": "^11.0|^12.0|^13.0",
     "illuminate/support": "^11.0|^12.0|^13.0",
@@ -86,7 +88,7 @@ Guidelines:
 
 ## CI matrix
 
-The initial GitHub Actions matrix MUST test these combinations:
+The GitHub Actions matrix tests these combinations:
 
 | Laravel | PHP 8.2 | PHP 8.3 | PHP 8.4 | PHP 8.5 |
 | --- | :---: | :---: | :---: | :---: |
@@ -123,7 +125,7 @@ strategy:
         laravel: '13.*'
 ```
 
-CI MUST use the lowest and highest compatible transitive dependencies where practical. Static analysis and browser/editor tests may run on a smaller representative subset, but PHP package integration tests MUST cover the complete table.
+The Laravel 11/PHP 8.2 lane installs the lowest supported transitive dependencies; the other lanes install current compatible dependencies. PHP package integration tests cover the complete table. Composer validation, Pint, PHPStan, Vitest, a deterministic production build, and Playwright run in a representative PHP 8.4 quality job.
 
 ## Compatibility changes
 

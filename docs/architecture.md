@@ -241,7 +241,7 @@ Laravel package discovery will register `KatonFajar\LaravelBlocks\LaravelBlocksS
 - merge package configuration;
 - bind registries, renderer, validator, and media contracts;
 - load namespaced renderer views and package-owned Blade components;
-- register commands and routes when relevant;
+- register the `laravel-blocks:install` console command;
 - publish configuration, frontend block renderer views, and versioned compiled assets;
 - register the asset publish tag and inject published CSS/deferred JavaScript once per page through the editor component;
 - register separate publish groups for optional feature migrations without publishing or running them during core installation.
@@ -249,6 +249,8 @@ Laravel package discovery will register `KatonFajar\LaravelBlocks\LaravelBlocksS
 This follows Laravel's documented package discovery and resource-loading mechanisms.
 
 The implemented asset boundary commits `dist/laravel-blocks.js`, `dist/laravel-blocks.css`, and `dist/manifest.json` as the Composer distribution artifact. The service provider registers a `laravel-blocks-assets` publish group, and `AssetManifest` validates the versioned manifest, checksum, integrity, byte size, base URL, and missing/corrupt metadata before returning asset URLs. The package asset Blade component emits the CSS and deferred module script once per page.
+
+The implemented installer publishes configuration and those committed assets only. It is idempotent by default, offers explicit replacement through `--force`, requires no host frontend toolchain, and never publishes or runs migrations.
 
 The implemented editor shell renders `<x-laravel-blocks::editor>` as a normalized document payload, hidden canonical JSON input, and package-owned Vue/Tiptap mount. The editor, assets, and content components are class-based package-owned surfaces, so application namespace view overrides cannot replace the master editor shell or renderer entrypoint. Only frontend block renderer views are published as supported overrides.
 
@@ -284,7 +286,7 @@ Tiptap               ^3
 ProseMirror          via @tiptap/pm
 ```
 
-PHP 8.2 is the shared language baseline for Laravel 11 and 12. Laravel 13 applications require PHP 8.3 or newer through their own framework constraints. The actual combinations MUST be proven by CI before the first release.
+PHP 8.2 is the shared language baseline for Laravel 11 and 12. Laravel 13 applications require PHP 8.3 or newer through their own framework constraints. CI explicitly executes every documented valid combination before release.
 
 ### Framework compatibility strategy
 

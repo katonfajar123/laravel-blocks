@@ -52,7 +52,7 @@ return [
 ];
 ```
 
-Testbench verifies merge behavior, serialization, default Paragraph/Heading/List/Quote/Code/Image and current editor mark registration, active document limits, renderer policy behavior, asset base URL behavior, editor asset auto-injection opt-out, and config/view/asset publish groups. The `document.unknown_blocks` values/default and precompiled asset-loading boundary are frozen contracts; the current editor runtime remains incomplete until later UI and block milestones land.
+Testbench verifies merge behavior, serialization, default Paragraph/Heading/List/Quote/Code/Image and current editor mark registration, active document limits, renderer policy behavior, asset base URL behavior, editor asset auto-injection opt-out, installer idempotency, and config/view/asset publish groups. The `document.unknown_blocks` values/default and precompiled asset-loading boundary are frozen contracts.
 
 ## Planned expanded configuration
 

@@ -11,6 +11,7 @@ use InvalidArgumentException;
 use KatonFajar\LaravelBlocks\Assets\AssetManifest;
 use KatonFajar\LaravelBlocks\Blocks\Block;
 use KatonFajar\LaravelBlocks\Blocks\BlockRegistry;
+use KatonFajar\LaravelBlocks\Console\InstallCommand;
 use KatonFajar\LaravelBlocks\Manifest\EditorManifestGenerator;
 use KatonFajar\LaravelBlocks\Rendering\DocumentRenderer;
 use KatonFajar\LaravelBlocks\Validation\AttributeRule;
@@ -124,6 +125,10 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
         if (! $this->app->runningInConsole()) {
             return;
         }
+
+        $this->commands([
+            InstallCommand::class,
+        ]);
 
         $this->publishes([
             $this->packageConfigPath() => config_path('laravel-blocks.php'),
