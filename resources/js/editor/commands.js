@@ -390,6 +390,13 @@ const definitions = [
     (editor) => Boolean(editor.isActive('italic')),
   ),
   simpleCommand(
+    'toggleHighlight',
+    'Highlight',
+    (editor) => chainCan(editor, (chain) => chain.toggleHighlight().run()),
+    (editor) => runChain(editor, (chain) => chain.toggleHighlight()),
+    (editor) => Boolean(editor.isActive('highlight')),
+  ),
+  simpleCommand(
     'setLink',
     'Link',
     (editor, payload) => {

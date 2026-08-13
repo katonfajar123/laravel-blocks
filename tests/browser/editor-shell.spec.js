@@ -370,24 +370,25 @@ test('executes editor mutations through the shared command API', async ({ page }
     'focus',
     'selectBlock',
     'toggleBold',
-        'toggleItalic',
-        'setLink',
-        'unsetLink',
-        'duplicateBlock',
-        'deleteBlock',
-        'insertBlockBefore',
-        'insertBlockAfter',
-        'moveBlockUp',
-        'moveBlockDown',
-        'moveBlockToIndex',
-        'insertManifestBlock',
-        'updateBlockAttrs',
-        'setParagraph',
-        'setHeading',
-        'setBlockquote',
-        'setCodeBlock',
-        'toggleBulletList',
-        'undo',
+    'toggleItalic',
+    'toggleHighlight',
+    'setLink',
+    'unsetLink',
+    'duplicateBlock',
+    'deleteBlock',
+    'insertBlockBefore',
+    'insertBlockAfter',
+    'moveBlockUp',
+    'moveBlockDown',
+    'moveBlockToIndex',
+    'insertManifestBlock',
+    'updateBlockAttrs',
+    'setParagraph',
+    'setHeading',
+    'setBlockquote',
+    'setCodeBlock',
+    'toggleBulletList',
+    'undo',
     'redo',
   ]);
 });
@@ -444,6 +445,36 @@ test('uses visible history controls and platform history shortcuts', async ({ pa
   await expect(undo).toBeEnabled();
 });
 
+test('uses platform heading shortcuts for H2 through H4', async ({ page }) => {
+  await page.goto(baseUrl);
+
+  const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
+  const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
+
+  await canvas.click();
+  await page.keyboard.type('Shortcut heading');
+
+  await page.keyboard.press(`${modifier}+Shift+2`);
+  await expect(canvas).toBeFocused();
+  await expect.poll(() => firstContentNode(page, '#editor-null')).toEqual({
+    type: 'heading',
+    attrs: { level: 2 },
+    content: [{ type: 'text', text: 'Shortcut heading' }],
+  });
+
+  await page.keyboard.press(`${modifier}+Shift+3`);
+  await expect.poll(() => firstContentNode(page, '#editor-null')).toMatchObject({
+    type: 'heading',
+    attrs: { level: 3 },
+  });
+
+  await page.keyboard.press(`${modifier}+Shift+4`);
+  await expect.poll(() => firstContentNode(page, '#editor-null')).toMatchObject({
+    type: 'heading',
+    attrs: { level: 4 },
+  });
+});
+
 test('formats selected text through the unified contextual toolbar', async ({ page }) => {
   await page.goto(baseUrl);
 
@@ -457,6 +488,7 @@ test('formats selected text through the unified contextual toolbar', async ({ pa
   const options = page.locator('#editor-null [data-laravel-blocks-block-options]');
   const bold = page.locator('#editor-null [data-laravel-blocks-contextual-command="toggleBold"]');
   const italic = page.locator('#editor-null [data-laravel-blocks-contextual-command="toggleItalic"]');
+  const highlight = page.locator('#editor-null [data-laravel-blocks-contextual-command="toggleHighlight"]');
 
   await expect(richToolbar).toHaveCount(0);
   await expect(toolbar).toHaveCount(1);
@@ -486,6 +518,7 @@ test('formats selected text through the unified contextual toolbar', async ({ pa
   await expect(options).toBeVisible();
   await expect(bold).toHaveAttribute('aria-pressed', 'false');
   await expect(italic).toHaveAttribute('aria-pressed', 'false');
+  await expect(highlight).toHaveAttribute('aria-pressed', 'false');
 
   await bold.click();
 
@@ -498,6 +531,13 @@ test('formats selected text through the unified contextual toolbar', async ({ pa
   await expect(canvas).toBeFocused();
   await expect(italic).toHaveAttribute('aria-pressed', 'true');
   await expect.poll(() => firstTextMarkTypes(page, '#editor-null')).toEqual(['bold', 'italic']);
+
+  await highlight.click();
+
+  await expect(canvas).toBeFocused();
+  await expect(highlight).toHaveAttribute('aria-pressed', 'true');
+  await expect.poll(() => firstTextMarkTypes(page, '#editor-null')).toEqual(['bold', 'highlight', 'italic']);
+  await expect(canvas.locator('mark.lb-editor-highlight').first()).toBeVisible();
 
   await page.keyboard.press('ArrowRight');
 
@@ -733,6 +773,7 @@ test('adapts the single contextual toolbar to the active block type', async ({ p
   await expect(toolbar.locator('[data-laravel-blocks-heading-level]')).toHaveCount(0);
   await expect(toolbar.locator('[data-laravel-blocks-contextual-command="toggleBold"]')).toHaveCount(0);
   await expect(toolbar.locator('[data-laravel-blocks-contextual-command="toggleItalic"]')).toHaveCount(0);
+  await expect(toolbar.locator('[data-laravel-blocks-contextual-command="toggleHighlight"]')).toHaveCount(0);
   await expect(toolbar.locator('[data-laravel-blocks-contextual-command="openLink"]')).toHaveCount(0);
 });
 
@@ -911,6 +952,14 @@ test('inserts manifest blocks through the appender inserter', async ({ page }) =
   await appender.click();
   await expect(inserter).toBeVisible();
   await expect(search).toBeFocused();
+  await expect(page.locator('#editor-null [data-laravel-blocks-block-appender-root]'))
+    .toHaveAttribute('data-laravel-blocks-block-appender-placement', /top|bottom/);
+
+  const inserterBox = await inserter.boundingBox();
+
+  expect(inserterBox).not.toBeNull();
+  expect(inserterBox.width).toBeLessThanOrEqual(330);
+  expect(inserterBox.height).toBeLessThanOrEqual(360);
 
   await search.fill('heading');
   await expect(heading).toBeVisible();
@@ -938,6 +987,45 @@ test('inserts manifest blocks through the appender inserter', async ({ page }) =
 
   await page.keyboard.press('Escape');
   await expect(inserter).toBeHidden();
+});
+
+test('keeps the compact trailing inserter within a narrow lower viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 320 });
+  await page.goto(baseUrl);
+
+  const root = page.locator('#editor-null [data-laravel-blocks-block-appender-root]');
+  const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
+  const appender = page.locator('#editor-null [data-laravel-blocks-block-appender]');
+  const inserter = page.locator('#editor-null [data-laravel-blocks-block-inserter]');
+
+  await page.evaluate(() => {
+    const editor = document.querySelector('#editor-null').__laravelBlocksEditor.editor();
+
+    editor.commands.setContent({
+      type: 'doc',
+      content: Array.from({ length: 8 }, (_, index) => ({
+        type: 'paragraph',
+        content: [{ type: 'text', text: `Viewport inserter ${index + 1}` }],
+      })),
+    });
+    editor.commands.focus('end');
+    window.scrollTo(0, document.body.scrollHeight);
+  });
+
+  await expect(canvas.locator(':scope > p')).toHaveCount(8);
+  await appender.click();
+
+  await expect(inserter).toBeVisible();
+  await expect(root).toHaveAttribute('data-laravel-blocks-block-appender-placement', /top|bottom/);
+  await expect(root).toHaveAttribute('data-laravel-blocks-block-appender-align', /left|right/);
+
+  const box = await inserter.boundingBox();
+
+  expect(box).not.toBeNull();
+  expect(box.x).toBeGreaterThanOrEqual(0);
+  expect(box.y).toBeGreaterThanOrEqual(0);
+  expect(box.x + box.width).toBeLessThanOrEqual(390);
+  expect(box.y + box.height).toBeLessThanOrEqual(360);
 });
 
 test('uses the package default text manifest for appender, slash, and inspector flows', async ({ page }) => {
@@ -1110,6 +1198,23 @@ test('uses the package default quote and code manifest through complete editing 
     { type: 'paragraph' },
   ]);
 
+  const quotePreview = canvas.locator(':scope > blockquote');
+  await expect(quotePreview).toBeVisible();
+
+  const quoteStyle = await quotePreview.evaluate((element) => {
+    const style = window.getComputedStyle(element);
+
+    return {
+      backgroundColor: style.backgroundColor,
+      borderLeftWidth: Number.parseFloat(style.borderLeftWidth),
+      paddingLeft: Number.parseFloat(style.paddingLeft),
+    };
+  });
+
+  expect(quoteStyle.borderLeftWidth).toBeGreaterThanOrEqual(4);
+  expect(quoteStyle.paddingLeft).toBeGreaterThanOrEqual(16);
+  expect(quoteStyle.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+
   const slash = page.locator('#editor-null [data-laravel-blocks-slash-command]');
   const code = page.locator('#editor-null [data-laravel-blocks-slash-item="codeBlock"]');
 
@@ -1148,6 +1253,7 @@ test('uses the package default quote and code manifest through complete editing 
   await expect(toolbar).toHaveCount(1);
   await expect(toolbar.locator('[data-laravel-blocks-contextual-command="toggleBold"]')).toHaveCount(0);
   await expect(toolbar.locator('[data-laravel-blocks-contextual-command="toggleItalic"]')).toHaveCount(0);
+  await expect(toolbar.locator('[data-laravel-blocks-contextual-command="toggleHighlight"]')).toHaveCount(0);
   await expect(toolbar.locator('[data-laravel-blocks-contextual-command="openLink"]')).toHaveCount(0);
 });
 

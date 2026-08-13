@@ -25,6 +25,7 @@ return [
     'marks' => [
         'bold',
         'italic',
+        'highlight',
         'link',
     ],
 

@@ -46,7 +46,9 @@ export const BlockInserter = {
     const activeIndex = ref(0);
     const input = ref(null);
     const open = ref(false);
+    const placementX = ref('right');
     const placement = ref('bottom');
+    const popover = ref(null);
     const query = ref('');
     const root = ref(null);
     const rootStyle = ref({});
@@ -66,21 +68,46 @@ export const BlockInserter = {
       }
 
       const viewportPadding = 8;
-      const buttonSize = 40;
+      const buttonSize = 34;
       const gap = 8;
       const viewportWidth = globalThis.window?.innerWidth ?? 1024;
       const viewportHeight = globalThis.window?.innerHeight ?? 768;
+      const stickyHeader = globalThis.document?.querySelector?.('[data-laravel-blocks-editor-header]');
+      const stickyHeaderBottom = stickyHeader?.getBoundingClientRect?.().bottom ?? 0;
+      const minimumTop = Math.max(viewportPadding, stickyHeaderBottom + gap);
+      const maximumTop = Math.max(minimumTop, viewportHeight - buttonSize - viewportPadding);
+      const popoverRect = open.value ? popover.value?.getBoundingClientRect?.() : null;
+      const popoverWidth = Math.min(
+        popoverRect?.width || 320,
+        viewportWidth - (viewportPadding * 2),
+      );
+      const popoverHeight = Math.min(
+        popoverRect?.height || 336,
+        viewportHeight - (viewportPadding * 2),
+      );
       const left = Math.min(
         Math.max(viewportPadding, rect.right - buttonSize),
         viewportWidth - buttonSize - viewportPadding,
       );
       const top = Math.min(
-        Math.max(viewportPadding, rect.bottom + gap),
-        viewportHeight - buttonSize - viewportPadding,
+        Math.max(minimumTop, rect.bottom + gap),
+        maximumTop,
       );
+      const spaceAbove = top - stickyHeaderBottom - gap;
+      const spaceBelow = viewportHeight - (top + buttonSize) - viewportPadding - gap;
+      const rightAlignedLeft = left + buttonSize - popoverWidth;
+      const leftAlignedRight = left + popoverWidth;
 
-      placement.value = top + buttonSize + 420 > viewportHeight ? 'top' : 'bottom';
+      placement.value = spaceBelow < popoverHeight && spaceAbove > spaceBelow ? 'top' : 'bottom';
+      const availablePopoverHeight = Math.max(
+        120,
+        placement.value === 'top' ? spaceAbove : spaceBelow,
+      );
+      placementX.value = rightAlignedLeft < viewportPadding && leftAlignedRight <= viewportWidth - viewportPadding
+        ? 'left'
+        : 'right';
       rootStyle.value = Object.freeze({
+        '--lb-block-inserter-max-height': `${Math.floor(availablePopoverHeight)}px`,
         left: `${Math.round(left)}px`,
         position: 'fixed',
         top: `${Math.round(top)}px`,
@@ -111,7 +138,10 @@ export const BlockInserter = {
           source: 'block-inserter',
         },
       }));
-      nextTick(() => input.value?.focus?.({ preventScroll: true }));
+      nextTick(() => {
+        updatePosition();
+        input.value?.focus?.({ preventScroll: true });
+      });
     }
 
     function toggle() {
@@ -177,6 +207,7 @@ export const BlockInserter = {
 
     watch(filtered, () => {
       activeIndex.value = 0;
+      nextTick(updatePosition);
     });
 
     onMounted(() => {
@@ -219,6 +250,7 @@ export const BlockInserter = {
     return () => h('div', {
       class: 'lb-block-inserter lb-block-inserter--trailing',
       'data-laravel-blocks-block-appender-root': '',
+      'data-laravel-blocks-block-appender-align': placementX.value,
       'data-laravel-blocks-block-appender-placement': placement.value,
       'data-laravel-blocks-block-inserter-root': '',
       ref: root,
@@ -234,13 +266,17 @@ export const BlockInserter = {
         title: 'Add block after the final block',
         variant: 'ghost',
       }, {
-        default: () => h(Icon, { name: 'plus' }),
+        default: () => h(Icon, {
+          name: 'plus',
+          size: 16,
+        }),
       }),
       h('div', {
         'aria-label': 'Block inserter',
         class: 'lb-ui-popover lb-block-inserter__popover',
         'data-laravel-blocks-block-inserter': '',
         hidden: !open.value,
+        ref: popover,
         role: 'dialog',
       }, [
         h('div', {
@@ -248,7 +284,7 @@ export const BlockInserter = {
         }, [
           h(Icon, {
             name: 'search',
-            size: 22,
+            size: 16,
           }),
           h('input', {
             'aria-label': 'Search blocks',
@@ -298,7 +334,7 @@ export const BlockInserter = {
               }, [
                 h(Icon, {
                   name: blockIconName(item.name),
-                  size: 18,
+                  size: 16,
                 }),
                 h('span', {
                   class: 'lb-block-inserter__item-label',

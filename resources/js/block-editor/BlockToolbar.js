@@ -672,6 +672,28 @@ export const BlockToolbar = {
       });
     }
 
+    function highlightButton() {
+      const state = commandState(props.commandRegistry, 'toggleHighlight');
+
+      return h(IconButton, {
+        disabled: !state.enabled,
+        label: 'Highlight',
+        pressed: state.active,
+        size: 'sm',
+        title: state.disabledReason || 'Highlight',
+        variant: state.active ? 'primary' : 'ghost',
+        'data-laravel-blocks-block-command': 'toggleHighlight',
+        'data-laravel-blocks-contextual-command': 'toggleHighlight',
+        onClick: () => run('toggleHighlight'),
+        onMousedown: (event) => event.preventDefault(),
+      }, {
+        default: () => h(Icon, {
+          name: 'highlighter',
+          size: 18,
+        }),
+      });
+    }
+
     function linkButton() {
       const state = commandState(props.commandRegistry, 'unsetLink');
 
@@ -698,6 +720,7 @@ export const BlockToolbar = {
         default: () => [
           boldButton(),
           italicButton(),
+          highlightButton(),
           linkButton(),
         ],
       });

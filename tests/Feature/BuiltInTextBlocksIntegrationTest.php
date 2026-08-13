@@ -17,7 +17,7 @@ it('registers paragraph and heading blocks from the default package configuratio
         ->toBeInstanceOf(Heading::class);
 
     expect(array_keys($this->app->make(MarkRegistry::class)->all()))
-        ->toBe(['bold', 'italic', 'link']);
+        ->toBe(['bold', 'italic', 'highlight', 'link']);
 });
 
 it('allows applications to choose a default block subset through configuration', function (): void {
@@ -48,6 +48,7 @@ it('validates and renders package-owned paragraph and heading documents', functi
                     'marks' => [
                         ['type' => 'bold'],
                         ['type' => 'italic'],
+                        ['type' => 'highlight'],
                         [
                             'type' => 'link',
                             'attrs' => [
@@ -77,7 +78,7 @@ it('validates and renders package-owned paragraph and heading documents', functi
     $html = preg_replace('/>\s+</', '><', trim($content->toHtml()));
 
     expect($html)
-        ->toBe('<p>Hello &lt;Laravel&gt;</p><h3>Package heading</h3>');
+        ->toBe('<p><a href="https://example.test/docs"><mark><em><strong>Hello &lt;Laravel&gt;</strong></em></mark></a></p><h3>Package heading</h3>');
 });
 
 it('fails invalid heading levels with typed validation context', function (): void {

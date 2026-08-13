@@ -10,6 +10,7 @@ describe('editor command registry', () => {
 
     expect(registry).toBeInstanceOf(CommandRegistry);
     expect(registry.has('toggleBold')).toBe(true);
+    expect(registry.has('toggleHighlight')).toBe(true);
     expect(registry.state('toggleBold')).toMatchObject({
       name: 'toggleBold',
       label: 'Bold',
@@ -23,6 +24,12 @@ describe('editor command registry', () => {
       executed: true,
     });
     expect(editor.calls).toContain('run:toggleBold');
+
+    expect(registry.run('toggleHighlight')).toMatchObject({
+      name: 'toggleHighlight',
+      executed: true,
+    });
+    expect(editor.calls).toContain('run:toggleHighlight');
   });
 
   it('does not execute disabled commands and reports a reason', () => {
@@ -95,6 +102,7 @@ describe('editor command registry', () => {
         'selectBlock',
         'toggleBold',
         'toggleItalic',
+        'toggleHighlight',
         'setLink',
         'unsetLink',
         'duplicateBlock',
@@ -192,6 +200,11 @@ function fakeChain(calls, prefix, runResult) {
     },
     toggleItalic() {
       calls.push(`${prefix}:toggleItalic`);
+
+      return this;
+    },
+    toggleHighlight() {
+      calls.push(`${prefix}:toggleHighlight`);
 
       return this;
     },

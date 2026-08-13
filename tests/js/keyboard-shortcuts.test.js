@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  editorShortcutCommand,
+  handleEditorShortcut,
   handleHistoryShortcut,
+  headingShortcutCommand,
   historyShortcutCommand,
 } from '../../resources/js/editor/keyboard-shortcuts.js';
 
@@ -17,6 +20,38 @@ describe('editor keyboard shortcuts', () => {
     expect(historyShortcutCommand(event({ key: 'z' }))).toBeNull();
     expect(historyShortcutCommand(event({ altKey: true, ctrlKey: true, key: 'z' }))).toBeNull();
     expect(historyShortcutCommand(event({ ctrlKey: true, key: 'b' }))).toBeNull();
+  });
+
+  it('maps heading level shortcuts to command payloads', () => {
+    expect(headingShortcutCommand(event({ code: 'Digit2', ctrlKey: true, key: '@', shiftKey: true })))
+      .toEqual({ command: 'setHeading', payload: { level: 2 } });
+    expect(headingShortcutCommand(event({ code: 'Digit3', metaKey: true, key: '#', shiftKey: true })))
+      .toEqual({ command: 'setHeading', payload: { level: 3 } });
+    expect(headingShortcutCommand(event({ ctrlKey: true, key: '4', shiftKey: true })))
+      .toEqual({ command: 'setHeading', payload: { level: 4 } });
+    expect(headingShortcutCommand(event({ code: 'Digit5', ctrlKey: true, key: '%', shiftKey: true })))
+      .toBeNull();
+    expect(headingShortcutCommand(event({ code: 'Digit2', ctrlKey: true, key: '2' })))
+      .toBeNull();
+  });
+
+  it('dispatches editor shortcuts with payloads through the command registry', () => {
+    const preventDefault = vi.fn();
+    const run = vi.fn();
+
+    expect(editorShortcutCommand(event({ code: 'Digit3', ctrlKey: true, key: '#', shiftKey: true })))
+      .toEqual({ command: 'setHeading', payload: { level: 3 } });
+
+    expect(handleEditorShortcut(
+      event({ code: 'Digit3', ctrlKey: true, key: '#', preventDefault, shiftKey: true }),
+      { run },
+    )).toBe(true);
+    expect(preventDefault).toHaveBeenCalledOnce();
+    expect(run).toHaveBeenCalledWith('setHeading', { level: 3 });
+
+    expect(handleEditorShortcut(event({ ctrlKey: true, key: 'z', preventDefault }), { run }))
+      .toBe(true);
+    expect(run).toHaveBeenLastCalledWith('undo', {});
   });
 
   it('dispatches recognized history shortcuts through the command registry', () => {
@@ -44,6 +79,7 @@ describe('editor keyboard shortcuts', () => {
 function event(overrides = {}) {
   return {
     altKey: false,
+    code: '',
     ctrlKey: false,
     key: '',
     metaKey: false,

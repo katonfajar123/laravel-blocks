@@ -52,7 +52,7 @@ final class Paragraph extends Block
             ],
             allowedParents: ['doc', 'listItem', 'blockquote'],
             allowedChildren: ['text'],
-            allowedMarks: ['bold', 'italic', 'link'],
+            allowedMarks: ['bold', 'italic', 'highlight', 'link'],
             maximumChildren: null,
         );
     }

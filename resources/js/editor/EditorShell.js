@@ -1,4 +1,5 @@
 import { EditorContent, useEditor } from '@tiptap/vue-3';
+import Highlight from '@tiptap/extension-highlight';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import StarterKit from '@tiptap/starter-kit';
@@ -19,7 +20,7 @@ import {
 import { createDefaultCommandRegistry } from './commands.js';
 import { normalizeDocument, toCanonicalJson, toTiptapDocument } from './document.js';
 import { HistoryToolbar } from './HistoryToolbar.js';
-import { handleHistoryShortcut } from './keyboard-shortcuts.js';
+import { handleEditorShortcut } from './keyboard-shortcuts.js';
 import { createSelectionState } from './selection.js';
 import { Icon, IconButton } from '../ui/index.js';
 
@@ -463,6 +464,11 @@ export const EditorShell = {
     const editor = useEditor({
       extensions: [
         StarterKit,
+        Highlight.configure({
+          HTMLAttributes: {
+            class: 'lb-editor-highlight',
+          },
+        }),
         LaravelBlocksImage.configure({
           allowBase64: false,
         }),
@@ -486,7 +492,7 @@ export const EditorShell = {
             return true;
           }
 
-          if (handleHistoryShortcut(event, commands.value)) {
+          if (handleEditorShortcut(event, commands.value)) {
             return true;
           }
 

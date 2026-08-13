@@ -67,7 +67,7 @@ final class Heading extends Block
             ],
             allowedParents: ['doc', 'blockquote'],
             allowedChildren: ['text'],
-            allowedMarks: ['bold', 'italic', 'link'],
+            allowedMarks: ['bold', 'italic', 'highlight', 'link'],
             maximumChildren: null,
         );
     }

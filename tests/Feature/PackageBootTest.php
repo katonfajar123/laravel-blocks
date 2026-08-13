@@ -58,7 +58,7 @@ it('merges serializable configuration and registers its publish group', function
             Image::class,
         ])
         ->and($configuration['marks'])
-        ->toBe(['bold', 'italic', 'link'])
+        ->toBe(['bold', 'italic', 'highlight', 'link'])
         ->and($configuration['document']['unknown_blocks'])
         ->toBe('throw')
         ->and($configuration['document']['max_bytes'])

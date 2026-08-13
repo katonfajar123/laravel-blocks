@@ -440,8 +440,67 @@ final readonly class DocumentRenderer
     private function renderText(array $node): string
     {
         $text = $node['text'] ?? '';
+        $html = e(is_string($text) ? $text : '');
+        $marks = $node['marks'] ?? [];
 
-        return e(is_string($text) ? $text : '');
+        if (! is_array($marks) || ! array_is_list($marks)) {
+            return $html;
+        }
+
+        foreach ($marks as $mark) {
+            if (is_array($mark) && ! array_is_list($mark)) {
+                $markObject = [];
+
+                foreach ($mark as $key => $value) {
+                    if (is_string($key)) {
+                        $markObject[$key] = $value;
+                    }
+                }
+
+                $html = $this->renderMark($markObject, $html);
+            }
+        }
+
+        return $html;
+    }
+
+    /**
+     * @param  array<string, mixed>  $mark
+     */
+    private function renderMark(array $mark, string $html): string
+    {
+        return match ($mark['type'] ?? null) {
+            'bold' => '<strong>'.$html.'</strong>',
+            'italic' => '<em>'.$html.'</em>',
+            'highlight' => '<mark>'.$html.'</mark>',
+            'link' => $this->renderLinkMark($mark, $html),
+            default => $html,
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $mark
+     */
+    private function renderLinkMark(array $mark, string $html): string
+    {
+        $attrs = isset($mark['attrs']) && is_array($mark['attrs']) && ! array_is_list($mark['attrs'])
+            ? $mark['attrs']
+            : [];
+
+        $href = $attrs['href'] ?? '';
+        $target = $attrs['target'] ?? null;
+        $rel = $attrs['rel'] ?? null;
+        $attributes = ' href="'.e(is_string($href) ? $href : '').'"';
+
+        if (is_string($target) && $target !== '') {
+            $attributes .= ' target="'.e($target).'"';
+        }
+
+        if (is_string($rel) && $rel !== '') {
+            $attributes .= ' rel="'.e($rel).'"';
+        }
+
+        return '<a'.$attributes.'>'.$html.'</a>';
     }
 
     private function renderUnknownPlaceholder(string $type, string $path): string
