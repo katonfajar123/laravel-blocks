@@ -66,7 +66,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -81,10 +81,18 @@ jobs:
 
       - name: Install lowest supported dependencies
         if: matrix.dependencies == 'lowest'
+        env:
+          COMPOSER_POLICY_ADVISORIES_BLOCK: '0'
         run: composer update --prefer-lowest --prefer-dist --no-interaction --no-progress
 
-      - name: Install current dependencies
-        if: matrix.dependencies == 'highest'
+      - name: Install Laravel 11 dependencies for compatibility evidence
+        if: matrix.laravel == '11' && matrix.dependencies == 'highest'
+        env:
+          COMPOSER_POLICY_ADVISORIES_BLOCK: '0'
+        run: composer update --prefer-dist --no-interaction --no-progress
+
+      - name: Install current supported dependencies
+        if: matrix.laravel != '11' && matrix.dependencies == 'highest'
         run: composer update --prefer-dist --no-interaction --no-progress
 
       - name: Run package tests
@@ -97,7 +105,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -108,7 +116,7 @@ jobs:
           tools: composer:v2
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm

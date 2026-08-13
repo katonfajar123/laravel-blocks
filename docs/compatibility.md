@@ -22,7 +22,7 @@ The valid framework and PHP combinations are:
 
 The package-level PHP constraint is `^8.2`. Laravel 13 still requires PHP 8.3 or newer through Laravel's own dependency constraints, so Composer will reject Laravel 13 with PHP 8.2.
 
-Laravel's upstream support lifecycle is separate from Laravel Blocks compatibility. Laravel 11 reached the end of Laravel security fixes on March 12, 2026; applications should evaluate that lifecycle independently even while this package remains installable and tested on Laravel 11.
+Laravel's upstream support lifecycle is separate from Laravel Blocks compatibility. Laravel 11 reached the end of Laravel security fixes on March 12, 2026, and its currently resolvable framework versions have active security advisories. The Laravel 11 CI lanes set `COMPOSER_POLICY_ADVISORIES_BLOCK=0` only while resolving their ephemeral compatibility fixtures. This proves Laravel Blocks API behavior; it is not a security endorsement or a recommendation to start a new Laravel 11 deployment. Laravel 12/13 lanes retain Composer's normal advisory blocking.
 
 ## Composer constraint contract
 
@@ -125,7 +125,7 @@ strategy:
         laravel: '13.*'
 ```
 
-The Laravel 11/PHP 8.2 lane installs the lowest supported transitive dependencies; the other lanes install current compatible dependencies. PHP package integration tests cover the complete table. Composer validation, Pint, PHPStan, Vitest, a deterministic production build, and Playwright run in a representative PHP 8.4 quality job.
+The Laravel 11/PHP 8.2 lane installs the lowest supported transitive dependencies; the other lanes install current compatible dependencies. Laravel 11's advisory-block exception is scoped to its three ephemeral jobs and does not alter package metadata or suppress Laravel 12/13 policy. PHP package integration tests cover the complete table. Composer validation, Pint, PHPStan, Vitest, a deterministic production build, and Playwright run in a representative PHP 8.4 quality job.
 
 ## Compatibility changes
 

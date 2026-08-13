@@ -128,6 +128,8 @@ The package is tested around:
 
 PHP `^8.2` and the Laravel/Illuminate 11/12/13 target are frozen package constraints. The full [compatibility matrix](docs/compatibility.md) is encoded explicitly in CI so invalid Laravel/PHP combinations are never inferred from a permissive job matrix.
 
+Laravel 11 is upstream end-of-life and its currently resolvable framework versions have active security advisories. The Laravel 11 CI lanes therefore prove package API compatibility under an explicit advisory-block exception; they do not represent a security-support recommendation for new deployments.
+
 ## Package identity
 
 | Item | Value |
