@@ -105,6 +105,22 @@ export const EditorShell = {
     });
     let clearHoverTimer = null;
 
+    function sameBlockSelection(first, second) {
+      return Boolean(first?.active) === Boolean(second?.active)
+        && Number(first?.from ?? 0) === Number(second?.from ?? 0)
+        && Number(first?.to ?? 0) === Number(second?.to ?? 0)
+        && Number(first?.index ?? -1) === Number(second?.index ?? -1)
+        && String(first?.type ?? '') === String(second?.type ?? '');
+    }
+
+    function setHoveredBlock(next) {
+      if (sameBlockSelection(hoveredBlockSelection.value, next)) {
+        return;
+      }
+
+      hoveredBlockSelection.value = next;
+    }
+
     function updateEditorState(currentEditor) {
       blockSelection.value = createBlockSelectionState(currentEditor);
       selection.value = createSelectionState(currentEditor);
@@ -116,7 +132,7 @@ export const EditorShell = {
     }
 
     function clearHoveredBlock() {
-      hoveredBlockSelection.value = createEmptyBlockSelection();
+      setHoveredBlock(createEmptyBlockSelection());
     }
 
     function cancelClearHoverTimer() {
@@ -134,7 +150,7 @@ export const EditorShell = {
         if (!hoverControlsActive.value) {
           clearHoveredBlock();
         }
-      }, 120) ?? null;
+      }, 240) ?? null;
     }
 
     function retainHoverControls() {
@@ -197,11 +213,11 @@ export const EditorShell = {
         return;
       }
 
-      hoveredBlockSelection.value = createTopLevelHoverBlockSelectionState(
+      setHoveredBlock(createTopLevelHoverBlockSelectionState(
         editor.value,
         editor.value?.view?.dom,
         event.target,
-      );
+      ));
     }
 
     function contextualToolbarState() {
@@ -450,7 +466,7 @@ export const EditorShell = {
         syncHiddenInputValue(normalizeDocument(props.document), props.input);
       },
       onBlur: ({ editor: blurredEditor }) => {
-        clearHoveredBlock();
+        scheduleClearHoveredBlock();
         updateEditorState(blurredEditor);
       },
       onFocus: ({ editor: focusedEditor }) => updateEditorState(focusedEditor),

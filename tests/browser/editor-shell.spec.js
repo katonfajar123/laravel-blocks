@@ -492,8 +492,8 @@ test('transforms the current block through the unified contextual toolbar', asyn
   const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
   const toolbar = page.locator('#editor-null [data-laravel-blocks-contextual-toolbar]');
   const frame = page.locator('#editor-null [data-laravel-blocks-block-wrapper]');
-  const options = page.locator('#editor-null [data-laravel-blocks-block-options]');
   const menu = page.locator('#editor-null [data-laravel-blocks-block-transform-menu]');
+  const transform = page.locator('#editor-null [data-laravel-blocks-block-transform]');
 
   await canvas.click();
   await page.keyboard.type('Transform me');
@@ -501,8 +501,11 @@ test('transforms the current block through the unified contextual toolbar', asyn
   await expect(frame).toBeHidden();
   await expect(toolbar).toBeHidden();
 
-  await openHoverOptions(page, '#editor-null');
+  await revealHoverToolbar(page, '#editor-null');
   await expect(toolbar).toHaveAttribute('data-laravel-blocks-contextual-toolbar-mode', 'hover');
+  await expect(transform).toBeVisible();
+  await transform.click();
+  await expect(menu).toBeVisible();
 
   await page.locator('#editor-null [data-laravel-blocks-block-transform-item="setHeading"]').click();
 
@@ -513,7 +516,9 @@ test('transforms the current block through the unified contextual toolbar', asyn
     content: [{ type: 'text', text: 'Transform me' }],
   });
 
-  await openHoverOptions(page, '#editor-null');
+  await revealHoverToolbar(page, '#editor-null');
+  await transform.click();
+  await expect(menu).toBeVisible();
   await page.locator('#editor-null [data-laravel-blocks-block-transform-item="setParagraph"]').click();
 
   await expect.poll(() => firstContentNode(page, '#editor-null')).toEqual({
@@ -522,7 +527,6 @@ test('transforms the current block through the unified contextual toolbar', asyn
   });
 
   await expect(menu).toBeHidden();
-  await expect(options).toBeHidden();
 });
 
 test('manages the current top-level block through contextual block controls', async ({ page }) => {
@@ -531,6 +535,7 @@ test('manages the current top-level block through contextual block controls', as
   const canvas = page.locator('#editor-null [data-laravel-blocks-canvas]');
   const wrapper = page.locator('#editor-null [data-laravel-blocks-block-wrapper]');
   const toolbar = page.locator('#editor-null [data-laravel-blocks-block-toolbar]');
+  const transform = page.locator('#editor-null [data-laravel-blocks-block-transform]');
   const options = page.locator('#editor-null [data-laravel-blocks-block-options]');
   const menu = page.locator('#editor-null [data-laravel-blocks-block-options-menu]');
 
@@ -553,11 +558,21 @@ test('manages the current top-level block through contextual block controls', as
   await revealHoverToolbar(page, '#editor-null', 0);
   await expect(wrapper).toBeHidden();
   await expect(toolbar.locator('svg.lb-ui-icon')).not.toHaveCount(0);
-  await expect(page.locator('#editor-null [data-laravel-blocks-block-transform]')).toHaveCount(0);
+  await expect(transform).toBeVisible();
   await expect(page.locator('#editor-null [data-laravel-blocks-block-drag-handle]')).toBeEnabled();
 
+  const toolbarBox = await toolbar.boundingBox();
+
+  expect(toolbarBox).not.toBeNull();
+
+  await page.mouse.move(toolbarBox.x + 10, toolbarBox.y + 10);
+  await page.waitForTimeout(320);
+  await expect(toolbar).toBeVisible();
+
+  const scrollBeforeOptions = await page.evaluate(() => window.scrollY);
   await options.click();
   await expect(menu).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(scrollBeforeOptions);
   await expect(page.locator('#editor-null [data-laravel-blocks-block-menu-command="moveBlockUp"]')).toBeDisabled();
   await page.locator('#editor-null [data-laravel-blocks-block-menu-command="moveBlockDown"]').click();
 

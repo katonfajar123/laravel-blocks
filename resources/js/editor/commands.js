@@ -3,6 +3,8 @@ import { createBlockSelectionState } from '../block-editor/block-selection.js';
 import { topLevelBlockRanges } from '../block-editor/block-drag.js';
 import { blockInsertPayload } from '../block-editor/manifest.js';
 
+const focusOptions = Object.freeze({ scrollIntoView: false });
+
 function normalLevel(payload) {
   const level = Number(payload?.level ?? 2);
 
@@ -42,11 +44,11 @@ function canRun(editor, callback) {
 }
 
 function chainCan(editor, callback) {
-  return canRun(editor, (candidate) => callback(candidate.can().chain().focus()));
+  return canRun(editor, (candidate) => callback(candidate.can().chain().focus(undefined, focusOptions)));
 }
 
 function runChain(editor, callback) {
-  return Boolean(callback(editor.chain().focus()).run());
+  return Boolean(callback(editor.chain().focus(undefined, focusOptions)).run());
 }
 
 function withStoredSelection(chain, payload) {
@@ -99,7 +101,7 @@ function canUseTopLevelBlock(editor, payload = {}) {
 }
 
 function focusBlock(editor, position) {
-  editor.commands.focus();
+  editor.commands.focus(undefined, focusOptions);
 
   if (Number.isInteger(position)) {
     editor.commands.setTextSelection(Math.max(1, position));
@@ -107,7 +109,7 @@ function focusBlock(editor, position) {
 }
 
 function dispatchBlockTransaction(editor, transaction, focusPosition) {
-  editor.view.dispatch(transaction.scrollIntoView());
+  editor.view.dispatch(transaction);
   focusBlock(editor, focusPosition);
 
   return true;
@@ -346,7 +348,7 @@ const definitions = [
     'focus',
     'Focus',
     (editor) => canRun(editor, (candidate) => !candidate.isDestroyed),
-    (editor) => Boolean(editor.commands.focus()),
+    (editor) => Boolean(editor.commands.focus(undefined, focusOptions)),
   ),
   simpleCommand(
     'selectBlock',

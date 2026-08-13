@@ -197,15 +197,15 @@ export const BlockToolbar = {
       });
     }
 
-    function hoverToolbarStyle() {
+    function hoverToolbarStyle(fallbackWidth = 112) {
       const rect = blockRect(props.editor, props.block);
 
       if (!rect) {
         return Object.freeze({});
       }
 
-      const toolbarRect = currentToolbarRect(112);
-      const left = rect.left - (toolbarRect.width ?? 112) - 8;
+      const toolbarRect = currentToolbarRect(fallbackWidth);
+      const left = rect.left - (toolbarRect.width ?? fallbackWidth) - 8;
 
       return clampToolbarToViewport({
         left,
@@ -376,8 +376,15 @@ export const BlockToolbar = {
         return;
       }
 
-      if (props.mode === 'hover' || props.mode === 'empty') {
-        toolbarStyle.value = hoverToolbarStyle();
+      if (props.mode === 'hover') {
+        toolbarStyle.value = hoverToolbarStyle(320);
+        nextTick(updateMenuPlacement);
+
+        return;
+      }
+
+      if (props.mode === 'empty') {
+        toolbarStyle.value = hoverToolbarStyle(48);
         nextTick(updateMenuPlacement);
 
         return;
@@ -707,15 +714,16 @@ export const BlockToolbar = {
         return [inlineGroup()];
       }
 
-      if (props.mode === 'hover') {
-        return [
-          moveGroup({ compact: true }),
-          moreGroup({ includeTransform: true, commands: hoverOptionCommands }),
-        ];
-      }
-
       if (props.mode === 'empty') {
         return [transformGroup({ empty: true })];
+      }
+
+      if (props.mode === 'hover') {
+        return [
+          transformGroup(),
+          moveGroup(),
+          moreGroup({ commands: hoverOptionCommands }),
+        ];
       }
 
       return [
