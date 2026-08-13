@@ -52,6 +52,10 @@ export function coerceInspectorFieldValue(field, raw) {
     return Boolean(raw);
   }
 
+  if (field?.constraints?.nullable && String(raw ?? '').trim() === '') {
+    return null;
+  }
+
   if (field?.type === 'number' || field?.type === 'range') {
     const number = Number(raw);
 

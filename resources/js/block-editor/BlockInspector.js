@@ -56,9 +56,11 @@ function controlForField(field, value, update) {
 
   return h('input', {
     ...common,
+    autocomplete: field.type === 'url' ? 'url' : undefined,
     onInput: (event) => update(event.target.value),
     placeholder: field.ui.placeholder,
-    type: 'text',
+    spellcheck: field.type === 'url' ? 'false' : undefined,
+    type: field.type === 'url' ? 'url' : 'text',
     value,
   });
 }
@@ -96,6 +98,7 @@ export const BlockInspector = {
     function updateField(field, raw) {
       return props.commandRegistry?.run?.('updateBlockAttrs', {
         block: props.block,
+        focus: !['text', 'textarea', 'url'].includes(field.type),
         path: field.path,
         value: coerceInspectorFieldValue(field, raw),
       }) ?? { executed: false };

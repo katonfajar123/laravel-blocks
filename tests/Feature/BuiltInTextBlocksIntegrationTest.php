@@ -137,10 +137,16 @@ it('exposes paragraph and heading metadata through the editor manifest', functio
     $manifest = LaravelBlocksFacade::editorManifest()->toArray();
 
     expect($manifest['categories'])
-        ->toBe([[
-            'name' => 'text',
-            'label' => 'Text',
-        ]])
+        ->toBe([
+            [
+                'name' => 'text',
+                'label' => 'Text',
+            ],
+            [
+                'name' => 'media',
+                'label' => 'Media',
+            ],
+        ])
         ->and(array_slice(array_column($manifest['blocks'], 'name'), 0, 2))
         ->toBe(['paragraph', 'heading'])
         ->and($manifest['blocks'][0])

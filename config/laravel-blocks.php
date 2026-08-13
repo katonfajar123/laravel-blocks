@@ -1,5 +1,6 @@
 <?php
 
+use KatonFajar\LaravelBlocks\Blocks\Media\Image;
 use KatonFajar\LaravelBlocks\Blocks\Text\BulletList;
 use KatonFajar\LaravelBlocks\Blocks\Text\Code;
 use KatonFajar\LaravelBlocks\Blocks\Text\Heading;
@@ -17,6 +18,7 @@ return [
         ListItem::class,
         Quote::class,
         Code::class,
+        Image::class,
     ],
 
     'marks' => [

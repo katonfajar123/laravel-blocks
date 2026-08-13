@@ -58,6 +58,7 @@ final class Quote extends Block
                 'orderedList',
                 'blockquote',
                 'codeBlock',
+                'image',
             ],
             minimumChildren: 1,
             maximumChildren: null,

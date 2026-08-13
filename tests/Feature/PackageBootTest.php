@@ -1,6 +1,7 @@
 <?php
 
 use KatonFajar\LaravelBlocks\Assets\AssetManifest;
+use KatonFajar\LaravelBlocks\Blocks\Media\Image;
 use KatonFajar\LaravelBlocks\Blocks\Text\BulletList;
 use KatonFajar\LaravelBlocks\Blocks\Text\Code;
 use KatonFajar\LaravelBlocks\Blocks\Text\Heading;
@@ -53,6 +54,7 @@ it('merges serializable configuration and registers its publish group', function
             ListItem::class,
             Quote::class,
             Code::class,
+            Image::class,
         ])
         ->and($configuration['marks'])
         ->toBe(['bold', 'italic', 'link'])

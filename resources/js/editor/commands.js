@@ -1,3 +1,5 @@
+import { NodeSelection } from '@tiptap/pm/state';
+
 import { linkAttributes } from '../rich-text/link-provider.js';
 import { createBlockSelectionState } from '../block-editor/block-selection.js';
 import { topLevelBlockRanges } from '../block-editor/block-drag.js';
@@ -104,6 +106,17 @@ function focusBlock(editor, position) {
   editor.commands.focus(undefined, focusOptions);
 
   if (Number.isInteger(position)) {
+    const blockPosition = Math.max(0, position - 1);
+    const node = editor.state.doc.nodeAt(blockPosition);
+
+    if (node?.isAtom && node.isBlock) {
+      editor.view.dispatch(editor.state.tr.setSelection(
+        NodeSelection.create(editor.state.doc, blockPosition),
+      ));
+
+      return;
+    }
+
     editor.commands.setTextSelection(Math.max(1, position));
   }
 }
@@ -339,6 +352,12 @@ function updateBlockAttrs(editor, payload = {}) {
     nextAttrs,
     target.node.marks,
   );
+
+  if (payload.focus === false) {
+    editor.view.dispatch(transaction);
+
+    return true;
+  }
 
   return dispatchBlockTransaction(editor, transaction, target.block.from + 1);
 }

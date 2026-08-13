@@ -1,4 +1,5 @@
 import { EditorContent, useEditor } from '@tiptap/vue-3';
+import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import StarterKit from '@tiptap/starter-kit';
 import { h, onBeforeUnmount, shallowRef } from 'vue';
@@ -21,6 +22,31 @@ import { HistoryToolbar } from './HistoryToolbar.js';
 import { handleHistoryShortcut } from './keyboard-shortcuts.js';
 import { createSelectionState } from './selection.js';
 import { Icon, IconButton } from '../ui/index.js';
+
+const LaravelBlocksImage = Image.extend({
+  addAttributes() {
+    return {
+      src: { default: null },
+      alt: { default: null },
+      title: { default: null },
+    };
+  },
+  renderHTML({ HTMLAttributes }) {
+    if (!HTMLAttributes.src) {
+      return ['div', {
+        'aria-label': 'Empty image block',
+        'data-laravel-blocks-image-placeholder': '',
+        role: 'img',
+      }, 'Image'];
+    }
+
+    return ['img', {
+      ...this.options.HTMLAttributes,
+      ...HTMLAttributes,
+      'data-laravel-blocks-image': '',
+    }];
+  },
+});
 
 function syncHiddenInputValue(value, input) {
   input.value = typeof value === 'string' ? value : JSON.stringify(value);
@@ -437,6 +463,9 @@ export const EditorShell = {
     const editor = useEditor({
       extensions: [
         StarterKit,
+        LaravelBlocksImage.configure({
+          allowBase64: false,
+        }),
         Link.configure({
           autolink: false,
           linkOnPaste: false,

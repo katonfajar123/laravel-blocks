@@ -26,6 +26,7 @@ const packageDefaultManifest = {
   documentSchemaVersion: 1,
   categories: [
     { name: 'text', label: 'Text' },
+    { name: 'media', label: 'Media' },
   ],
   blocks: [
     {
@@ -103,6 +104,57 @@ const packageDefaultManifest = {
       keywords: ['code', 'preformatted', 'snippet'],
       supports: { inserter: true },
     },
+    {
+      name: 'image',
+      label: 'Image',
+      description: 'Display an image from a URL.',
+      category: 'media',
+      icon: 'image',
+      fields: [
+        {
+          constraints: {
+            allowedSchemes: ['https', 'http'],
+            maxLength: 2048,
+            nullable: true,
+          },
+          default: null,
+          group: 'content',
+          help: 'HTTP or HTTPS URL.',
+          label: 'Image URL',
+          name: 'src',
+          path: 'attrs.src',
+          required: false,
+          type: 'url',
+          ui: {},
+        },
+        {
+          constraints: { maxLength: 500, nullable: true },
+          default: null,
+          group: 'content',
+          help: null,
+          label: 'Alternative text',
+          name: 'alt',
+          path: 'attrs.alt',
+          required: false,
+          type: 'text',
+          ui: {},
+        },
+        {
+          constraints: { maxLength: 500, nullable: true },
+          default: null,
+          group: 'content',
+          help: null,
+          label: 'Title',
+          name: 'title',
+          path: 'attrs.title',
+          required: false,
+          type: 'text',
+          ui: {},
+        },
+      ],
+      keywords: ['image', 'photo', 'picture', 'media'],
+      supports: { inserter: true },
+    },
   ],
 };
 
@@ -151,6 +203,13 @@ test.beforeAll(async () => {
     if (url.pathname === '/default') {
       response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       response.end(editorFixture(packageDefaultManifest));
+
+      return;
+    }
+
+    if (url.pathname === '/fixture-image.svg') {
+      response.writeHead(200, { 'content-type': 'image/svg+xml; charset=utf-8' });
+      response.end('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="350" viewBox="0 0 800 350"><rect width="800" height="350" fill="#e4e4e7"/><path d="M80 280 260 105l115 105 100-90 245 160Z" fill="#71717a"/><circle cx="620" cy="95" r="42" fill="#f59e0b"/></svg>');
 
       return;
     }
@@ -1090,6 +1149,92 @@ test('uses the package default quote and code manifest through complete editing 
   await expect(toolbar.locator('[data-laravel-blocks-contextual-command="toggleBold"]')).toHaveCount(0);
   await expect(toolbar.locator('[data-laravel-blocks-contextual-command="toggleItalic"]')).toHaveCount(0);
   await expect(toolbar.locator('[data-laravel-blocks-contextual-command="openLink"]')).toHaveCount(0);
+});
+
+test('inserts and edits package default images without losing inspector focus or scroll position', async ({ page }) => {
+  await page.goto(`${baseUrl}/default`);
+
+  const root = page.locator('#editor-null');
+  const canvas = root.locator('[data-laravel-blocks-canvas]');
+  const appender = root.locator('[data-laravel-blocks-block-appender]');
+  const inserter = root.locator('[data-laravel-blocks-block-inserter]');
+  const search = root.locator('[data-laravel-blocks-block-search]');
+  const imageItem = root.locator('[data-laravel-blocks-block-inserter-item="image"]');
+  const inspector = root.locator('[data-laravel-blocks-inspector]');
+  const toggle = root.locator('[data-laravel-blocks-inspector-toggle]');
+  const source = root.locator('[data-laravel-blocks-inspector-field="src"]');
+  const alt = root.locator('[data-laravel-blocks-inspector-field="alt"]');
+  const title = root.locator('[data-laravel-blocks-inspector-field="title"]');
+  const placeholder = root.locator('[data-laravel-blocks-image-placeholder]');
+  const renderedImage = root.locator('[data-laravel-blocks-image]');
+
+  await canvas.click();
+  await page.keyboard.type('Image seed');
+  await appender.click();
+  await expect(inserter).toBeVisible();
+  await search.fill('photo');
+  await expect(imageItem).toBeVisible();
+  await expect(imageItem).toHaveAttribute('aria-disabled', 'false');
+  await page.keyboard.press('Enter');
+
+  await expect(inserter).toBeHidden();
+  await expect(canvas).toBeFocused();
+  await expect(placeholder).toBeVisible();
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1]).toEqual({
+    type: 'image',
+    attrs: { src: null, alt: null, title: null },
+  });
+
+  await toggle.click();
+  await expect(inspector).toBeVisible();
+  await expect(root.locator('[data-laravel-blocks-inspector-title]')).toContainText('Image');
+  await expect(source).toHaveAttribute('type', 'url');
+
+  await source.fill(`${baseUrl}/fixture-image.svg`);
+  await expect(source).toBeFocused();
+  await alt.pressSequentially('Landscape preview');
+  await expect(alt).toBeFocused();
+  await title.pressSequentially('Package image');
+  await expect(title).toBeFocused();
+
+  await expect(renderedImage).toBeVisible();
+  await expect(renderedImage).toHaveAttribute('src', `${baseUrl}/fixture-image.svg`);
+  await expect(renderedImage).toHaveAttribute('alt', 'Landscape preview');
+  await expect(renderedImage).toHaveAttribute('title', 'Package image');
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1]).toEqual({
+    type: 'image',
+    attrs: {
+      src: `${baseUrl}/fixture-image.svg`,
+      alt: 'Landscape preview',
+      title: 'Package image',
+    },
+  });
+
+  const scrollBeforeClear = await page.evaluate(() => window.scrollY);
+  await source.fill('');
+
+  await expect(source).toBeFocused();
+  await expect(placeholder).toBeVisible();
+  await expect(renderedImage).toHaveCount(0);
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1].attrs.src)
+    .toBeNull();
+  expect(await page.evaluate(() => window.scrollY)).toBe(scrollBeforeClear);
+
+  await page.screenshot({ path: 'test-results/image-placeholder-inspector.png', fullPage: false });
+
+  await page.goto(`${baseUrl}/default`);
+  await canvas.click();
+  await page.keyboard.press('/');
+  await page.keyboard.type('image');
+  await expect(root.locator('[data-laravel-blocks-slash-item="image"]')).toBeVisible();
+  await page.keyboard.press('Enter');
+
+  await expect(root.locator('[data-laravel-blocks-slash-command]')).toBeHidden();
+  await expect(canvas).toBeFocused();
+  await expect.poll(() => firstContentNode(page, '#editor-null')).toEqual({
+    type: 'image',
+    attrs: { src: null, alt: null, title: null },
+  });
 });
 
 test('replaces an empty text block through slash commands', async ({ page }) => {

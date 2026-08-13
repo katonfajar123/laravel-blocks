@@ -2,7 +2,7 @@
 
 ## Status
 
-The product scope contains 50 built-in blocks, delivered incrementally. Paragraph, Heading, Bullet List, Ordered List, structural List Item, Quote, and Code are implemented as the initial package-owned text blocks and are registered by default. The remaining catalog blocks arrive in later batches.
+The product scope contains 50 built-in blocks, delivered incrementally. Paragraph, Heading, Bullet List, Ordered List, structural List Item, Quote, Code, and Image are implemented and registered by default. The remaining catalog blocks arrive in later batches.
 
 ## Catalog
 
@@ -20,7 +20,7 @@ The product scope contains 50 built-in blocks, delivered incrementally. Paragrap
 | 10 | Text | Details | Expandable disclosure content | `0.8` |
 | 11 | Text | Footnote | Structured note and reference | `0.8` |
 | 12 | Text | Text Box | Styled text container | `0.8` |
-| 13 | Media | Image | Single managed image | `0.1` |
+| 13 | Media | Image | Single image; URL baseline before managed-provider support | `0.1` |
 | 14 | Media | Gallery | Multiple images | `0.3` |
 | 15 | Media | Video | Uploaded or remote video | `0.3` |
 | 16 | Media | Audio | Audio player | `0.8` |
@@ -76,7 +76,7 @@ Milestone assignments after `0.4` may move as the PHP extension APIs become conc
 
 The schema also reserves `doc` and `text`. These lower-camel identifiers are persisted contracts; labels remain localizable. Renaming a stored identifier after content is emitted requires a forward document-schema transform.
 
-## Implemented initial text blocks
+## Implemented initial blocks
 
 | Document node | PHP class | Renderer view | Manifest behavior |
 | --- | --- | --- | --- |
@@ -87,10 +87,13 @@ The schema also reserves `doc` and `text`. These lower-camel identifiers are per
 | `listItem` | `KatonFajar\LaravelBlocks\Blocks\Text\ListItem` | `laravel-blocks::blocks.list-item` | Structural child for list blocks, hidden from Inserter/slash |
 | `blockquote` | `KatonFajar\LaravelBlocks\Blocks\Text\Quote` | `laravel-blocks::blocks.quote` | Text category, Inserter/slash enabled, one or more supported block children |
 | `codeBlock` | `KatonFajar\LaravelBlocks\Blocks\Text\Code` | `laravel-blocks::blocks.code` | Text category, Inserter/slash enabled, plain unmarked text with optional language metadata |
+| `image` | `KatonFajar\LaravelBlocks\Blocks\Media\Image` | `laravel-blocks::blocks.image` | Media category, Inserter/slash enabled, generated URL/alt/title Inspector fields |
 
 Paragraph allows top-level, list-item, and Quote placement; Heading and both List blocks allow top-level and Quote placement. Paragraph and Heading accept text children, the current editor marks (`bold`, `italic`, `link`), and optional empty `design` and `advanced` attribute objects. Heading requires `attrs.level` to be one of `1` through `6`. Bullet List and Ordered List require one or more `listItem` children; `listItem` is structural, may only appear inside lists, and currently accepts paragraph children only.
 
-Quote matches the bundled Tiptap `block+` structure for the currently supported catalog: it requires one or more Paragraph, Heading, Bullet List, Ordered List, Quote, or Code children. Code accepts only unmarked text, may be empty, and accepts an optional nullable `attrs.language` string of at most 100 characters. Its Blade renderer emits escaped `<pre><code>` output and an escaped `language-*` class when language metadata is present. Syntax highlighting, a language picker, citations, Quote variants, nested-block toolbar controls, mark-specific server HTML rendering, and the complete built-in mark catalog remain separate follow-up work.
+Quote matches the bundled Tiptap `block+` structure for the currently supported catalog: it requires one or more Paragraph, Heading, Bullet List, Ordered List, Quote, Code, or Image children. Code accepts only unmarked text, may be empty, and accepts an optional nullable `attrs.language` string of at most 100 characters. Its Blade renderer emits escaped `<pre><code>` output and an escaped `language-*` class when language metadata is present. Syntax highlighting, a language picker, citations, Quote variants, nested-block toolbar controls, mark-specific server HTML rendering, and the complete built-in mark catalog remain separate follow-up work.
+
+Image is a leaf block allowed at the document root or inside Quote. Its initial URL-only contract stores nullable `attrs.src`, `attrs.alt`, and `attrs.title`; non-null `src` must use HTTP or HTTPS, while alt/title strings are limited to 500 characters. `src: null` is a valid editor placeholder and renders no frontend `<img>`. A valid source renders escaped attributes, with empty alternative text when `alt` is absent. Uploads, provider references, media picking, captions, responsive sources, cropping, and presentation controls remain in later media and Field Engine milestones.
 
 ## Registration
 
@@ -104,6 +107,7 @@ use KatonFajar\LaravelBlocks\Blocks\Text\ListItem;
 use KatonFajar\LaravelBlocks\Blocks\Text\OrderedList;
 use KatonFajar\LaravelBlocks\Blocks\Text\Paragraph;
 use KatonFajar\LaravelBlocks\Blocks\Text\Quote;
+use KatonFajar\LaravelBlocks\Blocks\Media\Image;
 
 return [
     'blocks' => [
@@ -114,6 +118,7 @@ return [
         ListItem::class,
         Quote::class,
         Code::class,
+        Image::class,
     ],
 ];
 ```

@@ -13,7 +13,7 @@ it('registers quote and code blocks from the default package configuration', fun
         ->and($blocks['codeBlock'])
         ->toBeInstanceOf(Code::class)
         ->and(array_keys($blocks))
-        ->toBe(['paragraph', 'heading', 'bulletList', 'orderedList', 'listItem', 'blockquote', 'codeBlock']);
+        ->toBe(['paragraph', 'heading', 'bulletList', 'orderedList', 'listItem', 'blockquote', 'codeBlock', 'image']);
 });
 
 it('validates and safely renders package-owned quote and code documents', function (): void {

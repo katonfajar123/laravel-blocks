@@ -188,7 +188,22 @@ Laravel-specific nodes store configuration, not rendered HTML or runtime query r
 }
 ```
 
-Media nodes MAY store a provider URL or a stable media reference plus content metadata. For example, an ID-based provider may produce:
+The implemented initial Image block uses a URL-only leaf node. A newly inserted placeholder is valid with nullable attributes:
+
+```json
+{
+  "type": "image",
+  "attrs": {
+    "src": null,
+    "alt": null,
+    "title": null
+  }
+}
+```
+
+A non-null `src` must be an HTTP(S) URL. The bundled Inspector edits source, alternative text, and title; the frontend renderer omits placeholders until a source exists.
+
+Later media-provider nodes MAY store a provider URL or a stable media reference plus content metadata. For example, an ID-based provider may produce:
 
 ```json
 {

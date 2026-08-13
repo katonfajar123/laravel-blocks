@@ -44,21 +44,24 @@ export function createBlockSelectionState(editor) {
   const cursor = selection.$from;
 
   if (cursor.depth === 0 && editor?.state?.doc?.childCount > 0) {
-    const node = editor.state.doc.child(0);
+    const index = Math.min(cursor.index(0), editor.state.doc.childCount - 1);
+    const node = editor.state.doc.child(index);
 
     if (node?.isBlock) {
+      const from = Number.isInteger(selection.from) ? selection.from : 0;
+
       return Object.freeze({
         active: true,
         attrs: Object.freeze({ ...(node.attrs ?? {}) }),
-        canMoveDown: editor.state.doc.childCount > 1,
-        canMoveUp: false,
+        canMoveDown: index < editor.state.doc.childCount - 1,
+        canMoveUp: index > 0,
         depth: 1,
-        from: 0,
-        index: 0,
+        from,
+        index,
         label: labelForType(node.type?.name),
         siblingCount: editor.state.doc.childCount,
         text: node.textContent ?? '',
-        to: node.nodeSize,
+        to: from + node.nodeSize,
         type: node.type?.name ?? 'unknown',
       });
     }

@@ -45,6 +45,39 @@ describe('block editor helpers', () => {
     expect(Object.isFrozen(selection.attrs)).toBe(true);
   });
 
+  it('selects the correct top-level atom from a document-depth node selection', () => {
+    const blocks = [
+      fakeBlockNode({ nodeSize: 8, type: 'paragraph' }),
+      fakeBlockNode({ nodeSize: 1, type: 'image' }),
+      fakeBlockNode({ nodeSize: 6, type: 'paragraph' }),
+    ];
+    const selection = createBlockSelectionState({
+      state: {
+        doc: {
+          child: (index) => blocks[index],
+          childCount: blocks.length,
+        },
+        selection: {
+          from: 8,
+          $from: {
+            depth: 0,
+            index: () => 1,
+          },
+        },
+      },
+    });
+
+    expect(selection).toMatchObject({
+      canMoveDown: true,
+      canMoveUp: true,
+      from: 8,
+      index: 1,
+      label: 'Image',
+      to: 9,
+      type: 'image',
+    });
+  });
+
   it('derives top-level block ranges for drag transactions', () => {
     const ranges = topLevelBlockRanges({
       state: {
@@ -287,6 +320,18 @@ describe('block editor helpers', () => {
     });
 
     expect(blockInsertPayload({
+      name: 'image',
+      supported: true,
+    })).toEqual({
+      node: {
+        type: 'image',
+        attrs: { src: null, alt: null, title: null },
+      },
+      reason: null,
+      valid: true,
+    });
+
+    expect(blockInsertPayload({
       disabledReason: 'Unsupported.',
       name: 'featureCard',
       supported: false,
@@ -374,6 +419,11 @@ describe('block editor helpers', () => {
     expect(inspectorFieldValue(block, inspectorFieldsForBlock(manifest, block, 'content')[0])).toBe(2);
     expect(inspectorFieldValue(block, inspectorFieldsForBlock(manifest, block, 'advanced')[0])).toBe('intro');
     expect(coerceInspectorFieldValue(inspectorFieldsForBlock(manifest, block, 'content')[0], '3')).toBe(3);
+
+    expect(coerceInspectorFieldValue({
+      constraints: { nullable: true },
+      type: 'url',
+    }, '   ')).toBeNull();
   });
 });
 

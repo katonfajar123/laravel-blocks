@@ -15,6 +15,10 @@ const supportedInsertPayloads = Object.freeze({
     type: 'heading',
     attrs: { level: 2 },
   }),
+  image: () => ({
+    type: 'image',
+    attrs: { src: null, alt: null, title: null },
+  }),
   orderedList: () => ({
     type: 'orderedList',
     attrs: { start: 1, type: null },

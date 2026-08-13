@@ -124,6 +124,39 @@
   margin-bottom: 0;
 }
 
+.lb-editor-shell__prosemirror [data-laravel-blocks-image],
+.lb-editor-shell__prosemirror [data-laravel-blocks-image-placeholder] {
+  display: block;
+  margin: 0 0 1.35rem;
+  max-width: 100%;
+}
+
+.lb-editor-shell__prosemirror [data-laravel-blocks-image] {
+  height: auto;
+  width: 100%;
+}
+
+.lb-editor-shell__prosemirror [data-laravel-blocks-image-placeholder] {
+  align-items: center;
+  aspect-ratio: 16 / 7;
+  background: #f4f4f5;
+  border: 1px dashed #a1a1aa;
+  color: #52525b;
+  display: flex;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  justify-content: center;
+  min-height: 8rem;
+  user-select: none;
+}
+
+.lb-editor-shell__prosemirror [data-laravel-blocks-image-placeholder].ProseMirror-selectednode,
+.lb-editor-shell__prosemirror [data-laravel-blocks-image].ProseMirror-selectednode {
+  outline: 2px solid var(--lb-accent);
+  outline-offset: 3px;
+}
+
 .lb-editor-shell__loading {
   color: #6b7280;
   grid-column: 2;

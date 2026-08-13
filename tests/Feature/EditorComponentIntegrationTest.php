@@ -33,7 +33,7 @@ it('renders the editor component with assets, mount payload, and canonical hidde
         ->and($payload['manifest']['documentSchemaVersion'])
         ->toBe(1)
         ->and(array_column($payload['manifest']['blocks'], 'name'))
-        ->toBe(['paragraph', 'heading', 'bulletList', 'orderedList', 'listItem', 'blockquote', 'codeBlock'])
+        ->toBe(['paragraph', 'heading', 'bulletList', 'orderedList', 'listItem', 'blockquote', 'codeBlock', 'image'])
         ->and($payload['placeholder'])
         ->toBe('Start writing or type / to choose a block');
 });
