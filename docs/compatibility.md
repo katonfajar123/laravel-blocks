@@ -33,9 +33,12 @@ The current implemented runtime set is:
 ```json
 {
   "require": {
+    "ext-fileinfo": "*",
     "php": "^8.2",
     "illuminate/console": "^11.0|^12.0|^13.0",
     "illuminate/contracts": "^11.0|^12.0|^13.0",
+    "illuminate/filesystem": "^11.0|^12.0|^13.0",
+    "illuminate/http": "^11.0|^12.0|^13.0",
     "illuminate/support": "^11.0|^12.0|^13.0",
     "illuminate/view": "^11.0|^12.0|^13.0"
   }
@@ -47,10 +50,12 @@ The anticipated upper-bound set is:
 ```json
 {
   "require": {
+    "ext-fileinfo": "*",
     "php": "^8.2",
     "illuminate/console": "^11.0|^12.0|^13.0",
     "illuminate/contracts": "^11.0|^12.0|^13.0",
     "illuminate/filesystem": "^11.0|^12.0|^13.0",
+    "illuminate/http": "^11.0|^12.0|^13.0",
     "illuminate/support": "^11.0|^12.0|^13.0",
     "illuminate/validation": "^11.0|^12.0|^13.0",
     "illuminate/view": "^11.0|^12.0|^13.0"
@@ -58,7 +63,7 @@ The anticipated upper-bound set is:
 }
 ```
 
-This example is not permission to add every component during B01. Unused entries MUST be omitted, and additional Illuminate components may be added only when implementation proves they are direct runtime dependencies.
+`illuminate/filesystem` and `illuminate/http` are direct dependencies of the implemented default media provider; `ext-fileinfo` is required for content-derived MIME inspection. The upper-bound example is not permission to add every component. Unused entries MUST be omitted, and additional Illuminate components may be added only when implementation proves they are direct runtime dependencies.
 
 Major constraints remain explicit because Laravel major releases may contain breaking changes. Supporting a new Laravel major requires CI coverage and a changelog entry; it must not be assumed from a permissive wildcard.
 

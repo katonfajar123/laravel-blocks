@@ -91,7 +91,7 @@ Remote images should normally render as URLs without server fetching. Any proxy 
 
 ## Media uploads
 
-See [Media](media.md) for the full upload policy. Authorization, MIME inspection, size limits, safe generated paths, SVG policy, rate limiting, and storage visibility are mandatory server responsibilities.
+See [Media](media.md) for the full upload policy. The implemented Laravel Filesystem provider rejects invalid/empty/oversized files, inspects MIME from content, denies SVG, bounds image pixels, generates storage names, confines IDs to its configured directory, and returns metadata without absolute paths. The later HTTP boundary must still enforce authentication, authorization, CSRF protection, request limits, rate limits, quotas, and tenant scope before invoking any provider method.
 
 ## Preview endpoints
 

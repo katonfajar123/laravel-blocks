@@ -8,6 +8,7 @@ use KatonFajar\LaravelBlocks\Blocks\Text\ListItem;
 use KatonFajar\LaravelBlocks\Blocks\Text\OrderedList;
 use KatonFajar\LaravelBlocks\Blocks\Text\Paragraph;
 use KatonFajar\LaravelBlocks\Blocks\Text\Quote;
+use KatonFajar\LaravelBlocks\Media\LaravelFilesystemMediaProvider;
 
 return [
     'blocks' => [
@@ -39,6 +40,42 @@ return [
     'assets' => [
         'auto_inject' => true,
         'base_url' => null,
+    ],
+
+    'media' => [
+        'provider' => LaravelFilesystemMediaProvider::class,
+        'disk' => 'public',
+        'directory' => 'laravel-blocks',
+        'visibility' => 'public',
+        'max_upload_bytes' => 10_485_760,
+        'max_image_pixels' => 40_000_000,
+        'max_items_per_page' => 100,
+        'allowed_mime_types' => [
+            'image/jpeg',
+            'image/png',
+            'image/gif',
+            'image/webp',
+            'image/avif',
+            'video/mp4',
+            'video/webm',
+            'audio/mpeg',
+            'audio/wav',
+            'audio/ogg',
+            'application/pdf',
+        ],
+        'extensions' => [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp',
+            'image/avif' => 'avif',
+            'video/mp4' => 'mp4',
+            'video/webm' => 'webm',
+            'audio/mpeg' => 'mp3',
+            'audio/wav' => 'wav',
+            'audio/ogg' => 'ogg',
+            'application/pdf' => 'pdf',
+        ],
     ],
 
     'persistence' => [

@@ -4,43 +4,61 @@
 
 Laravel Blocks must provide a useful default media workflow without coupling documents to one storage provider or media-library package.
 
-## Contract
+## Implemented contract
 
-The initial contract is conceptually:
+The package binds this interface as a replaceable singleton:
 
 ```php
-namespace KatonFajar\LaravelBlocks\Contracts;
+namespace KatonFajar\LaravelBlocks\Media\Contracts;
 
 use Illuminate\Http\UploadedFile;
+use KatonFajar\LaravelBlocks\Media\MediaCapabilities;
+use KatonFajar\LaravelBlocks\Media\MediaItem;
+use KatonFajar\LaravelBlocks\Media\MediaPage;
+use KatonFajar\LaravelBlocks\Media\MediaQuery;
 
-interface MediaManager
+interface MediaProvider
 {
-    public function browse(array $filters = []): mixed;
+    public function name(): string;
 
-    public function upload(UploadedFile $file): mixed;
+    public function capabilities(): MediaCapabilities;
 
-    public function delete(mixed $media): void;
+    public function browse(?MediaQuery $query = null): MediaPage;
 
-    public function url(mixed $media): string;
+    public function find(string $id): ?MediaItem;
+
+    public function upload(UploadedFile $file): MediaItem;
+
+    public function delete(string $id): void;
 }
 ```
 
-This signature is not yet final. Returning `mixed` makes adapters easy but weakens interoperability; a small normalized media value object is preferred for `0.3`.
+Resolve it directly or through the facade:
+
+```php
+use KatonFajar\LaravelBlocks\Facades\LaravelBlocks;
+use KatonFajar\LaravelBlocks\Media\MediaQuery;
+
+$provider = LaravelBlocks::media();
+$page = $provider->browse(new MediaQuery(search: 'hero', mimeTypes: ['image/jpeg']));
+```
+
+Provider failures use `MediaException` with a machine-readable `reason()` and optional `mediaId()`. Missing `find()` results return `null`; deleting a missing item is an explicit `media_not_found` failure.
 
 ## Normalized media value
 
-The editor and blocks need stable metadata regardless of adapter. A future value object should cover at least:
+`MediaItem` provides normalized JSON-serializable metadata regardless of adapter:
 
-- an optional provider-defined stable identifier;
-- URL and optional temporary URL expiry;
+- a provider-scoped stable identifier and provider name;
+- a public HTTP(S) URL;
 - MIME type;
 - original filename;
 - byte size;
 - width and height where applicable;
 - alt text and caption when stored by the adapter;
-- adapter/disk identity when identifiers are not globally unique.
+- last-modified time where available.
 
-Sensitive storage paths and credentials MUST never enter document JSON.
+The current value also reserves nullable alternative text and caption metadata. Sensitive storage paths and credentials are not part of the contract. Private temporary URL expiry and canonical stable media references remain future additions and must not be inferred from the current value.
 
 Depending on the selected provider, an image node MAY store a provider URL or a stable media reference plus presentation metadata. Stable references are preferred when the provider supports them, but URL-only adapters remain valid.
 
@@ -54,13 +72,21 @@ The default implementation uses Laravel Filesystem with a configured disk and di
 
 ```php
 'media' => [
+    'provider' => \KatonFajar\LaravelBlocks\Media\LaravelFilesystemMediaProvider::class,
     'disk' => 'public',
     'directory' => 'laravel-blocks',
-    'max_size' => 10 * 1024,
+    'visibility' => 'public',
+    'max_upload_bytes' => 10_485_760,
+    'max_image_pixels' => 40_000_000,
+    'max_items_per_page' => 100,
+    'allowed_mime_types' => [/* trusted MIME allow-list */],
+    'extensions' => [/* MIME => generated extension */],
 ],
 ```
 
-Files SHOULD receive generated storage names. Original filenames may be retained as metadata but must not be trusted as paths.
+The disk must provide absolute public HTTP(S) URLs. Files receive random 40-hex-character IDs and trusted extensions selected from content-derived MIME, never from client filenames. Browse is deterministic, supports provider-ID search and MIME filtering, and caps each page at `max_items_per_page`. The zero-database default cannot preserve original-name, dimensions, alt, or caption metadata across a later browse; providers with metadata stores may do so.
+
+Applications replace the default by configuring a container-resolvable `MediaProvider` implementation. Third-party database/storage ownership stays with that provider.
 
 ## Future adapters
 
@@ -90,18 +116,17 @@ Deletion is not a normal block-edit operation. Removing an image block must not 
 
 ## Upload security
 
-The server MUST enforce:
+The implemented default provider enforces:
 
-- authenticated and authorized upload endpoints;
-- CSRF protection for browser requests;
-- maximum request and file sizes;
+- configured file byte limits;
 - MIME detection based on file contents, not only extension or browser headers;
 - per-field allowed MIME types;
 - generated safe storage paths;
-- SVG denial or sanitization;
-- rate limits and storage quotas where appropriate;
-- image decoding safeguards against decompression bombs;
+- unconditional SVG denial in the default provider;
+- image pixel bounds before storage;
 - response data that omits private paths and credentials.
+
+M03 must add authenticated and authorized endpoints, CSRF protection, request limits, rate limits, quotas, tenant scoping, and response shaping before exposing this provider to a browser. Calling `upload()` directly does not perform an application authorization decision.
 
 Malware scanning is deployment-specific but the adapter contract SHOULD allow applications to quarantine or reject files.
 
@@ -115,4 +140,4 @@ The package should expose reference discovery so an application can identify unu
 
 ## Missing media
 
-Adapters must define a not-found result. Editor preview should show a recoverable placeholder. Frontend rendering should use configured fallback behavior and preserve accessible alternative text when possible.
+The implemented contract returns `null` from `find()` for a missing item and throws `media_not_found` when explicit deletion targets a missing item. Editor preview recovery and frontend fallback behavior remain M03/M04 work.

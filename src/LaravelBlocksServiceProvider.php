@@ -13,6 +13,9 @@ use KatonFajar\LaravelBlocks\Blocks\Block;
 use KatonFajar\LaravelBlocks\Blocks\BlockRegistry;
 use KatonFajar\LaravelBlocks\Console\InstallCommand;
 use KatonFajar\LaravelBlocks\Manifest\EditorManifestGenerator;
+use KatonFajar\LaravelBlocks\Media\Contracts\MediaProvider;
+use KatonFajar\LaravelBlocks\Media\LaravelFilesystemMediaProvider;
+use KatonFajar\LaravelBlocks\Media\MediaConfiguration;
 use KatonFajar\LaravelBlocks\Rendering\DocumentRenderer;
 use KatonFajar\LaravelBlocks\Validation\AttributeRule;
 use KatonFajar\LaravelBlocks\Validation\AttributeValidator;
@@ -48,6 +51,35 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
 
         $this->app->singleton(MarkRegistry::class);
         $this->registerConfiguredMarks();
+
+        $this->app->singleton(
+            MediaConfiguration::class,
+            static fn (Container $app): MediaConfiguration => MediaConfiguration::fromRepository(
+                $app->make(Repository::class),
+            ),
+        );
+        $this->app->singleton(LaravelFilesystemMediaProvider::class);
+        $this->app->singleton(
+            MediaProvider::class,
+            static function (Container $app): MediaProvider {
+                $provider = $app->make(Repository::class)
+                    ->get('laravel-blocks.media.provider', LaravelFilesystemMediaProvider::class);
+
+                if (! is_string($provider)
+                    || $provider === MediaProvider::class
+                    || ! is_a($provider, MediaProvider::class, true)) {
+                    throw new InvalidArgumentException('Configured Laravel Blocks media provider must implement MediaProvider.');
+                }
+
+                $resolved = $app->make($provider);
+
+                if (! $resolved instanceof MediaProvider) {
+                    throw new InvalidArgumentException('Configured Laravel Blocks media provider did not resolve to MediaProvider.');
+                }
+
+                return $resolved;
+            },
+        );
 
         $this->app->singleton(
             EditorManifestGenerator::class,
@@ -111,6 +143,7 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
                 $app->make(DocumentRenderer::class),
                 $app->make(EditorManifestGenerator::class),
                 $app->make(AssetManifest::class),
+                $app->make(MediaProvider::class),
             ),
         );
 

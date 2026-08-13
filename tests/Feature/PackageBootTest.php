@@ -12,6 +12,7 @@ use KatonFajar\LaravelBlocks\Blocks\Text\Quote;
 use KatonFajar\LaravelBlocks\Facades\LaravelBlocks as LaravelBlocksFacade;
 use KatonFajar\LaravelBlocks\LaravelBlocks;
 use KatonFajar\LaravelBlocks\LaravelBlocksServiceProvider;
+use KatonFajar\LaravelBlocks\Media\LaravelFilesystemMediaProvider;
 
 it('boots the package and resolves the facade singleton', function (): void {
     $service = $this->app->make(LaravelBlocks::class);
@@ -70,6 +71,16 @@ it('merges serializable configuration and registers its publish group', function
         ->toBe(262_144)
         ->and($configuration['document']['max_attribute_bytes'])
         ->toBe(65_536)
+        ->and($configuration['media']['provider'])
+        ->toBe(LaravelFilesystemMediaProvider::class)
+        ->and($configuration['media']['disk'])
+        ->toBe('public')
+        ->and($configuration['media']['directory'])
+        ->toBe('laravel-blocks')
+        ->and($configuration['media']['max_upload_bytes'])
+        ->toBe(10_485_760)
+        ->and($configuration['media']['allowed_mime_types'])
+        ->not->toContain('image/svg+xml')
         ->and(json_encode($configuration, JSON_THROW_ON_ERROR))
         ->toBeString()
         ->and($published)
@@ -104,7 +115,7 @@ it('discovers the provider and boots without database artifacts', function (): v
     expect($metadata['extra']['laravel']['providers'])
         ->toContain(LaravelBlocksServiceProvider::class)
         ->and(array_keys($metadata['require']))
-        ->toContain('illuminate/console')
+        ->toContain('ext-fileinfo', 'illuminate/console', 'illuminate/filesystem', 'illuminate/http')
         ->and(array_keys($metadata['require']))
         ->not->toContain('illuminate/database')
         ->and(is_dir($packageRoot.'/database/migrations'))

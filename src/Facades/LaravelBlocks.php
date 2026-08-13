@@ -9,6 +9,7 @@ use KatonFajar\LaravelBlocks\Blocks\Block;
 use KatonFajar\LaravelBlocks\Blocks\BlockMetadata;
 use KatonFajar\LaravelBlocks\Documents\Document;
 use KatonFajar\LaravelBlocks\Manifest\EditorManifest;
+use KatonFajar\LaravelBlocks\Media\Contracts\MediaProvider;
 use KatonFajar\LaravelBlocks\Rendering\RenderContext;
 use KatonFajar\LaravelBlocks\Rendering\RenderedContent;
 use KatonFajar\LaravelBlocks\Validation\MarkSchema;
@@ -24,6 +25,7 @@ use KatonFajar\LaravelBlocks\Validation\MarkSchema;
  * @method static RenderedContent render(array<array-key, mixed>|string|Document|null $value, ?RenderContext $context = null)
  * @method static EditorManifest editorManifest()
  * @method static AssetManifest assets()
+ * @method static MediaProvider media()
  * @method static DistributedAsset asset(string $name)
  * @method static string assetUrl(string $name)
  *

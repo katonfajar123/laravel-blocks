@@ -27,7 +27,7 @@ This roadmap defines direction, release composition, and dependency relationship
 
 An in-progress implementation must finish first. Otherwise the highest-value incomplete gap whose dependencies are satisfied is selected, scoped, verified, and evaluated before unrelated work begins.
 
-Package Skeleton through the URL-backed Image block are implemented, including the precompiled asset boundary, package-owned editor surface, contextual controls, Inserter/slash commands, Inspector, history, top-level drag/drop, and Document/List View. The `0.1` release gate adds executable installation, host-persistence, zero-database, and complete compatibility-matrix evidence before later media and nested-layout work advances.
+Package Skeleton through the URL-backed Image block and `0.1` release gate are implemented, including the precompiled asset boundary, package-owned editor surface, contextual controls, Inserter/slash commands, Inspector, history, top-level drag/drop, Document/List View, host-persistence evidence, and compatibility matrix. The `0.3` media foundation now includes a typed replaceable provider and zero-database Laravel Filesystem default; provider-backed editor UI and additional media blocks remain later work.
 
 ## B00 frozen decisions
 

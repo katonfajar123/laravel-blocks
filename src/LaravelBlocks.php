@@ -11,6 +11,7 @@ use KatonFajar\LaravelBlocks\Blocks\BlockRegistry;
 use KatonFajar\LaravelBlocks\Documents\Document;
 use KatonFajar\LaravelBlocks\Manifest\EditorManifest;
 use KatonFajar\LaravelBlocks\Manifest\EditorManifestGenerator;
+use KatonFajar\LaravelBlocks\Media\Contracts\MediaProvider;
 use KatonFajar\LaravelBlocks\Rendering\DocumentRenderer;
 use KatonFajar\LaravelBlocks\Rendering\RenderContext;
 use KatonFajar\LaravelBlocks\Rendering\RenderedContent;
@@ -28,6 +29,7 @@ final readonly class LaravelBlocks
         private DocumentRenderer $renderer,
         private EditorManifestGenerator $manifest,
         private AssetManifest $assets,
+        private MediaProvider $media,
     ) {}
 
     /**
@@ -110,6 +112,11 @@ final readonly class LaravelBlocks
     public function assets(): AssetManifest
     {
         return $this->assets;
+    }
+
+    public function media(): MediaProvider
+    {
+        return $this->media;
     }
 
     public function asset(string $name): DistributedAsset

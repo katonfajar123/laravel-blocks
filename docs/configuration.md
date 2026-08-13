@@ -2,7 +2,7 @@
 
 ## Status
 
-The package merges and publishes a small serializable configuration. Default block and mark registration, document validation limits, renderer unknown-block policy, asset auto-injection, and the asset base URL used by the distribution resolver are active; values whose consuming subsystem has not been implemented yet remain inert defaults, not claims that optional persistence or complete editor UX exists.
+The package merges and publishes a small serializable configuration. Default block and mark registration, document validation limits, renderer unknown-block policy, asset delivery, and the Laravel Filesystem media provider are active; values whose consuming subsystem has not been implemented yet remain inert defaults, not claims that optional persistence or complete editor UX exists.
 
 The implemented file is:
 
@@ -39,6 +39,29 @@ return [
         'base_url' => null,
     ],
 
+    'media' => [
+        'provider' => \KatonFajar\LaravelBlocks\Media\LaravelFilesystemMediaProvider::class,
+        'disk' => 'public',
+        'directory' => 'laravel-blocks',
+        'visibility' => 'public',
+        'max_upload_bytes' => 10_485_760,
+        'max_image_pixels' => 40_000_000,
+        'max_items_per_page' => 100,
+        'allowed_mime_types' => [
+            'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif',
+            'video/mp4', 'video/webm',
+            'audio/mpeg', 'audio/wav', 'audio/ogg',
+            'application/pdf',
+        ],
+        'extensions' => [
+            'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif',
+            'image/webp' => 'webp', 'image/avif' => 'avif',
+            'video/mp4' => 'mp4', 'video/webm' => 'webm',
+            'audio/mpeg' => 'mp3', 'audio/wav' => 'wav', 'audio/ogg' => 'ogg',
+            'application/pdf' => 'pdf',
+        ],
+    ],
+
     'persistence' => [
         'reusable_blocks' => [
             'enabled' => false,
@@ -52,11 +75,11 @@ return [
 ];
 ```
 
-Testbench verifies merge behavior, serialization, default Paragraph/Heading/List/Quote/Code/Image and current editor mark registration, active document limits, renderer policy behavior, asset base URL behavior, editor asset auto-injection opt-out, installer idempotency, and config/view/asset publish groups. The `document.unknown_blocks` values/default and precompiled asset-loading boundary are frozen contracts.
+Testbench verifies merge behavior, serialization, default Paragraph/Heading/List/Quote/Code/Image and current editor mark registration, active document limits, renderer and asset behavior, media provider replacement/security/storage operations, installer idempotency, and publish groups. The `document.unknown_blocks` values/default and precompiled asset-loading boundary are frozen contracts.
 
 ## Planned expanded configuration
 
-Keys below are target configuration, not implemented B01 behavior. Non-frozen keys may change before their owning milestone.
+Keys below remain target configuration. Non-frozen keys may change before their owning milestone.
 
 ```php
 return [
@@ -81,12 +104,6 @@ return [
     'assets' => [
         'auto_inject' => true,
         'base_url' => null,
-    ],
-
-    'media' => [
-        'disk' => 'public',
-        'directory' => 'laravel-blocks',
-        'max_size' => 10 * 1024,
     ],
 
     'persistence' => [
@@ -162,7 +179,22 @@ An application that enables them must either:
 
 The core installer MUST NOT enable these features, publish their migrations, or run `php artisan migrate`. A custom repository may use Eloquent, another database, an API, or any application-defined store.
 
-The `media.disk` setting configures the default Laravel Filesystem adapter. It does not require a Laravel Blocks media table; metadata persistence remains provider-dependent.
+## Media provider
+
+The active `media` section configures the default `LaravelFilesystemMediaProvider`. It requires a public Laravel disk whose `url()` result is an absolute HTTP(S) URL. `directory` is a normalized relative path; IDs accepted by this provider are single safe filenames confined below it. `max_upload_bytes`, `max_image_pixels`, and `max_items_per_page` must be positive integers.
+
+Upload MIME is detected from file content through `ext-fileinfo`; the client MIME and original extension are never trusted for storage naming. Every allowed MIME needs a package- or application-controlled extension mapping. SVG is always rejected by this provider because core does not ship an SVG sanitizer. A custom sanitizing provider may implement a different policy.
+
+Replace the provider with a class implementing `KatonFajar\LaravelBlocks\Media\Contracts\MediaProvider`:
+
+```php
+'media' => [
+    'provider' => App\Media\ApplicationMediaProvider::class,
+    // Other keys are consumed only by the default Filesystem provider.
+],
+```
+
+The provider binding and normalized results require no Laravel Blocks media table. Authorization and transport middleware are intentionally not configurable here because the package does not expose media HTTP routes yet.
 
 ## Block selection
 

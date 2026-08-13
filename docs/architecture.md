@@ -47,7 +47,7 @@ The PHP layer owns:
 - block definitions and validation rules;
 - document validation and document-schema transforms;
 - server-side rendering;
-- media manager contracts;
+- typed media-provider contracts and the zero-database Laravel Filesystem default;
 - Blade component and dynamic block resolution;
 - optional editor-managed custom-pattern and reusable-block persistence contracts;
 - configuration, commands, events, and authorization hooks.
@@ -251,6 +251,8 @@ This follows Laravel's documented package discovery and resource-loading mechani
 The implemented asset boundary commits `dist/laravel-blocks.js`, `dist/laravel-blocks.css`, and `dist/manifest.json` as the Composer distribution artifact. The service provider registers a `laravel-blocks-assets` publish group, and `AssetManifest` validates the versioned manifest, checksum, integrity, byte size, base URL, and missing/corrupt metadata before returning asset URLs. The package asset Blade component emits the CSS and deferred module script once per page.
 
 The implemented installer publishes configuration and those committed assets only. It is idempotent by default, offers explicit replacement through `--force`, requires no host frontend toolchain, and never publishes or runs migrations.
+
+The implemented media boundary binds `MediaProvider` as a replaceable singleton and exposes immutable `MediaItem`, `MediaQuery`, `MediaPage`, and `MediaCapabilities` values. Its Laravel Filesystem default uses a configured public disk and confined directory, generated opaque names, content-derived MIME validation, byte/pixel limits, deterministic browse/find/delete behavior, and no package model, table, or migration. HTTP routes, authorization policy, CSRF/rate limits, media picker UI, private temporary URLs, and canonical stable-reference storage belong to later media batches.
 
 The implemented editor shell renders `<x-laravel-blocks::editor>` as a normalized document payload, hidden canonical JSON input, and package-owned Vue/Tiptap mount. The editor, assets, and content components are class-based package-owned surfaces, so application namespace view overrides cannot replace the master editor shell or renderer entrypoint. Only frontend block renderer views are published as supported overrides.
 
