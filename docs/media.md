@@ -81,6 +81,18 @@ The default implementation uses Laravel Filesystem with a configured disk and di
     'max_items_per_page' => 100,
     'allowed_mime_types' => [/* trusted MIME allow-list */],
     'extensions' => [/* MIME => generated extension */],
+    'transport' => [
+        'enabled' => true,
+        'prefix' => 'laravel-blocks/media',
+        'name_prefix' => 'laravel-blocks.media.',
+        'middleware' => ['web', 'auth'],
+        'abilities' => [
+            'browse' => 'laravel-blocks.media.browse',
+            'upload' => 'laravel-blocks.media.upload',
+        ],
+        'browse_requests_per_minute' => 60,
+        'upload_requests_per_minute' => 10,
+    ],
 ],
 ```
 
@@ -102,17 +114,37 @@ These adapters should live outside the core package when they require third-part
 
 ## Editor operations
 
-The default editor MUST provide a provider-backed media picker with:
+The default editor provides a package-owned provider-backed image picker with:
 
 - browse and search;
 - upload and drag-and-drop upload;
 - selection and replacement;
-- metadata editing where supported;
+- URL and bounded provider alternative-text assignment in one history transaction;
 - progress, cancellation, and clear failure states;
 - restrictions by accepted MIME family and block type;
 - permission-aware actions, retry behavior, accessible focus restoration, and alternative-text guidance for images.
 
 Deletion is not a normal block-edit operation. Removing an image block must not automatically delete the underlying media object because it may be reused elsewhere.
+
+The picker opens from the Image Inspector or contextual toolbar. Browse uses same-origin `fetch`; upload uses `XMLHttpRequest` so progress and cancellation remain observable. The modal traps focus, restores the invoking control after selection or dismissal, supports keyboard grid navigation, and adapts to narrow viewports. Gallery, other media block types, provider metadata editing, and stable media references remain later work.
+
+## Browser transport and authorization
+
+When `media.transport.enabled` is true, the package registers `GET` and `POST` at the configured prefix under the configured route-name prefix. The defaults are both `/laravel-blocks/media`, named `laravel-blocks.media.browse` and `laravel-blocks.media.upload`.
+
+The default middleware stack is `web` and `auth`. A package authorizer then requires an authenticated request and checks the configured per-action Gate ability before provider access. The secure default denies both actions until the host defines them:
+
+```php
+use App\Models\User;
+use Illuminate\Support\Facades\Gate;
+
+Gate::define('laravel-blocks.media.browse', fn (User $user): bool => $user->can('edit-content'));
+Gate::define('laravel-blocks.media.upload', fn (User $user): bool => $user->can('upload-media'));
+```
+
+The `web` middleware supplies session and CSRF verification; the editor sends the current token in `X-CSRF-TOKEN`. Applications replacing the middleware list must preserve an equivalent authentication and request-forgery boundary. Browse and upload have separate numeric per-minute throttles. Multi-tenant scope and storage quotas stay host-owned: add tenant middleware and bind a provider that scopes every operation to the resolved tenant.
+
+Success responses use a `data` envelope. Public failures use an `error` envelope with stable `code` and `message` values plus optional field errors. Provider exception messages, paths, credentials, classes, and traces are never returned.
 
 ## Upload security
 
@@ -126,7 +158,7 @@ The implemented default provider enforces:
 - image pixel bounds before storage;
 - response data that omits private paths and credentials.
 
-M03 must add authenticated and authorized endpoints, CSRF protection, request limits, rate limits, quotas, tenant scoping, and response shaping before exposing this provider to a browser. Calling `upload()` directly does not perform an application authorization decision.
+The implemented browser transport adds authentication, explicit Gate authorization, CSRF-compatible same-origin requests, bounded browse input, separate rate limits, and redacted response shaping before provider access. Tenant resolution and storage quotas are application policy and must be enforced by host middleware and/or the bound provider. Calling `upload()` directly still does not perform an application authorization decision.
 
 Malware scanning is deployment-specific but the adapter contract SHOULD allow applications to quarantine or reject files.
 
@@ -140,4 +172,4 @@ The package should expose reference discovery so an application can identify unu
 
 ## Missing media
 
-The implemented contract returns `null` from `find()` for a missing item and throws `media_not_found` when explicit deletion targets a missing item. Editor preview recovery and frontend fallback behavior remain M03/M04 work.
+The implemented contract returns `null` from `find()` for a missing item and throws `media_not_found` when explicit deletion targets a missing item. The picker exposes deterministic browse/upload failure and retry states; rendered missing-media fallback and non-Image media recovery remain later work.

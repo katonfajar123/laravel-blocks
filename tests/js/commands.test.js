@@ -114,6 +114,7 @@ describe('editor command registry', () => {
         'moveBlockToIndex',
         'insertManifestBlock',
         'updateBlockAttrs',
+        'setImageMedia',
         'setParagraph',
         'setHeading',
         'setBlockquote',

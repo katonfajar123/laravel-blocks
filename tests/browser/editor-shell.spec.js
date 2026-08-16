@@ -5,6 +5,18 @@ import path from 'node:path';
 
 let server;
 let baseUrl;
+let browseFailureAttempts = 0;
+let retryUploadAttempts = 0;
+
+const mediaCapabilities = {
+  allowedMimeTypes: ['image/jpeg', 'image/png'],
+  browse: true,
+  delete: false,
+  maxUploadBytes: 5 * 1024 * 1024,
+  mimeFilter: true,
+  search: true,
+  upload: true,
+};
 
 const emptyDocument = {
   type: 'doc',
@@ -214,6 +226,86 @@ test.beforeAll(async () => {
       return;
     }
 
+    if (url.pathname === '/media' && request.method === 'GET') {
+      const origin = `http://${request.headers.host}`;
+      const search = (url.searchParams.get('search') ?? '').toLowerCase();
+      const effectiveSearch = search === 'browse-error' ? '' : search;
+
+      if (search === 'browse-error' && browseFailureAttempts++ === 0) {
+        sendJson(response, 503, {
+          error: { code: 'storage_failure', message: 'The media provider is temporarily unavailable.' },
+        });
+
+        return;
+      }
+
+      const items = [
+        mediaItem('library-hero.png', `${origin}/fixture-image.svg`, 'Library hero', 18432),
+        mediaItem('library-detail.png', `${origin}/fixture-image.svg`, 'Product detail', 9216),
+      ].filter((item) => `${item.alt} ${item.originalName}`.toLowerCase().includes(effectiveSearch));
+
+      sendJson(response, 200, {
+        data: {
+          capabilities: mediaCapabilities,
+          page: {
+            hasMore: false,
+            items,
+            page: Number(url.searchParams.get('page') ?? 1),
+            perPage: Number(url.searchParams.get('perPage') ?? 24),
+            total: items.length,
+          },
+          provider: 'browser-fixture',
+        },
+      });
+
+      return;
+    }
+
+    if (url.pathname === '/media' && request.method === 'POST') {
+      const chunks = [];
+
+      for await (const chunk of request) {
+        chunks.push(chunk);
+      }
+
+      const body = Buffer.concat(chunks).toString('utf8');
+      const filename = ['retry.png', 'slow.png', 'drop.png']
+        .find((candidate) => body.includes(candidate)) ?? 'uploaded.png';
+
+      if (request.headers['x-csrf-token'] !== 'browser-fixture-csrf') {
+        sendJson(response, 419, {
+          error: { code: 'csrf_token_mismatch', message: 'The page session expired.' },
+        });
+
+        return;
+      }
+
+      if (filename === 'retry.png' && retryUploadAttempts++ === 0) {
+        sendJson(response, 503, {
+          error: { code: 'storage_failure', message: 'The media provider is temporarily unavailable.' },
+        });
+
+        return;
+      }
+
+      if (filename === 'slow.png') {
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+
+        if (response.destroyed) {
+          return;
+        }
+      }
+
+      const origin = `http://${request.headers.host}`;
+      sendJson(response, 201, {
+        data: {
+          item: mediaItem(filename, `${origin}/fixture-image.svg`, 'Uploaded image', 1024),
+        },
+      });
+
+      return;
+    }
+
     response.writeHead(404);
     response.end('Not found');
   });
@@ -383,6 +475,7 @@ test('executes editor mutations through the shared command API', async ({ page }
     'moveBlockToIndex',
     'insertManifestBlock',
     'updateBlockAttrs',
+    'setImageMedia',
     'setParagraph',
     'setHeading',
     'setBlockquote',
@@ -1340,6 +1433,7 @@ test('inserts and edits package default images without losing inspector focus or
   await toggle.click();
   await expect(inspector).toBeVisible();
   await expect(root.locator('[data-laravel-blocks-inspector-title]')).toContainText('Image');
+  await expect(root.locator('[data-laravel-blocks-inspector-media] button')).toBeEnabled();
   await expect(source).toHaveAttribute('type', 'url');
 
   await source.fill(`${baseUrl}/fixture-image.svg`);
@@ -1387,6 +1481,135 @@ test('inserts and edits package default images without losing inspector focus or
     type: 'image',
     attrs: { src: null, alt: null, title: null },
   });
+});
+
+test('browses, searches, selects, uploads, and dismisses the image library accessibly', async ({ page }) => {
+  await page.goto(`${baseUrl}/default`);
+
+  const root = page.locator('#editor-null');
+  const canvas = root.locator('[data-laravel-blocks-canvas]');
+
+  await canvas.click();
+  await page.keyboard.press('/');
+  await page.keyboard.type('image');
+  await page.keyboard.press('Enter');
+
+  await root.locator('[data-laravel-blocks-inspector-toggle]').click();
+  const openMedia = root.locator('[data-laravel-blocks-inspector-media] button');
+
+  await expect(openMedia).toBeEnabled();
+  await openMedia.click();
+
+  const modal = page.locator('[data-laravel-blocks-modal]');
+  const search = page.locator('[data-laravel-blocks-media-search]');
+  const mediaItems = page.locator('[data-laravel-blocks-media-item]');
+
+  await expect(modal).toBeVisible();
+  await expect(modal).toHaveAttribute('role', 'dialog');
+  await expect(modal).toHaveAttribute('aria-modal', 'true');
+  await expect(search).toBeFocused();
+  await expect(mediaItems).toHaveCount(2);
+
+  await mediaItems.first().focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(mediaItems.nth(1)).toBeFocused();
+
+  await search.fill('missing');
+  await search.press('Enter');
+  await expect(page.locator('[data-laravel-blocks-media-empty]')).toContainText('No matching images');
+
+  await search.fill('browse-error');
+  await search.press('Enter');
+  await expect(page.locator('[data-laravel-blocks-media-error="storage_failure"]')).toBeVisible();
+  await page.getByRole('button', { name: 'Retry' }).click();
+  await expect(mediaItems).toHaveCount(2);
+
+  await search.fill('product');
+  await search.press('Enter');
+  await expect(mediaItems).toHaveCount(1);
+  await expect(mediaItems.first()).toContainText('Product detail');
+  await mediaItems.first().click();
+  await expect(mediaItems.first()).toHaveAttribute('aria-selected', 'true');
+  await page.locator('[data-laravel-blocks-media-use]').click();
+
+  await expect(modal).toHaveCount(0);
+  await expect(openMedia).toBeFocused();
+  await expect.poll(() => firstContentNode(page, '#editor-null')).toEqual({
+    type: 'image',
+    attrs: {
+      alt: 'Product detail',
+      src: `${baseUrl}/fixture-image.svg`,
+      title: null,
+    },
+  });
+
+  expect(await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('undo'))).toMatchObject({ executed: true });
+  await expect.poll(async () => (await firstContentNode(page, '#editor-null')).attrs).toEqual({
+    alt: null,
+    src: null,
+    title: null,
+  });
+
+  expect(await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('redo'))).toMatchObject({ executed: true });
+  await expect.poll(async () => (await firstContentNode(page, '#editor-null')).attrs.alt)
+    .toBe('Product detail');
+
+  await openMedia.click();
+  await expect(modal).toBeVisible();
+
+  const uploadInput = page.locator('[data-laravel-blocks-media-upload-input]');
+  await uploadInput.setInputFiles({
+    buffer: Buffer.from('retry fixture'),
+    mimeType: 'image/png',
+    name: 'retry.png',
+  });
+  await expect(page.locator('[data-laravel-blocks-media-error="storage_failure"]')).toBeVisible();
+  await page.getByRole('button', { name: 'Retry' }).click();
+  await expect(page.locator('[data-laravel-blocks-media-item="retry.png"]')).toBeVisible();
+  await expect(page.locator('[data-laravel-blocks-media-status]'))
+    .toContainText('retry.png uploaded and selected.');
+
+  await uploadInput.setInputFiles({
+    buffer: Buffer.from('slow fixture'),
+    mimeType: 'image/png',
+    name: 'slow.png',
+  });
+  await expect(page.locator('[data-laravel-blocks-media-progress]')).toBeAttached();
+  await page.getByRole('button', { name: 'Cancel upload' }).click();
+  await expect(page.locator('[data-laravel-blocks-media-status]')).toContainText('Upload cancelled.');
+
+  const dataTransfer = await page.evaluateHandle(() => {
+    const transfer = new DataTransfer();
+    transfer.items.add(new File(['drop fixture'], 'drop.png', { type: 'image/png' }));
+
+    return transfer;
+  });
+  await page.locator('[data-laravel-blocks-media-dropzone]').dispatchEvent('drop', { dataTransfer });
+  await expect(page.locator('[data-laravel-blocks-media-item="drop.png"]')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(modal).toHaveCount(0);
+  await expect(openMedia).toBeFocused();
+
+  await page.setViewportSize({ height: 720, width: 390 });
+  await openMedia.click();
+  await expect(modal).toBeVisible();
+
+  const modalBox = await modal.boundingBox();
+  expect(modalBox.x).toBeGreaterThanOrEqual(0);
+  expect(modalBox.y).toBeGreaterThanOrEqual(0);
+  expect(modalBox.x + modalBox.width).toBeLessThanOrEqual(390);
+  expect(modalBox.y + modalBox.height).toBeLessThanOrEqual(720);
+
+  await page.locator('[data-laravel-blocks-modal-backdrop]').click({ position: { x: 8, y: 8 } });
+  await expect(modal).toHaveCount(0);
+  await expect(openMedia).toBeFocused();
 });
 
 test('replaces an empty text block through slash commands', async ({ page }) => {
@@ -1511,6 +1734,13 @@ function editorRoot(id, name, document, editorManifest) {
     name,
     document,
     manifest: editorManifest,
+    media: {
+      browseUrl: '/media',
+      capabilities: mediaCapabilities,
+      csrfToken: 'browser-fixture-csrf',
+      enabled: true,
+      uploadUrl: '/media',
+    },
     placeholder: 'Start writing or type / to choose a block',
   });
   const hiddenValue = JSON.stringify(document).replaceAll('"', '&quot;');
@@ -1520,6 +1750,31 @@ function editorRoot(id, name, document, editorManifest) {
     <script type="application/json" data-laravel-blocks-payload>${payload}</script>
     <div class="lb-editor__frame" data-laravel-blocks-mount></div>
   </div>`;
+}
+
+function mediaItem(id, url, alt, bytes) {
+  return {
+    alt,
+    bytes,
+    caption: null,
+    height: 350,
+    id,
+    lastModified: 1755331200,
+    mimeType: 'image/png',
+    originalName: id,
+    provider: 'browser-fixture',
+    url,
+    width: 800,
+  };
+}
+
+function sendJson(response, status, payload) {
+  if (response.destroyed) {
+    return;
+  }
+
+  response.writeHead(status, { 'content-type': 'application/json; charset=utf-8' });
+  response.end(JSON.stringify(payload));
 }
 
 async function editorInputValue(page, selector) {

@@ -23,6 +23,7 @@ import { HistoryToolbar } from './HistoryToolbar.js';
 import { handleEditorShortcut } from './keyboard-shortcuts.js';
 import { createSelectionState } from './selection.js';
 import { Icon, IconButton } from '../ui/index.js';
+import { MediaLibrary } from '../media/index.js';
 
 const LaravelBlocksImage = Image.extend({
   addAttributes() {
@@ -111,6 +112,10 @@ export const EditorShell = {
       type: Object,
       default: () => ({ manifestVersion: 1, documentSchemaVersion: 1, categories: [], blocks: [] }),
     },
+    media: {
+      type: Object,
+      default: () => ({ enabled: false }),
+    },
     placeholder: {
       type: String,
       default: 'Start writing or type / to choose a block',
@@ -125,6 +130,8 @@ export const EditorShell = {
     const hoverSuppressedUntil = shallowRef(0);
     const hoveredBlockSelection = shallowRef(createEmptyBlockSelection());
     const inspectorOpen = shallowRef(false);
+    const mediaBlock = shallowRef(createEmptyBlockSelection());
+    const mediaOpen = shallowRef(false);
     const requestedBlockSelection = shallowRef(createEmptyBlockSelection());
     const selection = shallowRef(createSelectionState(null));
     const slash = shallowRef({
@@ -326,6 +333,24 @@ export const EditorShell = {
       }
 
       return documentListOpen.value;
+    }
+
+    function openMedia(block, trigger = null) {
+      if (!props.media.enabled || block?.type !== 'image') {
+        return false;
+      }
+
+      trigger?.focus?.({ preventScroll: true });
+      mediaBlock.value = block;
+      mediaOpen.value = true;
+
+      return true;
+    }
+
+    function closeMedia() {
+      mediaOpen.value = false;
+
+      return true;
     }
 
     function slashItems(query = slash.value.query) {
@@ -550,6 +575,7 @@ export const EditorShell = {
       selection() {
         return selection.value;
       },
+      openMedia,
       slashCommand() {
         return slash.value;
       },
@@ -641,8 +667,10 @@ export const EditorShell = {
         mode: toolbarState.mode,
         selection: selection.value,
         suppressed: slash.value.open,
+        mediaAvailable: props.media.enabled,
         onHoverControlsEnter: retainHoverControls,
         onHoverControlsLeave: releaseHoverControls,
+        onOpenMedia: openMedia,
         onRequestBlockControls: requestBlockControls,
       }),
       h(SlashCommandMenu, {
@@ -681,8 +709,10 @@ export const EditorShell = {
         h(BlockInspector, {
           block: blockSelection.value,
           commandRegistry: commands.value,
+          mediaAvailable: props.media.enabled,
           open: inspectorOpen.value,
           manifest: props.manifest,
+          onOpenMedia: openMedia,
         }),
       ]),
       h(BlockInserter, {
@@ -691,6 +721,18 @@ export const EditorShell = {
         editor: editor.value,
         manifest: props.manifest,
       }),
+      props.media.enabled
+        ? h(MediaLibrary, {
+          block: mediaBlock.value,
+          commandRegistry: commands.value,
+          onClose: closeMedia,
+          onSelected: () => {
+            updateEditorState(editor.value);
+          },
+          open: mediaOpen.value,
+          transport: props.media,
+        })
+        : null,
       ]);
     };
   },

@@ -60,6 +60,18 @@ return [
             'audio/mpeg' => 'mp3', 'audio/wav' => 'wav', 'audio/ogg' => 'ogg',
             'application/pdf' => 'pdf',
         ],
+        'transport' => [
+            'enabled' => true,
+            'prefix' => 'laravel-blocks/media',
+            'name_prefix' => 'laravel-blocks.media.',
+            'middleware' => ['web', 'auth'],
+            'abilities' => [
+                'browse' => 'laravel-blocks.media.browse',
+                'upload' => 'laravel-blocks.media.upload',
+            ],
+            'browse_requests_per_minute' => 60,
+            'upload_requests_per_minute' => 10,
+        ],
     ],
 
     'persistence' => [
@@ -194,7 +206,9 @@ Replace the provider with a class implementing `KatonFajar\LaravelBlocks\Media\C
 ],
 ```
 
-The provider binding and normalized results require no Laravel Blocks media table. Authorization and transport middleware are intentionally not configurable here because the package does not expose media HTTP routes yet.
+The provider binding, transport, and normalized results require no Laravel Blocks media table. `media.transport` controls route enablement, URI/name prefixes, host middleware, per-action Gate ability names, and numeric per-minute browse/upload throttles. The defaults register named GET/POST routes at `/laravel-blocks/media` behind `web`, `auth`, explicit package authorization, and throttling.
+
+The host must define both configured abilities; undefined abilities deny access. Keep `web` or provide equivalent session/CSRF protection when changing middleware. Tenant resolution and storage quotas are not inferred by core—add host tenant middleware and/or bind a tenant-scoped provider. Set `transport.enabled` to `false` to omit both routes and the editor picker payload.
 
 ## Block selection
 

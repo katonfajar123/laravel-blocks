@@ -1,3 +1,4 @@
+import { closeHistory } from '@tiptap/pm/history';
 import { NodeSelection } from '@tiptap/pm/state';
 
 import { linkAttributes } from '../rich-text/link-provider.js';
@@ -362,6 +363,59 @@ function updateBlockAttrs(editor, payload = {}) {
   return dispatchBlockTransaction(editor, transaction, target.block.from + 1);
 }
 
+function normalizedImageMedia(item, currentAttrs = {}) {
+  if (!item || typeof item !== 'object' || typeof item.url !== 'string') {
+    return null;
+  }
+
+  let url;
+
+  try {
+    url = new URL(item.url);
+  } catch {
+    return null;
+  }
+
+  if (!['http:', 'https:'].includes(url.protocol) || !String(item.mimeType ?? '').startsWith('image/')) {
+    return null;
+  }
+
+  const providerAlt = typeof item.alt === 'string' && item.alt.length <= 500
+    && !/[\u0000-\u001f\u007f]/.test(item.alt)
+    ? item.alt
+    : null;
+
+  return {
+    ...currentAttrs,
+    alt: providerAlt ?? currentAttrs.alt ?? null,
+    src: item.url,
+    title: currentAttrs.title ?? null,
+  };
+}
+
+function setImageMedia(editor, payload = {}) {
+  const target = topLevelBlock(editor, payload);
+
+  if (!target || target.node.type.name !== 'image') {
+    return false;
+  }
+
+  const nextAttrs = normalizedImageMedia(payload.item, target.node.attrs ?? {});
+
+  if (!nextAttrs) {
+    return false;
+  }
+
+  editor.view.dispatch(closeHistory(editor.state.tr.setNodeMarkup(
+    target.block.from,
+    undefined,
+    nextAttrs,
+    target.node.marks,
+  )));
+
+  return true;
+}
+
 const definitions = [
   simpleCommand(
     'focus',
@@ -490,6 +544,20 @@ const definitions = [
         && valueAtPath(target.node.attrs ?? {}, payload.path) !== payload.value);
     },
     (editor, payload) => updateBlockAttrs(editor, payload),
+  ),
+  simpleCommand(
+    'setImageMedia',
+    'Choose image',
+    (editor, payload) => {
+      const target = topLevelBlock(editor, payload);
+
+      return Boolean(
+        target
+        && target.node.type.name === 'image'
+        && normalizedImageMedia(payload?.item, target.node.attrs ?? {}),
+      );
+    },
+    (editor, payload) => setImageMedia(editor, payload),
   ),
   simpleCommand(
     'setParagraph',

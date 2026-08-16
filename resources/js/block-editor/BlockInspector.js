@@ -1,4 +1,5 @@
 import { computed, h, ref, watch } from 'vue';
+import { Button, Icon } from '../ui/index.js';
 
 import {
   blockManifestDefinition,
@@ -84,8 +85,13 @@ export const BlockInspector = {
       type: Boolean,
       default: true,
     },
+    mediaAvailable: {
+      type: Boolean,
+      default: false,
+    },
   },
-  setup(props, { expose }) {
+  emits: ['openMedia'],
+  setup(props, { emit, expose }) {
     const activeGroup = ref('content');
     const groups = inspectorGroups();
     const definition = computed(() => blockManifestDefinition(props.manifest, props.block));
@@ -117,6 +123,56 @@ export const BlockInspector = {
       },
       setGroup,
     });
+
+    function mediaControl() {
+      if (activeGroup.value !== 'content' || props.block.type !== 'image') {
+        return null;
+      }
+
+      const label = props.block.attrs?.src ? 'Replace from Media Library' : 'Choose from Media Library';
+
+      return h('div', {
+        class: 'lb-block-inspector__media',
+        'data-laravel-blocks-inspector-media': '',
+      }, [
+        h(Button, {
+          disabled: !props.mediaAvailable,
+          onClick: (event) => emit('openMedia', props.block, event.currentTarget),
+          variant: 'primary',
+        }, { default: () => [h(Icon, { name: 'image' }), label] }),
+        !props.mediaAvailable
+          ? h('small', {}, 'Media transport is disabled for this editor.')
+          : null,
+      ]);
+    }
+
+    function fieldControls() {
+      if (fields.value.length === 0) {
+        return [h('p', {
+          class: 'lb-block-inspector__empty',
+          'data-laravel-blocks-inspector-empty': '',
+        }, `No ${activeGroup.value} settings for this block yet.`)];
+      }
+
+      return fields.value.map((field) => {
+        const value = inspectorFieldValue(props.block, field);
+
+        return h('label', {
+          class: 'lb-block-inspector__field',
+          for: `lb-inspector-field-${field.name}`,
+        }, [
+          h('span', {
+            class: 'lb-block-inspector__label',
+          }, field.label),
+          controlForField(field, value, (next) => updateField(field, next)),
+          field.help
+            ? h('span', {
+              class: 'lb-block-inspector__help',
+            }, field.help)
+            : null,
+        ]);
+      });
+    }
 
     return () => h('aside', {
       'aria-label': 'Block settings',
@@ -152,29 +208,7 @@ export const BlockInspector = {
         class: 'lb-block-inspector__panel',
         'data-laravel-blocks-inspector-panel': activeGroup.value,
         role: 'tabpanel',
-      }, fields.value.length === 0
-        ? h('p', {
-          class: 'lb-block-inspector__empty',
-          'data-laravel-blocks-inspector-empty': '',
-        }, `No ${activeGroup.value} settings for this block yet.`)
-        : fields.value.map((field) => {
-          const value = inspectorFieldValue(props.block, field);
-
-          return h('label', {
-            class: 'lb-block-inspector__field',
-            for: `lb-inspector-field-${field.name}`,
-          }, [
-            h('span', {
-              class: 'lb-block-inspector__label',
-            }, field.label),
-            controlForField(field, value, (next) => updateField(field, next)),
-            field.help
-              ? h('span', {
-                class: 'lb-block-inspector__help',
-              }, field.help)
-              : null,
-          ]);
-        })),
+      }, [mediaControl(), ...fieldControls()].filter(Boolean)),
     ]);
   },
 };

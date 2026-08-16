@@ -2,6 +2,7 @@ import { createApp } from 'vue';
 
 import { EditorShell } from './EditorShell.js';
 import { normalizeDocument } from './document.js';
+import { normalizeMediaTransport } from '../media/index.js';
 
 const API_KEY = '__laravelBlocksEditor';
 
@@ -33,6 +34,7 @@ export function readEditorPayload(root) {
     manifest: payload.manifest && typeof payload.manifest === 'object'
       ? payload.manifest
       : { manifestVersion: 1, documentSchemaVersion: 1, categories: [], blocks: [] },
+    media: normalizeMediaTransport(payload.media),
     placeholder: typeof payload.placeholder === 'string' && payload.placeholder.trim() !== ''
       ? payload.placeholder
       : 'Start writing or type / to choose a block',
@@ -60,6 +62,7 @@ export function mountLaravelBlocksEditor(root) {
     document: payload.document,
     input,
     manifest: payload.manifest,
+    media: payload.media,
     placeholder: payload.placeholder,
   });
 

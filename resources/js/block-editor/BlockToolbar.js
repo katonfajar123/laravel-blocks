@@ -101,8 +101,12 @@ export const BlockToolbar = {
       type: Boolean,
       default: false,
     },
+    mediaAvailable: {
+      type: Boolean,
+      default: false,
+    },
   },
-  emits: ['hoverControlsEnter', 'hoverControlsLeave', 'requestBlockControls'],
+  emits: ['hoverControlsEnter', 'hoverControlsLeave', 'openMedia', 'requestBlockControls'],
   setup(props, { emit, expose }) {
     const externalOverlayOpen = ref(false);
     const drag = shallowRef(createEmptyBlockDragState());
@@ -728,6 +732,34 @@ export const BlockToolbar = {
       });
     }
 
+    function mediaGroup() {
+      if (props.block.type !== 'image') {
+        return null;
+      }
+
+      const label = props.block.attrs?.src ? 'Replace image' : 'Choose image';
+
+      return h(ToolbarGroup, {
+        label: 'Image media',
+      }, {
+        default: () => h(IconButton, {
+          disabled: !props.mediaAvailable,
+          label,
+          size: 'sm',
+          title: props.mediaAvailable ? label : 'Media transport is disabled.',
+          'data-laravel-blocks-open-media': '',
+          onClick: (event) => {
+            closeMenus();
+            linkPopoverOpen.value = false;
+            emit('openMedia', props.block, event.currentTarget);
+          },
+          onMousedown: (event) => event.preventDefault(),
+        }, {
+          default: () => h(Icon, { name: 'image' }),
+        }),
+      });
+    }
+
     function moreGroup({ commands = hoverOptionCommands } = {}) {
       return h(ToolbarGroup, {
         label: 'More block options',
@@ -767,6 +799,7 @@ export const BlockToolbar = {
         transformGroup(),
         moveGroup(),
         headingLevelGroup(),
+        mediaGroup(),
         inlineBlockTypes.has(props.block.type) ? inlineGroup() : null,
         moreGroup({ commands: hoverOptionCommands }),
       ].filter(Boolean);

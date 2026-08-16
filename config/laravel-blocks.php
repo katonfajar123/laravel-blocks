@@ -77,6 +77,18 @@ return [
             'audio/ogg' => 'ogg',
             'application/pdf' => 'pdf',
         ],
+        'transport' => [
+            'enabled' => true,
+            'prefix' => 'laravel-blocks/media',
+            'name_prefix' => 'laravel-blocks.media.',
+            'middleware' => ['web', 'auth'],
+            'abilities' => [
+                'browse' => 'laravel-blocks.media.browse',
+                'upload' => 'laravel-blocks.media.upload',
+            ],
+            'browse_requests_per_minute' => 60,
+            'upload_requests_per_minute' => 10,
+        ],
     ],
 
     'persistence' => [

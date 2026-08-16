@@ -10,11 +10,22 @@
     $editorId = (string) ($id ?? 'laravel-blocks-editor-'.\Illuminate\Support\Str::uuid()->toString());
     $editorName = (string) $name;
     $editorPlaceholder = (string) $placeholder;
+    $mediaTransport = app(\KatonFajar\LaravelBlocks\Media\MediaTransportConfiguration::class);
+    $mediaPayload = $mediaTransport->enabled
+        ? [
+            'enabled' => true,
+            'browseUrl' => route($mediaTransport->routeName('browse')),
+            'uploadUrl' => route($mediaTransport->routeName('upload')),
+            'csrfToken' => (string) csrf_token(),
+            'capabilities' => app(\KatonFajar\LaravelBlocks\Media\Contracts\MediaProvider::class)->capabilities()->toArray(),
+        ]
+        : ['enabled' => false];
     $payload = [
         'id' => $editorId,
         'name' => $editorName,
         'document' => $document->toArray(),
         'manifest' => app(\KatonFajar\LaravelBlocks\LaravelBlocks::class)->editorManifest()->toArray(),
+        'media' => $mediaPayload,
         'placeholder' => $editorPlaceholder,
     ];
     $payloadJson = json_encode(

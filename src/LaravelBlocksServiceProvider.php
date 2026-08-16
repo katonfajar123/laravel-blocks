@@ -5,6 +5,7 @@ namespace KatonFajar\LaravelBlocks;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\View\Factory as ViewFactory;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use InvalidArgumentException;
@@ -12,10 +13,13 @@ use KatonFajar\LaravelBlocks\Assets\AssetManifest;
 use KatonFajar\LaravelBlocks\Blocks\Block;
 use KatonFajar\LaravelBlocks\Blocks\BlockRegistry;
 use KatonFajar\LaravelBlocks\Console\InstallCommand;
+use KatonFajar\LaravelBlocks\Http\Controllers\MediaController;
+use KatonFajar\LaravelBlocks\Http\Middleware\AuthorizeMedia;
 use KatonFajar\LaravelBlocks\Manifest\EditorManifestGenerator;
 use KatonFajar\LaravelBlocks\Media\Contracts\MediaProvider;
 use KatonFajar\LaravelBlocks\Media\LaravelFilesystemMediaProvider;
 use KatonFajar\LaravelBlocks\Media\MediaConfiguration;
+use KatonFajar\LaravelBlocks\Media\MediaTransportConfiguration;
 use KatonFajar\LaravelBlocks\Rendering\DocumentRenderer;
 use KatonFajar\LaravelBlocks\Validation\AttributeRule;
 use KatonFajar\LaravelBlocks\Validation\AttributeValidator;
@@ -55,6 +59,12 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
         $this->app->singleton(
             MediaConfiguration::class,
             static fn (Container $app): MediaConfiguration => MediaConfiguration::fromRepository(
+                $app->make(Repository::class),
+            ),
+        );
+        $this->app->singleton(
+            MediaTransportConfiguration::class,
+            static fn (Container $app): MediaTransportConfiguration => MediaTransportConfiguration::fromRepository(
                 $app->make(Repository::class),
             ),
         );
@@ -154,6 +164,7 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
     {
         $this->loadViewsFrom($this->packageViewsPath(), 'laravel-blocks');
         $this->registerBladeComponents();
+        $this->registerMediaTransportRoutes();
 
         if (! $this->app->runningInConsole()) {
             return;
@@ -188,6 +199,37 @@ final class LaravelBlocksServiceProvider extends ServiceProvider
         Blade::component(Editor::class, 'laravel-blocks::editor');
         Blade::component(Assets::class, 'laravel-blocks::assets');
         Blade::component(Content::class, 'laravel-blocks::content');
+    }
+
+    private function registerMediaTransportRoutes(): void
+    {
+        $configuration = $this->app->make(MediaTransportConfiguration::class);
+
+        if (! $configuration->enabled || $this->app->routesAreCached()) {
+            return;
+        }
+
+        $router = $this->app->make(Router::class);
+
+        $router->group([
+            'as' => $configuration->namePrefix,
+            'middleware' => $configuration->middleware,
+            'prefix' => $configuration->prefix,
+        ], static function (Router $router) use ($configuration): void {
+            $router->get('/', [MediaController::class, 'browse'])
+                ->middleware([
+                    sprintf('throttle:%d,1', $configuration->browseRequestsPerMinute),
+                    AuthorizeMedia::class.':browse',
+                ])
+                ->name('browse');
+
+            $router->post('/', [MediaController::class, 'upload'])
+                ->middleware([
+                    sprintf('throttle:%d,1', $configuration->uploadRequestsPerMinute),
+                    AuthorizeMedia::class.':upload',
+                ])
+                ->name('upload');
+        });
     }
 
     private function registerConfiguredBlocks(): void

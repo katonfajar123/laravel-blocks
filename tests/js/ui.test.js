@@ -4,6 +4,7 @@ import {
   Button,
   Icon,
   IconButton,
+  Modal,
   Popover,
   Toolbar,
   ToolbarGroup,
@@ -29,10 +30,12 @@ describe('editor UI primitives', () => {
     expect(ToolbarGroup.name).toBe('LaravelBlocksToolbarGroup');
     expect(Popover.name).toBe('LaravelBlocksPopover');
     expect(Popover.props.placement.default).toBe('bottom-start');
+    expect(Modal.name).toBe('LaravelBlocksModal');
   });
 
   it('uses modular stroke icon definitions behind the stable icon facade', () => {
     expect(Object.keys(iconDefinitions)).toContain('highlighter');
+    expect(Object.keys(iconDefinitions)).toContain('upload');
     expect(iconDefinitions.highlighter).toMatchObject({
       name: 'highlighter',
     });
