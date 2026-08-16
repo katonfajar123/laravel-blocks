@@ -86,7 +86,7 @@ it('round trips canonical documents through host-owned text and structured colum
     }
 
     expect(LaravelBlocksFacade::render($record->jsonb_document)->toHtml())
-        ->toContain('<p>Host-owned persistence</p>');
+        ->toContain('<p><strong>Host-owned persistence</strong></p>');
 });
 
 final class HostBlockDocument extends Model
