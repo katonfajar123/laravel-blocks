@@ -1,30 +1,75 @@
 const contexts = Object.freeze({
   image: Object.freeze({
-    blockType: 'image',
-    commandName: 'setImageMedia',
-    guidance: 'Describe meaningful images in Alternative text after choosing them. Leave it empty only for decorative images.',
-    icon: 'image',
-    mimePrefixes: Object.freeze(['image/']),
-    noun: 'image',
-    plural: 'images',
-    preview: 'image',
-    sourceAttribute: 'src',
+    primary: Object.freeze({
+      blockType: 'image',
+      commandName: 'setImageMedia',
+      guidance: 'Describe meaningful images in Alternative text after choosing them. Leave it empty only for decorative images.',
+      icon: 'image',
+      mimePrefixes: Object.freeze(['image/']),
+      mimeTypes: Object.freeze([]),
+      noun: 'image',
+      plural: 'images',
+      preview: 'image',
+      purpose: 'primary',
+      sourceAttribute: 'src',
+    }),
   }),
   video: Object.freeze({
-    blockType: 'video',
-    commandName: 'setVideoMedia',
-    guidance: 'Add an accessible title after choosing a video. Publish captions with the media when they are required.',
-    icon: 'video',
-    mimePrefixes: Object.freeze(['video/']),
-    noun: 'video',
-    plural: 'videos',
-    preview: 'icon',
-    sourceAttribute: 'src',
+    primary: Object.freeze({
+      blockType: 'video',
+      commandName: 'setVideoMedia',
+      guidance: 'Add an accessible title and captions after choosing a video.',
+      icon: 'video',
+      mimePrefixes: Object.freeze(['video/']),
+      mimeTypes: Object.freeze([]),
+      noun: 'video',
+      plural: 'videos',
+      preview: 'icon',
+      purpose: 'primary',
+      sourceAttribute: 'src',
+    }),
+    poster: Object.freeze({
+      blockType: 'video',
+      commandName: 'setVideoPosterMedia',
+      guidance: 'Choose a representative image that helps viewers understand the video before playback.',
+      icon: 'image',
+      mimePrefixes: Object.freeze(['image/']),
+      mimeTypes: Object.freeze([]),
+      noun: 'poster image',
+      plural: 'poster images',
+      preview: 'image',
+      purpose: 'poster',
+      sourceAttribute: 'poster',
+    }),
+    captions: Object.freeze({
+      blockType: 'video',
+      commandName: 'setVideoCaptionMedia',
+      guidance: 'Choose a WebVTT captions file, then confirm its language and readable label in block settings.',
+      icon: 'captions',
+      mimePrefixes: Object.freeze([]),
+      mimeTypes: Object.freeze(['text/vtt']),
+      noun: 'caption track',
+      plural: 'caption tracks',
+      preview: 'icon',
+      purpose: 'captions',
+      sourceAttribute: 'captionSrc',
+    }),
   }),
 });
 
-export function mediaContextForBlock(block) {
-  return contexts[String(block?.type ?? '')] ?? null;
+export function mediaContextForBlock(block, purpose = 'primary') {
+  return contexts[String(block?.type ?? '')]?.[String(purpose)] ?? null;
+}
+
+export function mediaContextsForBlock(block) {
+  const blockContexts = contexts[String(block?.type ?? '')];
+
+  return Object.freeze(blockContexts ? Object.values(blockContexts) : []);
+}
+
+function matchesMimeType(mimeType, context) {
+  return context.mimeTypes.includes(mimeType)
+    || context.mimePrefixes.some((prefix) => mimeType.startsWith(prefix));
 }
 
 export function mediaItemMatchesContext(item, context) {
@@ -33,7 +78,7 @@ export function mediaItemMatchesContext(item, context) {
   return Boolean(
     context
     && typeof item?.url === 'string'
-    && context.mimePrefixes.some((prefix) => mimeType.startsWith(prefix)),
+    && matchesMimeType(mimeType, context),
   );
 }
 
@@ -42,6 +87,8 @@ export function mediaMimeTypes(context, capabilities) {
     return Object.freeze([]);
   }
 
-  return Object.freeze(capabilities.allowedMimeTypes.filter((mimeType) => context.mimePrefixes
-    .some((prefix) => String(mimeType).toLowerCase().startsWith(prefix))));
+  return Object.freeze(capabilities.allowedMimeTypes.filter((mimeType) => matchesMimeType(
+    String(mimeType).toLowerCase(),
+    context,
+  )));
 }

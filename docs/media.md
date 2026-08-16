@@ -96,7 +96,7 @@ The default implementation uses Laravel Filesystem with a configured disk and di
 ],
 ```
 
-The disk must provide absolute public HTTP(S) URLs. Files receive random 40-hex-character IDs and trusted extensions selected from content-derived MIME, never from client filenames. Browse is deterministic, supports provider-ID search and MIME filtering, and caps each page at `max_items_per_page`. The zero-database default cannot preserve original-name, dimensions, alt, or caption metadata across a later browse; providers with metadata stores may do so.
+The disk must provide absolute public HTTP(S) URLs. Files receive random 40-hex-character IDs and trusted extensions selected from content-derived MIME, never from client filenames. Genuine WebVTT uploads are stored with `.vtt` only when content inspection reports exact `text/vtt`; renamed plain text is rejected. Browse is deterministic, supports provider-ID search and MIME filtering, and caps each page at `max_items_per_page`. The zero-database default cannot preserve original-name, dimensions, alt, or caption metadata across a later browse; providers with metadata stores may do so.
 
 Applications replace the default by configuring a container-resolvable `MediaProvider` implementation. Third-party database/storage ownership stays with that provider.
 
@@ -114,19 +114,19 @@ These adapters should live outside the core package when they require third-part
 
 ## Editor operations
 
-The default editor provides one package-owned provider-backed picker for the Image and Video blocks with:
+The default editor provides one package-owned provider-backed picker for Image sources and Video source, poster, and captions purposes with:
 
 - browse and search;
 - upload and drag-and-drop upload;
 - selection and replacement;
-- URL assignment in one history transaction, with bounded provider alternative text applied for Image when available;
+- URL assignment in one history transaction, with bounded provider alternative text applied for Image when available and safe language/label defaults applied for a selected caption track;
 - progress, cancellation, and clear failure states;
-- restrictions by accepted MIME family and block type;
-- permission-aware actions, retry behavior, accessible focus restoration, alternative-text guidance for images, and accessible-title guidance for videos.
+- restrictions by accepted MIME family or exact type for each block purpose;
+- permission-aware actions, retry behavior, accessible focus restoration, alternative-text/poster guidance, accessible-title guidance for videos, and WebVTT language/label guidance.
 
 Deletion is not a normal block-edit operation. Removing an Image or Video block must not automatically delete the underlying media object because it may be reused elsewhere.
 
-The picker opens from the Image or Video Inspector and contextual toolbar. A private block-context mapping selects the matching command, labels, preview, guidance, and MIME family; provider results are filtered again before they can enter the document. Browse uses same-origin `fetch`; upload uses `XMLHttpRequest` so progress and cancellation remain observable. The modal traps focus, restores the invoking control after selection or dismissal, supports keyboard grid navigation, and adapts to narrow viewports. Gallery, File, Cover, provider metadata editing, caption tracks, poster selection, and stable media references remain later work.
+The primary picker opens from the Image or Video Inspector and contextual toolbar. The Video Inspector also opens poster and caption purposes. A private block-purpose mapping selects the matching command, source attribute, labels, preview, guidance, and MIME restrictions; provider results are filtered again before they can enter the document. Video posters accept image MIME types, while caption tracks accept exact `text/vtt`. Browse uses same-origin `fetch`; upload uses `XMLHttpRequest` so progress and cancellation remain observable. The modal traps focus, restores the invoking control after selection or dismissal, supports keyboard grid navigation, and adapts to narrow viewports. Gallery, File, Cover, provider metadata editing, multiple caption tracks, and stable media references remain later work.
 
 ## Browser transport and authorization
 

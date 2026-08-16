@@ -435,6 +435,9 @@ function normalizedVideoMedia(item, currentAttrs = {}) {
 
   return {
     ...currentAttrs,
+    captionLabel: currentAttrs.captionLabel ?? null,
+    captionLanguage: currentAttrs.captionLanguage ?? null,
+    captionSrc: currentAttrs.captionSrc ?? null,
     poster: currentAttrs.poster ?? null,
     src: item.url,
     title: currentAttrs.title ?? null,
@@ -449,6 +452,100 @@ function setVideoMedia(editor, payload = {}) {
   }
 
   const nextAttrs = normalizedVideoMedia(payload.item, target.node.attrs ?? {});
+
+  if (!nextAttrs) {
+    return false;
+  }
+
+  editor.view.dispatch(closeHistory(editor.state.tr.setNodeMarkup(
+    target.block.from,
+    undefined,
+    nextAttrs,
+    target.node.marks,
+  )));
+
+  return true;
+}
+
+function normalizedVideoPosterMedia(item, currentAttrs = {}) {
+  if (!item || typeof item !== 'object' || typeof item.url !== 'string') {
+    return null;
+  }
+
+  let url;
+
+  try {
+    url = new URL(item.url);
+  } catch {
+    return null;
+  }
+
+  if (!['http:', 'https:'].includes(url.protocol) || !String(item.mimeType ?? '').toLowerCase().startsWith('image/')) {
+    return null;
+  }
+
+  return {
+    ...currentAttrs,
+    poster: item.url,
+  };
+}
+
+function setVideoPosterMedia(editor, payload = {}) {
+  const target = topLevelBlock(editor, payload);
+
+  if (!target || target.node.type.name !== 'video') {
+    return false;
+  }
+
+  const nextAttrs = normalizedVideoPosterMedia(payload.item, target.node.attrs ?? {});
+
+  if (!nextAttrs) {
+    return false;
+  }
+
+  editor.view.dispatch(closeHistory(editor.state.tr.setNodeMarkup(
+    target.block.from,
+    undefined,
+    nextAttrs,
+    target.node.marks,
+  )));
+
+  return true;
+}
+
+function normalizedVideoCaptionMedia(item, currentAttrs = {}) {
+  if (!item || typeof item !== 'object' || typeof item.url !== 'string') {
+    return null;
+  }
+
+  let url;
+
+  try {
+    url = new URL(item.url);
+  } catch {
+    return null;
+  }
+
+  if (!['http:', 'https:'].includes(url.protocol) || String(item.mimeType ?? '').toLowerCase() !== 'text/vtt') {
+    return null;
+  }
+
+  return {
+    ...currentAttrs,
+    captionLabel: currentAttrs.captionLabel || 'Captions',
+    captionLanguage: currentAttrs.captionLanguage || 'und',
+    captionSrc: item.url,
+  };
+}
+
+function setVideoCaptionMedia(editor, payload = {}) {
+  const target = topLevelBlock(editor, payload);
+
+  if (!target || target.node.type.name !== 'video') {
+    return false;
+  }
+
+  const nextAttrs = normalizedVideoCaptionMedia(payload.item, target.node.attrs ?? {});
 
   if (!nextAttrs) {
     return false;
@@ -620,6 +717,34 @@ const definitions = [
       );
     },
     (editor, payload) => setVideoMedia(editor, payload),
+  ),
+  simpleCommand(
+    'setVideoPosterMedia',
+    'Choose video poster',
+    (editor, payload) => {
+      const target = topLevelBlock(editor, payload);
+
+      return Boolean(
+        target
+        && target.node.type.name === 'video'
+        && normalizedVideoPosterMedia(payload?.item, target.node.attrs ?? {}),
+      );
+    },
+    (editor, payload) => setVideoPosterMedia(editor, payload),
+  ),
+  simpleCommand(
+    'setVideoCaptionMedia',
+    'Choose video captions',
+    (editor, payload) => {
+      const target = topLevelBlock(editor, payload);
+
+      return Boolean(
+        target
+        && target.node.type.name === 'video'
+        && normalizedVideoCaptionMedia(payload?.item, target.node.attrs ?? {}),
+      );
+    },
+    (editor, payload) => setVideoCaptionMedia(editor, payload),
   ),
   simpleCommand(
     'setParagraph',

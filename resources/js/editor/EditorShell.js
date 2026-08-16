@@ -62,6 +62,9 @@ const LaravelBlocksVideo = Node.create({
       src: { default: null },
       poster: { default: null },
       title: { default: null },
+      captionSrc: { default: null },
+      captionLanguage: { default: null },
+      captionLabel: { default: null },
     };
   },
   parseHTML() {
@@ -76,14 +79,34 @@ const LaravelBlocksVideo = Node.create({
       }, 'Video'];
     }
 
-    return ['video', {
-      ...HTMLAttributes,
+    const {
+      captionLabel,
+      captionLanguage,
+      captionSrc,
+      ...videoAttributes
+    } = HTMLAttributes;
+    const video = ['video', {
+      ...videoAttributes,
       'aria-label': HTMLAttributes.title || 'Video',
       controls: '',
       'data-laravel-blocks-video': '',
       playsinline: '',
       preload: 'metadata',
-    }, 'Video playback is not supported by this browser.'];
+    }];
+
+    if (captionSrc) {
+      video.push(['track', {
+        default: '',
+        kind: 'captions',
+        label: captionLabel || 'Captions',
+        src: captionSrc,
+        srclang: captionLanguage || 'und',
+      }]);
+    }
+
+    video.push('Video playback is not supported by this browser.');
+
+    return video;
   },
 });
 
@@ -169,6 +192,7 @@ export const EditorShell = {
     const inspectorOpen = shallowRef(false);
     const mediaBlock = shallowRef(createEmptyBlockSelection());
     const mediaOpen = shallowRef(false);
+    const mediaPurpose = shallowRef('primary');
     const requestedBlockSelection = shallowRef(createEmptyBlockSelection());
     const selection = shallowRef(createSelectionState(null));
     const slash = shallowRef({
@@ -372,13 +396,14 @@ export const EditorShell = {
       return documentListOpen.value;
     }
 
-    function openMedia(block, trigger = null) {
-      if (!props.media.enabled || !mediaContextForBlock(block)) {
+    function openMedia(block, trigger = null, purpose = 'primary') {
+      if (!props.media.enabled || !mediaContextForBlock(block, purpose)) {
         return false;
       }
 
       trigger?.focus?.({ preventScroll: true });
       mediaBlock.value = block;
+      mediaPurpose.value = purpose;
       mediaOpen.value = true;
 
       return true;
@@ -768,6 +793,7 @@ export const EditorShell = {
             updateEditorState(editor.value);
           },
           open: mediaOpen.value,
+          purpose: mediaPurpose.value,
           transport: props.media,
         })
         : null,

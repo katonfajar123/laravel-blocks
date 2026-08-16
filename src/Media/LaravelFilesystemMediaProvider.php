@@ -190,7 +190,13 @@ final readonly class LaravelFilesystemMediaProvider implements MediaProvider
             throw MediaException::because('mime_detection_failed', 'The media upload type could not be detected.');
         }
 
-        $mimeType = strtolower($mimeType);
+        $sample = @file_get_contents($file->getPathname(), false, null, 0, 65_536);
+
+        if (! is_string($sample) || $sample === '') {
+            throw MediaException::because('mime_detection_failed', 'The media upload content could not be inspected.');
+        }
+
+        $mimeType = $this->normalizedMimeType(strtolower($mimeType), $sample);
 
         if ($mimeType === 'image/svg+xml') {
             throw MediaException::because('svg_not_allowed', 'SVG uploads require an application-defined sanitizing provider.');
@@ -310,7 +316,31 @@ final readonly class LaravelFilesystemMediaProvider implements MediaProvider
             throw MediaException::because('mime_detection_failed', 'Stored media content type could not be detected.');
         }
 
-        return strtolower($mimeType);
+        return $this->normalizedMimeType(strtolower($mimeType), $sample);
+    }
+
+    private function normalizedMimeType(string $mimeType, string $sample): string
+    {
+        $webVtt = $this->isWebVtt($sample);
+
+        if ($mimeType === 'text/vtt') {
+            return $webVtt ? 'text/vtt' : 'text/plain';
+        }
+
+        if ($webVtt && in_array($mimeType, ['application/octet-stream', 'text/plain'], true)) {
+            return 'text/vtt';
+        }
+
+        return $mimeType;
+    }
+
+    private function isWebVtt(string $sample): bool
+    {
+        if (str_starts_with($sample, "\xEF\xBB\xBF")) {
+            $sample = substr($sample, 3);
+        }
+
+        return preg_match('/\AWEBVTT(?:[ \t][^\r\n]*)?(?:\r\n|\n|\r)/', $sample) === 1;
     }
 
     private function originalName(UploadedFile $file): ?string

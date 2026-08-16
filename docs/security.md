@@ -91,7 +91,7 @@ Remote images should normally render as URLs without server fetching. Any proxy 
 
 ## Media uploads
 
-See [Media](media.md) for the full upload policy. The implemented Laravel Filesystem provider rejects invalid/empty/oversized files, inspects MIME from content, denies SVG, bounds image pixels, generates storage names, confines IDs to its configured directory, and returns metadata without absolute paths.
+See [Media](media.md) for the full upload policy. The implemented Laravel Filesystem provider rejects invalid/empty/oversized files, inspects MIME from content, denies SVG, bounds image pixels, generates storage names, confines IDs to its configured directory, and returns metadata without absolute paths. WebVTT receives a generated `.vtt` name only after exact `text/vtt` content detection; the Video document stores and safely renders its HTTP(S) URL rather than inlining uploaded caption text.
 
 The package browser boundary registers only when enabled, defaults to `web` plus `auth`, requires an authenticated request, checks separate host-defined browse/upload Gate abilities, sends the session CSRF token, bounds browse query values, applies separate route throttles, and redacts provider and unexpected failures. Undefined abilities deny access. Applications that customize transport middleware must preserve equivalent authentication and CSRF protection; multi-tenant scope and quotas must be enforced by host middleware and/or the bound provider before storage access.
 

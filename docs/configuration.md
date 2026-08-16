@@ -51,6 +51,7 @@ return [
         'allowed_mime_types' => [
             'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif',
             'video/mp4', 'video/webm',
+            'text/vtt',
             'audio/mpeg', 'audio/wav', 'audio/ogg',
             'application/pdf',
         ],
@@ -58,6 +59,7 @@ return [
             'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif',
             'image/webp' => 'webp', 'image/avif' => 'avif',
             'video/mp4' => 'mp4', 'video/webm' => 'webm',
+            'text/vtt' => 'vtt',
             'audio/mpeg' => 'mp3', 'audio/wav' => 'wav', 'audio/ogg' => 'ogg',
             'application/pdf' => 'pdf',
         ],

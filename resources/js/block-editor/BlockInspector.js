@@ -1,6 +1,6 @@
 import { computed, h, ref, watch } from 'vue';
 import { Button, Icon } from '../ui/index.js';
-import { mediaContextForBlock } from '../media/context.js';
+import { mediaContextsForBlock } from '../media/context.js';
 
 import {
   blockManifestDefinition,
@@ -125,30 +125,33 @@ export const BlockInspector = {
       setGroup,
     });
 
-    function mediaControl() {
-      const context = mediaContextForBlock(props.block);
+    function mediaControls() {
+      const contexts = mediaContextsForBlock(props.block);
 
-      if (activeGroup.value !== 'content' || !context) {
-        return null;
+      if (activeGroup.value !== 'content' || contexts.length === 0) {
+        return [];
       }
 
-      const label = props.block.attrs?.src
-        ? `Replace ${context.noun} from Media Library`
-        : `Choose ${context.noun} from Media Library`;
-
-      return h('div', {
+      return contexts.map((context) => h('div', {
         class: 'lb-block-inspector__media',
-        'data-laravel-blocks-inspector-media': context.blockType,
+        'data-laravel-blocks-inspector-media': context.purpose === 'primary'
+          ? context.blockType
+          : `${context.blockType}:${context.purpose}`,
       }, [
         h(Button, {
           disabled: !props.mediaAvailable,
-          onClick: (event) => emit('openMedia', props.block, event.currentTarget),
+          onClick: (event) => emit('openMedia', props.block, event.currentTarget, context.purpose),
           variant: 'primary',
-        }, { default: () => [h(Icon, { name: context.icon }), label] }),
+        }, { default: () => [
+          h(Icon, { name: context.icon }),
+          props.block.attrs?.[context.sourceAttribute]
+            ? `Replace ${context.noun} from Media Library`
+            : `Choose ${context.noun} from Media Library`,
+        ] }),
         !props.mediaAvailable
           ? h('small', {}, 'Media transport is disabled for this editor.')
           : null,
-      ]);
+      ]));
     }
 
     function fieldControls() {
@@ -213,7 +216,7 @@ export const BlockInspector = {
         class: 'lb-block-inspector__panel',
         'data-laravel-blocks-inspector-panel': activeGroup.value,
         role: 'tabpanel',
-      }, [mediaControl(), ...fieldControls()].filter(Boolean)),
+      }, [...mediaControls(), ...fieldControls()].filter(Boolean)),
     ]);
   },
 };

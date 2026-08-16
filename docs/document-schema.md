@@ -211,12 +211,15 @@ The implemented Video block is also a URL-based leaf node. Its placeholder keeps
   "attrs": {
     "src": null,
     "poster": null,
-    "title": null
+    "title": null,
+    "captionSrc": null,
+    "captionLanguage": null,
+    "captionLabel": null
   }
 }
 ```
 
-Non-null `src` and `poster` values must be HTTP(S) URLs, and `title` is limited to 500 characters. The editor renders an atomic placeholder until a source is chosen; the frontend renderer then emits native controls without autoplay.
+Non-null `src`, `poster`, and `captionSrc` values must be HTTP(S) URLs. `title` is limited to 500 characters, `captionLanguage` to 35 characters, and `captionLabel` to 200 characters. Caption attributes are additive and optional, so existing Video documents remain valid. The editor renders an atomic placeholder until a source is chosen; the frontend renderer then emits native controls without autoplay and, when `captionSrc` exists, one default captions track with deterministic `und` and `Captions` fallbacks.
 
 Later media-provider nodes MAY store a provider URL or a stable media reference plus content metadata. For example, an ID-based provider may produce:
 

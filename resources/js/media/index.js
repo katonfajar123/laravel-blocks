@@ -1,6 +1,7 @@
 export { MediaLibrary } from './MediaLibrary.js';
 export {
   mediaContextForBlock,
+  mediaContextsForBlock,
   mediaItemMatchesContext,
   mediaMimeTypes,
 } from './context.js';

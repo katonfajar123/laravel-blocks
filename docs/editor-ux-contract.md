@@ -221,6 +221,10 @@ A selected Heading MUST provide a level/transform menu covering Paragraph and He
 
 A selected Image MUST provide its applicable Align, Replace, Crop, Link, and More actions. Its Inspector MUST expose Content controls for media, alternative text, caption, and link; Design controls for dimensions, aspect ratio, fit, alignment, and radius; and Advanced controls supported by the shared schema.
 
+### Video defaults
+
+A selected Video MUST keep primary video replacement in the contextual toolbar and expose separate source, poster-image, and WebVTT-caption Library actions in its Inspector. Each action MUST apply only its declared MIME purpose in one undoable transaction, restore focus after selection or dismissal, and keep language/label fields available for the rendered captions track.
+
 ## Inserter and appender contract
 
 The plus Inserter, block appender, and slash menu MUST read the same registry-backed catalog as the PHP manifest.

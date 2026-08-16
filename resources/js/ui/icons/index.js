@@ -2,6 +2,7 @@ import { arrowDownIcon } from './arrow-down.js';
 import { arrowUpIcon } from './arrow-up.js';
 import { boldIcon } from './bold.js';
 import { blockquoteIcon } from './blockquote.js';
+import { captionsIcon } from './captions.js';
 import { codeIcon } from './code.js';
 import { dragHandleIcon } from './drag-handle.js';
 import { headingIcon } from './heading.js';
@@ -28,6 +29,7 @@ export const iconDefinitions = Object.freeze({
   arrowUp: arrowUpIcon,
   bold: boldIcon,
   blockquote: blockquoteIcon,
+  captions: captionsIcon,
   code: codeIcon,
   dragHandle: dragHandleIcon,
   heading: headingIcon,

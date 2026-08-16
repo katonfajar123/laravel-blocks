@@ -81,6 +81,39 @@ it('uploads content-inspected media with a generated confined identifier', funct
         ]);
 });
 
+it('stores genuine WebVTT captions with exact MIME filtering', function (): void {
+    $provider = configuredFilesystemProvider();
+    $upload = testUpload('renamed-captions.txt', testWebVtt());
+
+    try {
+        $item = $provider->upload($upload);
+    } finally {
+        @unlink($upload->getPathname());
+    }
+
+    $captions = $provider->browse(new MediaQuery(mimeTypes: ['text/vtt']));
+    $videos = $provider->browse(new MediaQuery(mimeTypes: ['video/mp4']));
+
+    expect($item->id)
+        ->toMatch('/^[a-f0-9]{40}\.vtt$/')
+        ->and($item->mimeType)
+        ->toBe('text/vtt')
+        ->and($item->originalName)
+        ->toBe('renamed-captions.txt')
+        ->and([$item->width, $item->height])
+        ->toBe([null, null])
+        ->and($provider->find($item->id)?->mimeType)
+        ->toBe('text/vtt')
+        ->and($provider->capabilities()->allowedMimeTypes)
+        ->toContain('text/vtt')
+        ->and($captions->total)
+        ->toBe(1)
+        ->and($captions->items[0]->id)
+        ->toBe($item->id)
+        ->and($videos->total)
+        ->toBe(0);
+});
+
 it('browses searches filters and paginates deterministically before explicit deletion', function (): void {
     $provider = configuredFilesystemProvider(['max_items_per_page' => 1]);
     $firstUpload = testUpload('first.png', testPng());
@@ -137,6 +170,8 @@ it('rejects unsafe uploads with machine-readable reasons', function (string $nam
 })->with([
     'empty upload' => ['empty.jpg', '', [], 'empty_file'],
     'spoofed executable as JPEG' => ['shell.jpg', '<?php echo "unsafe";', [], 'unsupported_mime_type'],
+    'plain text renamed as WebVTT' => ['captions.vtt', 'This is not a WebVTT captions file.', [], 'unsupported_mime_type'],
+    'malformed WebVTT signature' => ['captions.vtt', 'WEBVTT without a line ending', [], 'unsupported_mime_type'],
     'SVG without sanitizer' => ['vector.svg', '<svg xmlns="http://www.w3.org/2000/svg"></svg>', [], 'svg_not_allowed'],
     'oversized content' => ['large.png', testPng(), ['max_upload_bytes' => 10], 'upload_too_large'],
     'excessive image dimensions' => ['dimensions.png', testPngDimensions(2, 2), ['max_image_pixels' => 1], 'image_too_large'],
@@ -242,6 +277,11 @@ function testPng(): string
         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
         true,
     ) ?: throw new RuntimeException('Unable to decode PNG fixture.');
+}
+
+function testWebVtt(): string
+{
+    return "WEBVTT\n\n00:00.000 --> 00:01.000\nHello from Laravel Blocks.\n";
 }
 
 function testPngDimensions(int $width, int $height): string

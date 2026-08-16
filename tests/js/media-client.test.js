@@ -4,6 +4,7 @@ import {
   MediaClientError,
   createMediaClient,
   mediaContextForBlock,
+  mediaContextsForBlock,
   mediaItemMatchesContext,
   mediaMimeTypes,
   normalizeMediaItem,
@@ -22,7 +23,7 @@ const transport = {
     upload: true,
     delete: false,
     maxUploadBytes: 1024,
-    allowedMimeTypes: ['image/png', 'video/mp4', 'video/webm'],
+    allowedMimeTypes: ['image/png', 'video/mp4', 'video/webm', 'text/vtt'],
   },
 };
 
@@ -55,6 +56,8 @@ describe('media client', () => {
   it('routes package media blocks through immutable MIME-specific contexts', () => {
     const imageContext = mediaContextForBlock({ type: 'image' });
     const videoContext = mediaContextForBlock({ type: 'video' });
+    const posterContext = mediaContextForBlock({ type: 'video' }, 'poster');
+    const captionsContext = mediaContextForBlock({ type: 'video' }, 'captions');
     const videoItem = {
       ...item,
       id: 'movie.mp4',
@@ -64,11 +67,21 @@ describe('media client', () => {
 
     expect(imageContext).toMatchObject({ commandName: 'setImageMedia', noun: 'image' });
     expect(videoContext).toMatchObject({ commandName: 'setVideoMedia', noun: 'video' });
+    expect(posterContext).toMatchObject({ commandName: 'setVideoPosterMedia', noun: 'poster image' });
+    expect(captionsContext).toMatchObject({ commandName: 'setVideoCaptionMedia', noun: 'caption track' });
+    expect(mediaContextsForBlock({ type: 'video' })).toHaveLength(3);
     expect(mediaContextForBlock({ type: 'file' })).toBeNull();
+    expect(mediaContextForBlock({ type: 'video' }, 'unknown')).toBeNull();
     expect(mediaMimeTypes(videoContext, transport.capabilities)).toEqual(['video/mp4', 'video/webm']);
+    expect(mediaMimeTypes(posterContext, transport.capabilities)).toEqual(['image/png']);
+    expect(mediaMimeTypes(captionsContext, transport.capabilities)).toEqual(['text/vtt']);
     expect(mediaItemMatchesContext(videoItem, videoContext)).toBe(true);
     expect(mediaItemMatchesContext(item, videoContext)).toBe(false);
+    expect(mediaItemMatchesContext(item, posterContext)).toBe(true);
+    expect(mediaItemMatchesContext({ ...item, mimeType: 'text/vtt' }, captionsContext)).toBe(true);
+    expect(mediaItemMatchesContext({ ...item, mimeType: 'text/plain' }, captionsContext)).toBe(false);
     expect(Object.isFrozen(videoContext)).toBe(true);
+    expect(Object.isFrozen(mediaContextsForBlock({ type: 'video' }))).toBe(true);
   });
 
   it('browses with bounded query parameters and normalizes the response', async () => {

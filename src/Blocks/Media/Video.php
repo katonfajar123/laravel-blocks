@@ -64,6 +64,24 @@ final class Video extends Block
                 'label' => 'Accessible title',
                 'help' => 'Briefly identify the video for assistive technology.',
             ],
+            [
+                'name' => 'captionSrc',
+                'type' => 'url',
+                'label' => 'Caption track URL',
+                'help' => 'Optional HTTP or HTTPS URL for a WebVTT captions file.',
+            ],
+            [
+                'name' => 'captionLanguage',
+                'type' => 'text',
+                'label' => 'Caption language',
+                'help' => 'BCP 47 language tag such as en, en-US, or id.',
+            ],
+            [
+                'name' => 'captionLabel',
+                'type' => 'text',
+                'label' => 'Caption label',
+                'help' => 'Human-readable track name such as English or Bahasa Indonesia.',
+            ],
         ];
     }
 
@@ -74,6 +92,9 @@ final class Video extends Block
                 'src' => AttributeRule::url(nullable: true),
                 'poster' => AttributeRule::url(nullable: true),
                 'title' => AttributeRule::string(nullable: true, maximumLength: 500),
+                'captionSrc' => AttributeRule::url(nullable: true),
+                'captionLanguage' => AttributeRule::string(nullable: true, maximumLength: 35),
+                'captionLabel' => AttributeRule::string(nullable: true, maximumLength: 200),
             ],
             allowedParents: ['doc', 'blockquote'],
         );

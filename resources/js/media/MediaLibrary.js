@@ -39,6 +39,10 @@ export const MediaLibrary = {
       type: Boolean,
       default: false,
     },
+    purpose: {
+      type: String,
+      default: 'primary',
+    },
     transport: {
       type: Object,
       required: true,
@@ -48,7 +52,7 @@ export const MediaLibrary = {
   setup(props, { emit, expose }) {
     const capabilities = ref(normalizeCapabilities(props.transport.capabilities));
     const client = createMediaClient(props.transport);
-    const context = computed(() => mediaContextForBlock(props.block));
+    const context = computed(() => mediaContextForBlock(props.block, props.purpose));
     const error = ref(null);
     const items = ref([]);
     const loading = ref(false);
@@ -65,7 +69,11 @@ export const MediaLibrary = {
 
     const acceptedMimeTypes = computed(() => mediaMimeTypes(context.value, capabilities.value));
     const accept = computed(() => acceptedMimeTypes.value.join(','));
-    const dialogTitle = computed(() => `${props.block?.attrs?.src ? 'Replace' : 'Choose'} ${context.value?.noun ?? 'media'}`);
+    const dialogTitle = computed(() => {
+      const source = props.block?.attrs?.[context.value?.sourceAttribute ?? 'src'];
+
+      return `${source ? 'Replace' : 'Choose'} ${context.value?.noun ?? 'media'}`;
+    });
 
     function setError(next, retry = null) {
       error.value = next instanceof Error ? next : new Error(String(next));
@@ -245,7 +253,7 @@ export const MediaLibrary = {
       controls[Math.min(controls.length - 1, Math.max(0, next))]?.focus?.({ preventScroll: true });
     }
 
-    watch(() => props.open, (open) => {
+    watch(() => [props.open, props.purpose], ([open]) => {
       if (open) {
         items.value = [];
         page.value = 1;

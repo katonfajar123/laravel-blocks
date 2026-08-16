@@ -116,6 +116,8 @@ describe('editor command registry', () => {
         'updateBlockAttrs',
         'setImageMedia',
         'setVideoMedia',
+        'setVideoPosterMedia',
+        'setVideoCaptionMedia',
         'setParagraph',
         'setHeading',
         'setBlockquote',

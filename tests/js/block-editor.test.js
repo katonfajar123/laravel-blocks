@@ -337,7 +337,14 @@ describe('block editor helpers', () => {
     })).toEqual({
       node: {
         type: 'video',
-        attrs: { src: null, poster: null, title: null },
+        attrs: {
+          src: null,
+          poster: null,
+          title: null,
+          captionSrc: null,
+          captionLanguage: null,
+          captionLabel: null,
+        },
       },
       reason: null,
       valid: true,

@@ -10,7 +10,7 @@ let lastBrowseMimeTypes = [];
 let retryUploadAttempts = 0;
 
 const mediaCapabilities = {
-  allowedMimeTypes: ['image/jpeg', 'image/png', 'video/mp4', 'video/webm'],
+  allowedMimeTypes: ['image/jpeg', 'image/png', 'video/mp4', 'video/webm', 'text/vtt'],
   browse: true,
   delete: false,
   maxUploadBytes: 5 * 1024 * 1024,
@@ -219,6 +219,46 @@ const packageDefaultManifest = {
           type: 'text',
           ui: {},
         },
+        {
+          constraints: {
+            allowedSchemes: ['https', 'http'],
+            maxLength: 2048,
+            nullable: true,
+          },
+          default: null,
+          group: 'content',
+          help: 'Optional HTTP or HTTPS URL for a WebVTT captions file.',
+          label: 'Caption track URL',
+          name: 'captionSrc',
+          path: 'attrs.captionSrc',
+          required: false,
+          type: 'url',
+          ui: {},
+        },
+        {
+          constraints: { maxLength: 35, nullable: true },
+          default: null,
+          group: 'content',
+          help: 'BCP 47 language tag such as en, en-US, or id.',
+          label: 'Caption language',
+          name: 'captionLanguage',
+          path: 'attrs.captionLanguage',
+          required: false,
+          type: 'text',
+          ui: {},
+        },
+        {
+          constraints: { maxLength: 200, nullable: true },
+          default: null,
+          group: 'content',
+          help: 'Human-readable track name such as English or Bahasa Indonesia.',
+          label: 'Caption label',
+          name: 'captionLabel',
+          path: 'attrs.captionLabel',
+          required: false,
+          type: 'text',
+          ui: {},
+        },
       ],
       keywords: ['video', 'movie', 'media', 'mp4', 'webm'],
       supports: { inserter: true },
@@ -289,6 +329,13 @@ test.beforeAll(async () => {
       return;
     }
 
+    if (url.pathname === '/fixture-captions.vtt') {
+      response.writeHead(200, { 'content-type': 'text/vtt; charset=utf-8' });
+      response.end('WEBVTT\n\n00:00.000 --> 00:01.000\nHello from the browser fixture.\n');
+
+      return;
+    }
+
     if (url.pathname === '/media' && request.method === 'GET') {
       const origin = `http://${request.headers.host}`;
       const search = (url.searchParams.get('search') ?? '').toLowerCase();
@@ -307,6 +354,7 @@ test.beforeAll(async () => {
         mediaItem('library-hero.png', `${origin}/fixture-image.svg`, 'Library hero', 18432),
         mediaItem('library-detail.png', `${origin}/fixture-image.svg`, 'Product detail', 9216),
         mediaItem('library-video.mp4', `${origin}/fixture-video.mp4`, 'Product video', 32768, 'video/mp4'),
+        mediaItem('library-captions.vtt', `${origin}/fixture-captions.vtt`, 'Product captions', 2048, 'text/vtt'),
       ].filter((item) => (
         lastBrowseMimeTypes.length === 0 || lastBrowseMimeTypes.includes(item.mimeType)
       ) && `${item.alt} ${item.originalName}`.toLowerCase().includes(effectiveSearch));
@@ -336,7 +384,7 @@ test.beforeAll(async () => {
       }
 
       const body = Buffer.concat(chunks).toString('utf8');
-      const filename = ['retry.png', 'slow.png', 'drop.png', 'movie-upload.mp4']
+      const filename = ['retry.png', 'slow.png', 'drop.png', 'movie-upload.mp4', 'captions-upload.vtt']
         .find((candidate) => body.includes(candidate)) ?? 'uploaded.png';
 
       if (request.headers['x-csrf-token'] !== 'browser-fixture-csrf') {
@@ -365,16 +413,19 @@ test.beforeAll(async () => {
 
       const origin = `http://${request.headers.host}`;
       const videoUpload = filename.endsWith('.mp4');
+      const captionUpload = filename.endsWith('.vtt');
       sendJson(response, 201, {
         data: {
           item: mediaItem(
             filename,
-            videoUpload
+            captionUpload
+              ? `${origin}/fixture-captions.vtt?upload=${encodeURIComponent(filename)}`
+              : videoUpload
               ? `${origin}/fixture-video.mp4?upload=${encodeURIComponent(filename)}`
               : `${origin}/fixture-image.svg`,
-            videoUpload ? 'Uploaded video' : 'Uploaded image',
+            captionUpload ? 'Uploaded captions' : videoUpload ? 'Uploaded video' : 'Uploaded image',
             1024,
-            videoUpload ? 'video/mp4' : 'image/png',
+            captionUpload ? 'text/vtt' : videoUpload ? 'video/mp4' : 'image/png',
           ),
         },
       });
@@ -553,6 +604,8 @@ test('executes editor mutations through the shared command API', async ({ page }
     'updateBlockAttrs',
     'setImageMedia',
     'setVideoMedia',
+    'setVideoPosterMedia',
+    'setVideoCaptionMedia',
     'setParagraph',
     'setHeading',
     'setBlockquote',
@@ -1714,7 +1767,14 @@ test('inserts, selects, replaces, and restores videos through the generic media 
   await expect(placeholder).toBeVisible();
   await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1]).toEqual({
     type: 'video',
-    attrs: { poster: null, src: null, title: null },
+    attrs: {
+      poster: null,
+      src: null,
+      title: null,
+      captionSrc: null,
+      captionLanguage: null,
+      captionLabel: null,
+    },
   });
 
   await root.locator('[data-laravel-blocks-inspector-toggle]').click();
@@ -1722,6 +1782,9 @@ test('inserts, selects, replaces, and restores videos through the generic media 
   await expect(root.locator('[data-laravel-blocks-inspector-field="src"]')).toHaveAttribute('type', 'url');
   await expect(root.locator('[data-laravel-blocks-inspector-field="poster"]')).toHaveAttribute('type', 'url');
   await expect(root.locator('[data-laravel-blocks-inspector-field="title"]')).toBeVisible();
+  await expect(root.locator('[data-laravel-blocks-inspector-field="captionSrc"]')).toHaveAttribute('type', 'url');
+  await expect(root.locator('[data-laravel-blocks-inspector-field="captionLanguage"]')).toBeVisible();
+  await expect(root.locator('[data-laravel-blocks-inspector-field="captionLabel"]')).toBeVisible();
 
   const openMedia = root.locator('[data-laravel-blocks-inspector-media="video"] button');
   await openMedia.click();
@@ -1753,7 +1816,14 @@ test('inserts, selects, replaces, and restores videos through the generic media 
   await expect(renderedVideo).not.toHaveAttribute('autoplay', '');
   await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1]).toEqual({
     type: 'video',
-    attrs: { poster: null, src: `${baseUrl}/fixture-video.mp4`, title: null },
+    attrs: {
+      poster: null,
+      src: `${baseUrl}/fixture-video.mp4`,
+      title: null,
+      captionSrc: null,
+      captionLanguage: null,
+      captionLabel: null,
+    },
   });
 
   expect(await page.evaluate(() => document
@@ -1763,7 +1833,14 @@ test('inserts, selects, replaces, and restores videos through the generic media 
   await expect(placeholder).toBeVisible();
   await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1]).toEqual({
     type: 'video',
-    attrs: { poster: null, src: null, title: null },
+    attrs: {
+      poster: null,
+      src: null,
+      title: null,
+      captionSrc: null,
+      captionLanguage: null,
+      captionLabel: null,
+    },
   });
 
   expect(await page.evaluate(() => document
@@ -1790,13 +1867,94 @@ test('inserts, selects, replaces, and restores videos through the generic media 
   await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1].attrs.src)
     .toBe(`${baseUrl}/fixture-video.mp4?upload=movie-upload.mp4`);
 
+  const openPoster = root.locator('[data-laravel-blocks-inspector-media="video:poster"] button');
+  await openPoster.click();
+  await expect(modal.getByRole('heading', { name: 'Choose poster image' })).toBeVisible();
+  await expect(searchMedia).toBeFocused();
+  await expect(uploadInput).toHaveAttribute('accept', 'image/jpeg,image/png');
+  expect(lastBrowseMimeTypes).toEqual(['image/jpeg', 'image/png']);
+  await expect(mediaItems).toHaveCount(2);
+  await expect(mediaItems.first().locator('img')).toBeVisible();
+  await mediaItems.first().click();
+  await page.locator('[data-laravel-blocks-media-use]').click();
+  await expect(modal).toHaveCount(0);
+  await expect(openPoster).toBeFocused();
+  await expect(renderedVideo).toHaveAttribute('poster', `${baseUrl}/fixture-image.svg`);
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1].attrs.poster)
+    .toBe(`${baseUrl}/fixture-image.svg`);
+
+  expect(await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('undo'))).toMatchObject({ executed: true });
+  await expect(renderedVideo).not.toHaveAttribute('poster');
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1].attrs.src)
+    .toBe(`${baseUrl}/fixture-video.mp4?upload=movie-upload.mp4`);
+
+  expect(await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('redo'))).toMatchObject({ executed: true });
+  await expect(renderedVideo).toHaveAttribute('poster', `${baseUrl}/fixture-image.svg`);
+
+  const openCaptions = root.locator('[data-laravel-blocks-inspector-media="video:captions"] button');
+  await openCaptions.click();
+  await expect(modal.getByRole('heading', { name: 'Choose caption track' })).toBeVisible();
+  await expect(searchMedia).toBeFocused();
+  await expect(uploadInput).toHaveAttribute('accept', 'text/vtt');
+  expect(lastBrowseMimeTypes).toEqual(['text/vtt']);
+  await expect(mediaItems).toHaveCount(1);
+  await expect(mediaItems.first()).toHaveAttribute('data-laravel-blocks-media-item', 'library-captions.vtt');
+  await expect(mediaItems.first().locator('.lb-media-library__item-preview--icon')).toContainText('text/vtt');
+  await mediaItems.first().click();
+  await page.locator('[data-laravel-blocks-media-use]').click();
+
+  const renderedTrack = renderedVideo.locator('track[kind="captions"]');
+  await expect(modal).toHaveCount(0);
+  await expect(openCaptions).toBeFocused();
+  await expect(renderedTrack).toHaveAttribute('src', `${baseUrl}/fixture-captions.vtt`);
+  await expect(renderedTrack).toHaveAttribute('srclang', 'und');
+  await expect(renderedTrack).toHaveAttribute('label', 'Captions');
+  await expect(renderedTrack).toHaveAttribute('default', '');
+  await expect(renderedVideo).not.toHaveAttribute('captionsrc');
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1].attrs).toMatchObject({
+    captionLabel: 'Captions',
+    captionLanguage: 'und',
+    captionSrc: `${baseUrl}/fixture-captions.vtt`,
+    poster: `${baseUrl}/fixture-image.svg`,
+    src: `${baseUrl}/fixture-video.mp4?upload=movie-upload.mp4`,
+  });
+
+  expect(await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('undo'))).toMatchObject({ executed: true });
+  await expect(renderedTrack).toHaveCount(0);
+  await expect(renderedVideo).toHaveAttribute('poster', `${baseUrl}/fixture-image.svg`);
+
+  expect(await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('redo'))).toMatchObject({ executed: true });
+  await expect(renderedTrack).toHaveAttribute('src', `${baseUrl}/fixture-captions.vtt`);
+
+  await root.locator('[data-laravel-blocks-inspector-field="captionLanguage"]').fill('id-ID');
+  await root.locator('[data-laravel-blocks-inspector-field="captionLabel"]').fill('Bahasa Indonesia');
+  await expect(renderedTrack).toHaveAttribute('srclang', 'id-ID');
+  await expect(renderedTrack).toHaveAttribute('label', 'Bahasa Indonesia');
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1].attrs).toMatchObject({
+    captionLabel: 'Bahasa Indonesia',
+    captionLanguage: 'id-ID',
+    captionSrc: `${baseUrl}/fixture-captions.vtt`,
+  });
+
   await page.setViewportSize({ height: 720, width: 390 });
   const videoBox = await renderedVideo.boundingBox();
   expect(videoBox).not.toBeNull();
   expect(videoBox.x).toBeGreaterThanOrEqual(0);
   expect(videoBox.x + videoBox.width).toBeLessThanOrEqual(390);
 
-  await openMedia.click();
+  await openCaptions.click();
   await expect(modal).toBeVisible();
   const modalBox = await modal.boundingBox();
   expect(modalBox).not.toBeNull();
@@ -1806,7 +1964,7 @@ test('inserts, selects, replaces, and restores videos through the generic media 
   expect(modalBox.y + modalBox.height).toBeLessThanOrEqual(720);
   await page.keyboard.press('Escape');
   await expect(modal).toHaveCount(0);
-  await expect(openMedia).toBeFocused();
+  await expect(openCaptions).toBeFocused();
 });
 
 test('replaces an empty text block through slash commands', async ({ page }) => {
