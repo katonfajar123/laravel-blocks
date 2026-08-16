@@ -3,6 +3,9 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   MediaClientError,
   createMediaClient,
+  mediaContextForBlock,
+  mediaItemMatchesContext,
+  mediaMimeTypes,
   normalizeMediaItem,
   normalizeMediaTransport,
 } from '../../resources/js/media/index.js';
@@ -19,7 +22,7 @@ const transport = {
     upload: true,
     delete: false,
     maxUploadBytes: 1024,
-    allowedMimeTypes: ['image/png'],
+    allowedMimeTypes: ['image/png', 'video/mp4', 'video/webm'],
   },
 };
 
@@ -47,6 +50,25 @@ describe('media client', () => {
     expect(normalizeMediaItem(item)).toMatchObject(item);
     expect(() => normalizeMediaItem({ ...item, url: 'javascript:alert(1)' }))
       .toThrow(MediaClientError);
+  });
+
+  it('routes package media blocks through immutable MIME-specific contexts', () => {
+    const imageContext = mediaContextForBlock({ type: 'image' });
+    const videoContext = mediaContextForBlock({ type: 'video' });
+    const videoItem = {
+      ...item,
+      id: 'movie.mp4',
+      mimeType: 'video/mp4',
+      url: 'https://media.example.test/movie.mp4',
+    };
+
+    expect(imageContext).toMatchObject({ commandName: 'setImageMedia', noun: 'image' });
+    expect(videoContext).toMatchObject({ commandName: 'setVideoMedia', noun: 'video' });
+    expect(mediaContextForBlock({ type: 'file' })).toBeNull();
+    expect(mediaMimeTypes(videoContext, transport.capabilities)).toEqual(['video/mp4', 'video/webm']);
+    expect(mediaItemMatchesContext(videoItem, videoContext)).toBe(true);
+    expect(mediaItemMatchesContext(item, videoContext)).toBe(false);
+    expect(Object.isFrozen(videoContext)).toBe(true);
   });
 
   it('browses with bounded query parameters and normalizes the response', async () => {

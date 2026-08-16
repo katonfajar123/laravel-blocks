@@ -3,7 +3,7 @@
 ## Availability
 
 > [!WARNING]
-> Laravel Blocks has not been released. The package foundation, canonical document boundary, block registry, schema validator, Blade renderer, manifest bridge, compiled asset installer/distribution boundary, editor shell and command layer, current editing controls, top-level drag/drop, Document/List View, and default Paragraph/Heading/List/Quote/Code/Image blocks exist. The complete editor UX, validation rule, media-provider UI, and remaining built-in block catalog remain milestone targets.
+> Laravel Blocks has not been released. The package foundation, canonical document boundary, block registry, schema validator, Blade renderer, manifest bridge, compiled asset installer/distribution boundary, editor shell and command layer, current editing controls, top-level drag/drop, Document/List View, provider-backed Image/Video media UI, and default Paragraph/Heading/List/Quote/Code/Image/Video blocks exist. The complete editor UX, validation rule, and remaining built-in block catalog remain milestone targets.
 
 ## Requirements
 
@@ -143,7 +143,7 @@ $post->update([
 
 The component MUST accept an associative array, non-blank JSON string, or `null` as its initial value and normalize it through `Document::from(...)`. A normal browser form submits canonical document JSON as a string. The application decides whether to retain that string or normalize it to an array for its persistence layer.
 
-The current implementation mounts a package-owned Vue/Tiptap shell, emits an escaped manifest/document payload with default Paragraph/Heading/List/Quote/Code/Image blocks, auto-loads compiled assets when enabled, synchronizes a hidden input to canonical document JSON, and includes the shared command layer, basic Bold/Italic/Highlight/Link controls, basic top-level block controls, rounded floating toolbar/popover styling, modular stroke SVG icons, a compact viewport-aware manifest appender/inserter, basic slash commands, a basic manifest-generated Inspector, basic visible undo/redo controls with Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z, heading shortcuts for Ctrl/Cmd+Shift+2/3/4, top-level drag/drop, and Document/List View. Image currently accepts an HTTP(S) URL through the Inspector; provider-backed media selection arrives in the media milestone. The editor does not yet include nested controls, the complete shortcut map, complete built-in block catalog, or polished editing controls.
+The current implementation mounts a package-owned Vue/Tiptap shell, emits an escaped manifest/document payload with default Paragraph/Heading/List/Quote/Code/Image/Video blocks, auto-loads compiled assets when enabled, synchronizes a hidden input to canonical document JSON, and includes the shared command layer, basic Bold/Italic/Highlight/Link controls, basic top-level block controls, rounded floating toolbar/popover styling, modular stroke SVG icons, a compact viewport-aware manifest appender/inserter, basic slash commands, a basic manifest-generated Inspector, basic visible undo/redo controls with Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z, heading shortcuts for Ctrl/Cmd+Shift+2/3/4, top-level drag/drop, and Document/List View. Image and Video accept HTTP(S) sources through the Inspector and share a provider-backed, MIME-filtered media picker. The editor does not yet include nested controls, the complete shortcut map, complete built-in block catalog, or polished editing controls.
 
 The component MUST mount the complete package-owned canvas, toolbars, overlays, Inserter, Inspector, List View, media UI, and accessible interaction layer defined by the [Editor UX contract](editor-ux-contract.md). No consumer frontend assembly is part of the quick start.
 
@@ -163,7 +163,7 @@ use KatonFajar\LaravelBlocks\Facades\LaravelBlocks;
 $html = LaravelBlocks::render($post->content);
 ```
 
-The Blade component uses the same renderer path as the facade. Current rendering includes package-owned Paragraph, Heading, Bullet List, Ordered List, List Item, Quote, Code, and Image views plus any application blocks registered with safe Blade views. The remaining built-in block catalog arrives in later batches.
+The Blade component uses the same renderer path as the facade. Current rendering includes package-owned Paragraph, Heading, Bullet List, Ordered List, List Item, Quote, Code, Image, and Video views plus any application blocks registered with safe Blade views. The remaining built-in block catalog arrives in later batches.
 
 ## Publish configuration and renderer views
 

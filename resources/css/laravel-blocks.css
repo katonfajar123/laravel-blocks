@@ -137,7 +137,9 @@
 }
 
 .lb-editor-shell__prosemirror [data-laravel-blocks-image],
-.lb-editor-shell__prosemirror [data-laravel-blocks-image-placeholder] {
+.lb-editor-shell__prosemirror [data-laravel-blocks-image-placeholder],
+.lb-editor-shell__prosemirror [data-laravel-blocks-video],
+.lb-editor-shell__prosemirror [data-laravel-blocks-video-placeholder] {
   display: block;
   margin: 0 0 1.35rem;
   max-width: 100%;
@@ -148,7 +150,14 @@
   width: 100%;
 }
 
-.lb-editor-shell__prosemirror [data-laravel-blocks-image-placeholder] {
+.lb-editor-shell__prosemirror [data-laravel-blocks-video] {
+  aspect-ratio: 16 / 9;
+  background: #111827;
+  width: 100%;
+}
+
+.lb-editor-shell__prosemirror [data-laravel-blocks-image-placeholder],
+.lb-editor-shell__prosemirror [data-laravel-blocks-video-placeholder] {
   align-items: center;
   aspect-ratio: 16 / 7;
   background: #f8fafc;
@@ -165,7 +174,9 @@
 }
 
 .lb-editor-shell__prosemirror [data-laravel-blocks-image-placeholder].ProseMirror-selectednode,
-.lb-editor-shell__prosemirror [data-laravel-blocks-image].ProseMirror-selectednode {
+.lb-editor-shell__prosemirror [data-laravel-blocks-image].ProseMirror-selectednode,
+.lb-editor-shell__prosemirror [data-laravel-blocks-video-placeholder].ProseMirror-selectednode,
+.lb-editor-shell__prosemirror [data-laravel-blocks-video].ProseMirror-selectednode {
   outline: 2px solid var(--lb-active);
   outline-offset: 4px;
 }
@@ -2056,13 +2067,27 @@
   box-shadow: 0 0 0 3px var(--lb-focus-soft);
 }
 
-.lb-media-library__item img {
+.lb-media-library__item img,
+.lb-media-library__item-preview {
   aspect-ratio: 4 / 3;
   background: #e5e7eb;
   border-radius: 0.6875rem;
   display: block;
   object-fit: cover;
   width: 100%;
+}
+
+.lb-media-library__item-preview--icon {
+  align-items: center;
+  color: var(--lb-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.lb-media-library__item-preview--icon small {
+  font-size: 0.6875rem;
 }
 
 .lb-media-library__item-copy {

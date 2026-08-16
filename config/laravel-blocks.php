@@ -1,6 +1,7 @@
 <?php
 
 use KatonFajar\LaravelBlocks\Blocks\Media\Image;
+use KatonFajar\LaravelBlocks\Blocks\Media\Video;
 use KatonFajar\LaravelBlocks\Blocks\Text\BulletList;
 use KatonFajar\LaravelBlocks\Blocks\Text\Code;
 use KatonFajar\LaravelBlocks\Blocks\Text\Heading;
@@ -20,6 +21,7 @@ return [
         Quote::class,
         Code::class,
         Image::class,
+        Video::class,
     ],
 
     'marks' => [

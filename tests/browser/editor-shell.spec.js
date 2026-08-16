@@ -6,10 +6,11 @@ import path from 'node:path';
 let server;
 let baseUrl;
 let browseFailureAttempts = 0;
+let lastBrowseMimeTypes = [];
 let retryUploadAttempts = 0;
 
 const mediaCapabilities = {
-  allowedMimeTypes: ['image/jpeg', 'image/png'],
+  allowedMimeTypes: ['image/jpeg', 'image/png', 'video/mp4', 'video/webm'],
   browse: true,
   delete: false,
   maxUploadBytes: 5 * 1024 * 1024,
@@ -167,6 +168,61 @@ const packageDefaultManifest = {
       keywords: ['image', 'photo', 'picture', 'media'],
       supports: { inserter: true },
     },
+    {
+      name: 'video',
+      label: 'Video',
+      description: 'Display an uploaded or remote video.',
+      category: 'media',
+      icon: 'video',
+      fields: [
+        {
+          constraints: {
+            allowedSchemes: ['https', 'http'],
+            maxLength: 2048,
+            nullable: true,
+          },
+          default: null,
+          group: 'content',
+          help: 'HTTP or HTTPS URL for an MP4 or WebM video.',
+          label: 'Video URL',
+          name: 'src',
+          path: 'attrs.src',
+          required: false,
+          type: 'url',
+          ui: {},
+        },
+        {
+          constraints: {
+            allowedSchemes: ['https', 'http'],
+            maxLength: 2048,
+            nullable: true,
+          },
+          default: null,
+          group: 'content',
+          help: 'Optional HTTP or HTTPS preview image.',
+          label: 'Poster URL',
+          name: 'poster',
+          path: 'attrs.poster',
+          required: false,
+          type: 'url',
+          ui: {},
+        },
+        {
+          constraints: { maxLength: 500, nullable: true },
+          default: null,
+          group: 'content',
+          help: 'Briefly identify the video for assistive technology.',
+          label: 'Accessible title',
+          name: 'title',
+          path: 'attrs.title',
+          required: false,
+          type: 'text',
+          ui: {},
+        },
+      ],
+      keywords: ['video', 'movie', 'media', 'mp4', 'webm'],
+      supports: { inserter: true },
+    },
   ],
 };
 
@@ -226,10 +282,18 @@ test.beforeAll(async () => {
       return;
     }
 
+    if (url.pathname === '/fixture-video.mp4') {
+      response.writeHead(200, { 'content-type': 'video/mp4' });
+      response.end(Buffer.from('browser video fixture'));
+
+      return;
+    }
+
     if (url.pathname === '/media' && request.method === 'GET') {
       const origin = `http://${request.headers.host}`;
       const search = (url.searchParams.get('search') ?? '').toLowerCase();
       const effectiveSearch = search === 'browse-error' ? '' : search;
+      lastBrowseMimeTypes = url.searchParams.getAll('mimeTypes[]');
 
       if (search === 'browse-error' && browseFailureAttempts++ === 0) {
         sendJson(response, 503, {
@@ -242,7 +306,10 @@ test.beforeAll(async () => {
       const items = [
         mediaItem('library-hero.png', `${origin}/fixture-image.svg`, 'Library hero', 18432),
         mediaItem('library-detail.png', `${origin}/fixture-image.svg`, 'Product detail', 9216),
-      ].filter((item) => `${item.alt} ${item.originalName}`.toLowerCase().includes(effectiveSearch));
+        mediaItem('library-video.mp4', `${origin}/fixture-video.mp4`, 'Product video', 32768, 'video/mp4'),
+      ].filter((item) => (
+        lastBrowseMimeTypes.length === 0 || lastBrowseMimeTypes.includes(item.mimeType)
+      ) && `${item.alt} ${item.originalName}`.toLowerCase().includes(effectiveSearch));
 
       sendJson(response, 200, {
         data: {
@@ -269,7 +336,7 @@ test.beforeAll(async () => {
       }
 
       const body = Buffer.concat(chunks).toString('utf8');
-      const filename = ['retry.png', 'slow.png', 'drop.png']
+      const filename = ['retry.png', 'slow.png', 'drop.png', 'movie-upload.mp4']
         .find((candidate) => body.includes(candidate)) ?? 'uploaded.png';
 
       if (request.headers['x-csrf-token'] !== 'browser-fixture-csrf') {
@@ -297,9 +364,18 @@ test.beforeAll(async () => {
       }
 
       const origin = `http://${request.headers.host}`;
+      const videoUpload = filename.endsWith('.mp4');
       sendJson(response, 201, {
         data: {
-          item: mediaItem(filename, `${origin}/fixture-image.svg`, 'Uploaded image', 1024),
+          item: mediaItem(
+            filename,
+            videoUpload
+              ? `${origin}/fixture-video.mp4?upload=${encodeURIComponent(filename)}`
+              : `${origin}/fixture-image.svg`,
+            videoUpload ? 'Uploaded video' : 'Uploaded image',
+            1024,
+            videoUpload ? 'video/mp4' : 'image/png',
+          ),
         },
       });
 
@@ -476,6 +552,7 @@ test('executes editor mutations through the shared command API', async ({ page }
     'insertManifestBlock',
     'updateBlockAttrs',
     'setImageMedia',
+    'setVideoMedia',
     'setParagraph',
     'setHeading',
     'setBlockquote',
@@ -1612,6 +1689,126 @@ test('browses, searches, selects, uploads, and dismisses the image library acces
   await expect(openMedia).toBeFocused();
 });
 
+test('inserts, selects, replaces, and restores videos through the generic media library', async ({ page }) => {
+  await page.goto(`${baseUrl}/default`);
+
+  const root = page.locator('#editor-null');
+  const canvas = root.locator('[data-laravel-blocks-canvas]');
+  const appender = root.locator('[data-laravel-blocks-block-appender]');
+  const inserter = root.locator('[data-laravel-blocks-block-inserter]');
+  const searchBlocks = root.locator('[data-laravel-blocks-block-search]');
+  const videoItem = root.locator('[data-laravel-blocks-block-inserter-item="video"]');
+
+  await canvas.click();
+  await page.keyboard.type('Video seed');
+  await appender.click();
+  await expect(inserter).toBeVisible();
+  await searchBlocks.fill('video');
+  await expect(videoItem).toBeVisible();
+  await expect(videoItem).toHaveAttribute('aria-disabled', 'false');
+  await page.keyboard.press('Enter');
+
+  const placeholder = root.locator('[data-laravel-blocks-video-placeholder]');
+  await expect(inserter).toBeHidden();
+  await expect(canvas).toBeFocused();
+  await expect(placeholder).toBeVisible();
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1]).toEqual({
+    type: 'video',
+    attrs: { poster: null, src: null, title: null },
+  });
+
+  await root.locator('[data-laravel-blocks-inspector-toggle]').click();
+  await expect(root.locator('[data-laravel-blocks-inspector-title]')).toContainText('Video');
+  await expect(root.locator('[data-laravel-blocks-inspector-field="src"]')).toHaveAttribute('type', 'url');
+  await expect(root.locator('[data-laravel-blocks-inspector-field="poster"]')).toHaveAttribute('type', 'url');
+  await expect(root.locator('[data-laravel-blocks-inspector-field="title"]')).toBeVisible();
+
+  const openMedia = root.locator('[data-laravel-blocks-inspector-media="video"] button');
+  await openMedia.click();
+
+  const modal = page.locator('[data-laravel-blocks-modal]');
+  const searchMedia = page.locator('[data-laravel-blocks-media-search]');
+  const mediaItems = page.locator('[data-laravel-blocks-media-item]');
+  const uploadInput = page.locator('[data-laravel-blocks-media-upload-input]');
+
+  await expect(modal).toBeVisible();
+  await expect(modal.getByRole('heading', { name: 'Choose video' })).toBeVisible();
+  await expect(searchMedia).toBeFocused();
+  await expect(uploadInput).toHaveAttribute('accept', 'video/mp4,video/webm');
+  expect(lastBrowseMimeTypes).toEqual(['video/mp4', 'video/webm']);
+  await expect(mediaItems).toHaveCount(1);
+  await expect(mediaItems.first()).toHaveAttribute('data-laravel-blocks-media-item', 'library-video.mp4');
+  await expect(mediaItems.first().locator('.lb-media-library__item-preview--icon')).toContainText('video/mp4');
+
+  await mediaItems.first().click();
+  await page.locator('[data-laravel-blocks-media-use]').click();
+
+  const renderedVideo = root.locator('video[data-laravel-blocks-video]');
+  await expect(modal).toHaveCount(0);
+  await expect(openMedia).toBeFocused();
+  await expect(renderedVideo).toBeVisible();
+  await expect(renderedVideo).toHaveAttribute('src', `${baseUrl}/fixture-video.mp4`);
+  await expect(renderedVideo).toHaveAttribute('controls', '');
+  await expect(renderedVideo).toHaveAttribute('playsinline', '');
+  await expect(renderedVideo).not.toHaveAttribute('autoplay', '');
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1]).toEqual({
+    type: 'video',
+    attrs: { poster: null, src: `${baseUrl}/fixture-video.mp4`, title: null },
+  });
+
+  expect(await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('undo'))).toMatchObject({ executed: true });
+  await expect(placeholder).toBeVisible();
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1]).toEqual({
+    type: 'video',
+    attrs: { poster: null, src: null, title: null },
+  });
+
+  expect(await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('redo'))).toMatchObject({ executed: true });
+  await expect(renderedVideo).toBeVisible();
+
+  await openMedia.click();
+  await expect(modal).toBeVisible();
+  await expect(modal.getByRole('heading', { name: 'Replace video' })).toBeVisible();
+  await uploadInput.setInputFiles({
+    buffer: Buffer.from('video fixture'),
+    mimeType: 'video/mp4',
+    name: 'movie-upload.mp4',
+  });
+  await expect(page.locator('[data-laravel-blocks-media-item="movie-upload.mp4"]')).toBeVisible();
+  await expect(page.locator('[data-laravel-blocks-media-status]'))
+    .toContainText('movie-upload.mp4 uploaded and selected.');
+  await page.locator('[data-laravel-blocks-media-use]').click();
+
+  await expect(modal).toHaveCount(0);
+  await expect(openMedia).toBeFocused();
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1].attrs.src)
+    .toBe(`${baseUrl}/fixture-video.mp4?upload=movie-upload.mp4`);
+
+  await page.setViewportSize({ height: 720, width: 390 });
+  const videoBox = await renderedVideo.boundingBox();
+  expect(videoBox).not.toBeNull();
+  expect(videoBox.x).toBeGreaterThanOrEqual(0);
+  expect(videoBox.x + videoBox.width).toBeLessThanOrEqual(390);
+
+  await openMedia.click();
+  await expect(modal).toBeVisible();
+  const modalBox = await modal.boundingBox();
+  expect(modalBox).not.toBeNull();
+  expect(modalBox.x).toBeGreaterThanOrEqual(0);
+  expect(modalBox.y).toBeGreaterThanOrEqual(0);
+  expect(modalBox.x + modalBox.width).toBeLessThanOrEqual(390);
+  expect(modalBox.y + modalBox.height).toBeLessThanOrEqual(720);
+  await page.keyboard.press('Escape');
+  await expect(modal).toHaveCount(0);
+  await expect(openMedia).toBeFocused();
+});
+
 test('replaces an empty text block through slash commands', async ({ page }) => {
   await page.goto(baseUrl);
 
@@ -1752,19 +1949,21 @@ function editorRoot(id, name, document, editorManifest) {
   </div>`;
 }
 
-function mediaItem(id, url, alt, bytes) {
+function mediaItem(id, url, alt, bytes, mimeType = 'image/png') {
+  const image = mimeType.startsWith('image/');
+
   return {
     alt,
     bytes,
     caption: null,
-    height: 350,
+    height: image ? 350 : null,
     id,
     lastModified: 1755331200,
-    mimeType: 'image/png',
+    mimeType,
     originalName: id,
     provider: 'browser-fixture',
     url,
-    width: 800,
+    width: image ? 800 : null,
   };
 }
 

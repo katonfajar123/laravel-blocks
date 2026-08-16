@@ -20,6 +20,7 @@ import { settingsIcon } from './settings.js';
 import { sparkleIcon } from './sparkle.js';
 import { undoIcon } from './undo.js';
 import { uploadIcon } from './upload.js';
+import { videoIcon } from './video.js';
 import { xIcon } from './x.js';
 
 export const iconDefinitions = Object.freeze({
@@ -45,5 +46,6 @@ export const iconDefinitions = Object.freeze({
   sparkle: sparkleIcon,
   undo: undoIcon,
   upload: uploadIcon,
+  video: videoIcon,
   x: xIcon,
 });

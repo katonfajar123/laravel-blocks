@@ -416,6 +416,54 @@ function setImageMedia(editor, payload = {}) {
   return true;
 }
 
+function normalizedVideoMedia(item, currentAttrs = {}) {
+  if (!item || typeof item !== 'object' || typeof item.url !== 'string') {
+    return null;
+  }
+
+  let url;
+
+  try {
+    url = new URL(item.url);
+  } catch {
+    return null;
+  }
+
+  if (!['http:', 'https:'].includes(url.protocol) || !String(item.mimeType ?? '').startsWith('video/')) {
+    return null;
+  }
+
+  return {
+    ...currentAttrs,
+    poster: currentAttrs.poster ?? null,
+    src: item.url,
+    title: currentAttrs.title ?? null,
+  };
+}
+
+function setVideoMedia(editor, payload = {}) {
+  const target = topLevelBlock(editor, payload);
+
+  if (!target || target.node.type.name !== 'video') {
+    return false;
+  }
+
+  const nextAttrs = normalizedVideoMedia(payload.item, target.node.attrs ?? {});
+
+  if (!nextAttrs) {
+    return false;
+  }
+
+  editor.view.dispatch(closeHistory(editor.state.tr.setNodeMarkup(
+    target.block.from,
+    undefined,
+    nextAttrs,
+    target.node.marks,
+  )));
+
+  return true;
+}
+
 const definitions = [
   simpleCommand(
     'focus',
@@ -558,6 +606,20 @@ const definitions = [
       );
     },
     (editor, payload) => setImageMedia(editor, payload),
+  ),
+  simpleCommand(
+    'setVideoMedia',
+    'Choose video',
+    (editor, payload) => {
+      const target = topLevelBlock(editor, payload);
+
+      return Boolean(
+        target
+        && target.node.type.name === 'video'
+        && normalizedVideoMedia(payload?.item, target.node.attrs ?? {}),
+      );
+    },
+    (editor, payload) => setVideoMedia(editor, payload),
   ),
   simpleCommand(
     'setParagraph',

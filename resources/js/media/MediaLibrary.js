@@ -2,10 +2,11 @@ import { computed, h, ref, shallowRef, watch } from 'vue';
 
 import { Button, Icon, IconButton, Modal } from '../ui/index.js';
 import { MediaClientError, createMediaClient, normalizeCapabilities } from './client.js';
-
-function imageMimeTypes(capabilities) {
-  return capabilities.allowedMimeTypes.filter((mimeType) => mimeType.startsWith('image/'));
-}
+import {
+  mediaContextForBlock,
+  mediaItemMatchesContext,
+  mediaMimeTypes,
+} from './context.js';
 
 function itemLabel(item) {
   return item.alt || item.originalName || item.id;
@@ -47,6 +48,7 @@ export const MediaLibrary = {
   setup(props, { emit, expose }) {
     const capabilities = ref(normalizeCapabilities(props.transport.capabilities));
     const client = createMediaClient(props.transport);
+    const context = computed(() => mediaContextForBlock(props.block));
     const error = ref(null);
     const items = ref([]);
     const loading = ref(false);
@@ -61,8 +63,9 @@ export const MediaLibrary = {
     let retryAction = null;
     let uploadController = null;
 
-    const acceptedMimeTypes = computed(() => imageMimeTypes(capabilities.value));
+    const acceptedMimeTypes = computed(() => mediaMimeTypes(context.value, capabilities.value));
     const accept = computed(() => acceptedMimeTypes.value.join(','));
+    const dialogTitle = computed(() => `${props.block?.attrs?.src ? 'Replace' : 'Choose'} ${context.value?.noun ?? 'media'}`);
 
     function setError(next, retry = null) {
       error.value = next instanceof Error ? next : new Error(String(next));
@@ -76,11 +79,19 @@ export const MediaLibrary = {
     }
 
     function chooseExistingItem() {
-      const source = props.block?.attrs?.src;
+      const source = props.block?.attrs?.[context.value?.sourceAttribute ?? 'src'];
       selected.value = items.value.find((item) => item.url === source) ?? selected.value;
     }
 
     async function load({ append = false } = {}) {
+      const requestedContext = context.value;
+
+      if (!requestedContext) {
+        setError(new MediaClientError('unsupported_media_block', 'This block does not support the Media Library.'));
+
+        return;
+      }
+
       browseController?.abort();
       browseController = new AbortController();
       loading.value = true;
@@ -96,11 +107,11 @@ export const MediaLibrary = {
           search: query.value.trim(),
         }, { signal: browseController.signal });
         capabilities.value = result.capabilities;
-        const images = result.items.filter((item) => item.mimeType.startsWith('image/'));
-        items.value = append ? [...items.value, ...images] : images;
+        const matchingItems = result.items.filter((item) => mediaItemMatchesContext(item, requestedContext));
+        items.value = append ? [...items.value, ...matchingItems] : matchingItems;
         page.value = result.page;
         hasMore.value = result.hasMore;
-        status.value = `${items.value.length} image${items.value.length === 1 ? '' : 's'} available.`;
+        status.value = `${items.value.length} ${items.value.length === 1 ? requestedContext.noun : requestedContext.plural} available.`;
         chooseExistingItem();
       } catch (failure) {
         if (failure?.code !== 'media_request_cancelled') {
@@ -123,11 +134,13 @@ export const MediaLibrary = {
     }
 
     function useSelected() {
-      if (!selected.value) {
+      const requestedContext = context.value;
+
+      if (!selected.value || !mediaItemMatchesContext(selected.value, requestedContext)) {
         return;
       }
 
-      const result = props.commandRegistry?.run?.('setImageMedia', {
+      const result = props.commandRegistry?.run?.(requestedContext.commandName, {
         block: props.block,
         item: selected.value,
       }) ?? { executed: false };
@@ -135,7 +148,7 @@ export const MediaLibrary = {
       if (!result.executed) {
         setError(new MediaClientError(
           'media_selection_failed',
-          'The selected image could not be applied to this block.',
+          `The selected ${requestedContext.noun} could not be applied to this block.`,
         ));
 
         return;
@@ -146,12 +159,14 @@ export const MediaLibrary = {
     }
 
     async function uploadFile(file) {
+      const requestedContext = context.value;
+
       if (!(file instanceof File)) {
         return;
       }
 
       if (accept.value && !acceptedMimeTypes.value.includes(file.type)) {
-        setError(new MediaClientError('unsupported_mime_type', 'Choose a supported image file.'));
+        setError(new MediaClientError('unsupported_mime_type', `Choose a supported ${requestedContext?.noun ?? 'media'} file.`));
 
         return;
       }
@@ -176,6 +191,14 @@ export const MediaLibrary = {
           },
           signal: uploadController.signal,
         });
+
+        if (!mediaItemMatchesContext(item, requestedContext)) {
+          throw new MediaClientError(
+            'unexpected_media_type',
+            `The media provider returned a file that is not a supported ${requestedContext.noun}.`,
+          );
+        }
+
         items.value = [item, ...items.value.filter((candidate) => candidate.id !== item.id)];
         selected.value = item;
         status.value = `${file.name} uploaded and selected.`;
@@ -224,6 +247,11 @@ export const MediaLibrary = {
 
     watch(() => props.open, (open) => {
       if (open) {
+        items.value = [];
+        page.value = 1;
+        hasMore.value = false;
+        query.value = '';
+        selected.value = null;
         load();
       } else {
         browseController?.abort();
@@ -233,20 +261,42 @@ export const MediaLibrary = {
 
     expose({ close, load, selectItem, uploadFile, useSelected });
 
+    function itemPreview(item) {
+      if (context.value?.preview === 'image') {
+        return h('img', {
+          alt: '',
+          loading: 'lazy',
+          src: item.url,
+        });
+      }
+
+      return h('span', {
+        'aria-hidden': 'true',
+        class: 'lb-media-library__item-preview lb-media-library__item-preview--icon',
+      }, [
+        h(Icon, { name: context.value?.icon ?? 'image', size: 32 }),
+        h('small', {}, item.mimeType),
+      ]);
+    }
+
     function mediaGrid() {
+      const activeContext = context.value;
+
       if (!loading.value && items.value.length === 0 && !error.value) {
         return h('div', {
           class: 'lb-media-library__empty',
           'data-laravel-blocks-media-empty': '',
         }, [
-          h(Icon, { name: 'image', size: 28 }),
-          h('strong', {}, query.value ? 'No matching images' : 'No images yet'),
-          h('span', {}, query.value ? 'Try another search or upload an image.' : 'Upload the first image to this library.'),
+          h(Icon, { name: activeContext.icon, size: 28 }),
+          h('strong', {}, query.value ? `No matching ${activeContext.plural}` : `No ${activeContext.plural} yet`),
+          h('span', {}, query.value
+            ? `Try another search or upload a ${activeContext.noun}.`
+            : `Upload the first ${activeContext.noun} to this library.`),
         ]);
       }
 
       return h('div', {
-        'aria-label': 'Available images',
+        'aria-label': `Available ${activeContext.plural}`,
         class: 'lb-media-library__grid',
         'data-laravel-blocks-media-grid': '',
         onKeydown: handleGridKeydown,
@@ -267,11 +317,7 @@ export const MediaLibrary = {
         role: 'option',
         type: 'button',
       }, [
-        h('img', {
-          alt: '',
-          loading: 'lazy',
-          src: item.url,
-        }),
+        itemPreview(item),
         h('span', { class: 'lb-media-library__item-copy' }, [
           h('strong', {}, itemLabel(item)),
           h('small', {}, `${item.mimeType} · ${humanBytes(item.bytes)}`),
@@ -279,16 +325,23 @@ export const MediaLibrary = {
       ])));
     }
 
-    return () => h(Modal, {
-      label: props.block?.attrs?.src ? 'Replace image' : 'Choose image',
-      onClose: close,
-      open: props.open,
-    }, {
-      default: () => [
+    return () => {
+      const activeContext = context.value;
+
+      if (!activeContext) {
+        return null;
+      }
+
+      return h(Modal, {
+        label: dialogTitle.value,
+        onClose: close,
+        open: props.open,
+      }, {
+        default: () => [
         h('header', { class: 'lb-media-library__header' }, [
           h('div', {}, [
             h('span', { class: 'lb-media-library__eyebrow' }, 'MEDIA LIBRARY'),
-            h('h2', { class: 'lb-media-library__title' }, props.block?.attrs?.src ? 'Replace image' : 'Choose image'),
+            h('h2', { class: 'lb-media-library__title' }, dialogTitle.value),
           ]),
           h(IconButton, {
             label: 'Close media library',
@@ -313,7 +366,7 @@ export const MediaLibrary = {
               onInput: (event) => {
                 query.value = event.target.value;
               },
-              placeholder: 'Search images',
+              placeholder: `Search ${activeContext.plural}`,
               type: 'search',
               value: query.value,
             }),
@@ -338,7 +391,7 @@ export const MediaLibrary = {
             size: 'sm',
             variant: 'primary',
           }, {
-            default: () => [h(Icon, { name: 'upload' }), 'Upload image'],
+            default: () => [h(Icon, { name: 'upload' }), `Upload ${activeContext.noun}`],
           }),
         ]),
         h('div', {
@@ -350,7 +403,7 @@ export const MediaLibrary = {
             handleFiles(event.dataTransfer?.files);
           },
         }, [
-          h('span', {}, 'Drop an image here'),
+          h('span', {}, `Drop a ${activeContext.noun} here`),
           h('small', {}, capabilities.value.maxUploadBytes > 0
             ? `Maximum ${humanBytes(capabilities.value.maxUploadBytes)}`
             : 'Upload limits are provided by your media provider.'),
@@ -401,7 +454,7 @@ export const MediaLibrary = {
             : null,
         ]),
         h('footer', { class: 'lb-media-library__footer' }, [
-          h('p', { class: 'lb-media-library__guidance' }, 'Describe meaningful images in Alternative text after choosing them. Leave it empty only for decorative images.'),
+          h('p', { class: 'lb-media-library__guidance' }, activeContext.guidance),
           h('div', { class: 'lb-media-library__actions' }, [
             h(Button, { onClick: () => close('cancel'), variant: 'ghost' }, { default: () => 'Cancel' }),
             h(Button, {
@@ -409,10 +462,11 @@ export const MediaLibrary = {
               'data-laravel-blocks-media-use': '',
               onClick: useSelected,
               variant: 'primary',
-            }, { default: () => props.block?.attrs?.src ? 'Replace image' : 'Use image' }),
+            }, { default: () => props.block?.attrs?.src ? `Replace ${activeContext.noun}` : `Use ${activeContext.noun}` }),
           ]),
         ]),
-      ],
-    });
+        ],
+      });
+    };
   },
 };

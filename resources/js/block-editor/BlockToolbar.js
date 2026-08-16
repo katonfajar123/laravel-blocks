@@ -9,6 +9,7 @@ import {
   blockIconName,
   targetIsInside,
 } from '../ui/index.js';
+import { mediaContextForBlock } from '../media/context.js';
 import {
   createBlockDragState,
   createEmptyBlockDragState,
@@ -733,21 +734,23 @@ export const BlockToolbar = {
     }
 
     function mediaGroup() {
-      if (props.block.type !== 'image') {
+      const context = mediaContextForBlock(props.block);
+
+      if (!context) {
         return null;
       }
 
-      const label = props.block.attrs?.src ? 'Replace image' : 'Choose image';
+      const label = props.block.attrs?.src ? `Replace ${context.noun}` : `Choose ${context.noun}`;
 
       return h(ToolbarGroup, {
-        label: 'Image media',
+        label: `${context.noun[0].toUpperCase()}${context.noun.slice(1)} media`,
       }, {
         default: () => h(IconButton, {
           disabled: !props.mediaAvailable,
           label,
           size: 'sm',
           title: props.mediaAvailable ? label : 'Media transport is disabled.',
-          'data-laravel-blocks-open-media': '',
+          'data-laravel-blocks-open-media': context.blockType,
           onClick: (event) => {
             closeMenus();
             linkPopoverOpen.value = false;
@@ -755,7 +758,7 @@ export const BlockToolbar = {
           },
           onMousedown: (event) => event.preventDefault(),
         }, {
-          default: () => h(Icon, { name: 'image' }),
+          default: () => h(Icon, { name: context.icon }),
         }),
       });
     }

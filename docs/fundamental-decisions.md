@@ -98,9 +98,9 @@ The editor component, content component, renderer, and document rule accept an a
 
 The browser editor serializes its hidden form input as one JSON string. The host decides whether to retain that string or decode it for JSON/JSONB storage. Core will provide a `BlockDocument` Laravel validation rule; a package Eloquent cast is optional convenience and MUST NOT become a persistence requirement.
 
-## Stable initial schema names
+## Stable schema names emitted by the package
 
-The first stored node names are:
+The stored node names currently emitted are:
 
 ```text
 doc
@@ -113,6 +113,7 @@ listItem
 blockquote
 codeBlock
 image
+video
 ```
 
 The first stored mark names are:

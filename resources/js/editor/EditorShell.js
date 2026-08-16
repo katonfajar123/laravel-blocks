@@ -1,4 +1,5 @@
 import { EditorContent, useEditor } from '@tiptap/vue-3';
+import { Node } from '@tiptap/core';
 import Highlight from '@tiptap/extension-highlight';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
@@ -23,7 +24,7 @@ import { HistoryToolbar } from './HistoryToolbar.js';
 import { handleEditorShortcut } from './keyboard-shortcuts.js';
 import { createSelectionState } from './selection.js';
 import { Icon, IconButton } from '../ui/index.js';
-import { MediaLibrary } from '../media/index.js';
+import { MediaLibrary, mediaContextForBlock } from '../media/index.js';
 
 const LaravelBlocksImage = Image.extend({
   addAttributes() {
@@ -47,6 +48,42 @@ const LaravelBlocksImage = Image.extend({
       ...HTMLAttributes,
       'data-laravel-blocks-image': '',
     }];
+  },
+});
+
+const LaravelBlocksVideo = Node.create({
+  name: 'video',
+  group: 'block',
+  atom: true,
+  draggable: true,
+  selectable: true,
+  addAttributes() {
+    return {
+      src: { default: null },
+      poster: { default: null },
+      title: { default: null },
+    };
+  },
+  parseHTML() {
+    return [{ tag: 'video[data-laravel-blocks-video]' }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    if (!HTMLAttributes.src) {
+      return ['div', {
+        'aria-label': 'Empty video block',
+        'data-laravel-blocks-video-placeholder': '',
+        role: 'group',
+      }, 'Video'];
+    }
+
+    return ['video', {
+      ...HTMLAttributes,
+      'aria-label': HTMLAttributes.title || 'Video',
+      controls: '',
+      'data-laravel-blocks-video': '',
+      playsinline: '',
+      preload: 'metadata',
+    }, 'Video playback is not supported by this browser.'];
   },
 });
 
@@ -336,7 +373,7 @@ export const EditorShell = {
     }
 
     function openMedia(block, trigger = null) {
-      if (!props.media.enabled || block?.type !== 'image') {
+      if (!props.media.enabled || !mediaContextForBlock(block)) {
         return false;
       }
 
@@ -497,6 +534,7 @@ export const EditorShell = {
         LaravelBlocksImage.configure({
           allowBase64: false,
         }),
+        LaravelBlocksVideo,
         Link.configure({
           autolink: false,
           linkOnPaste: false,

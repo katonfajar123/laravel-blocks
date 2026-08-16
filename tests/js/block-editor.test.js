@@ -332,6 +332,18 @@ describe('block editor helpers', () => {
     });
 
     expect(blockInsertPayload({
+      name: 'video',
+      supported: true,
+    })).toEqual({
+      node: {
+        type: 'video',
+        attrs: { src: null, poster: null, title: null },
+      },
+      reason: null,
+      valid: true,
+    });
+
+    expect(blockInsertPayload({
       disabledReason: 'Unsupported.',
       name: 'featureCard',
       supported: false,

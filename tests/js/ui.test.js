@@ -36,6 +36,7 @@ describe('editor UI primitives', () => {
   it('uses modular stroke icon definitions behind the stable icon facade', () => {
     expect(Object.keys(iconDefinitions)).toContain('highlighter');
     expect(Object.keys(iconDefinitions)).toContain('upload');
+    expect(Object.keys(iconDefinitions)).toContain('video');
     expect(iconDefinitions.highlighter).toMatchObject({
       name: 'highlighter',
     });

@@ -114,19 +114,19 @@ These adapters should live outside the core package when they require third-part
 
 ## Editor operations
 
-The default editor provides a package-owned provider-backed image picker with:
+The default editor provides one package-owned provider-backed picker for the Image and Video blocks with:
 
 - browse and search;
 - upload and drag-and-drop upload;
 - selection and replacement;
-- URL and bounded provider alternative-text assignment in one history transaction;
+- URL assignment in one history transaction, with bounded provider alternative text applied for Image when available;
 - progress, cancellation, and clear failure states;
 - restrictions by accepted MIME family and block type;
-- permission-aware actions, retry behavior, accessible focus restoration, and alternative-text guidance for images.
+- permission-aware actions, retry behavior, accessible focus restoration, alternative-text guidance for images, and accessible-title guidance for videos.
 
-Deletion is not a normal block-edit operation. Removing an image block must not automatically delete the underlying media object because it may be reused elsewhere.
+Deletion is not a normal block-edit operation. Removing an Image or Video block must not automatically delete the underlying media object because it may be reused elsewhere.
 
-The picker opens from the Image Inspector or contextual toolbar. Browse uses same-origin `fetch`; upload uses `XMLHttpRequest` so progress and cancellation remain observable. The modal traps focus, restores the invoking control after selection or dismissal, supports keyboard grid navigation, and adapts to narrow viewports. Gallery, other media block types, provider metadata editing, and stable media references remain later work.
+The picker opens from the Image or Video Inspector and contextual toolbar. A private block-context mapping selects the matching command, labels, preview, guidance, and MIME family; provider results are filtered again before they can enter the document. Browse uses same-origin `fetch`; upload uses `XMLHttpRequest` so progress and cancellation remain observable. The modal traps focus, restores the invoking control after selection or dismissal, supports keyboard grid navigation, and adapts to narrow viewports. Gallery, File, Cover, provider metadata editing, caption tracks, poster selection, and stable media references remain later work.
 
 ## Browser transport and authorization
 
@@ -172,4 +172,4 @@ The package should expose reference discovery so an application can identify unu
 
 ## Missing media
 
-The implemented contract returns `null` from `find()` for a missing item and throws `media_not_found` when explicit deletion targets a missing item. The picker exposes deterministic browse/upload failure and retry states; rendered missing-media fallback and non-Image media recovery remain later work.
+The implemented contract returns `null` from `find()` for a missing item and throws `media_not_found` when explicit deletion targets a missing item. The picker exposes deterministic browse/upload failure and retry states; rendered missing-media fallback and recovery beyond Image/Video remain later work.

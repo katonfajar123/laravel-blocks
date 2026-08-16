@@ -59,6 +59,7 @@ final class Quote extends Block
                 'blockquote',
                 'codeBlock',
                 'image',
+                'video',
             ],
             minimumChildren: 1,
             maximumChildren: null,

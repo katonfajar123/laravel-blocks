@@ -203,6 +203,21 @@ The implemented initial Image block uses a URL-only leaf node. A newly inserted 
 
 A non-null `src` must be an HTTP(S) URL. The bundled Inspector edits source, alternative text, and title; the frontend renderer omits placeholders until a source exists.
 
+The implemented Video block is also a URL-based leaf node. Its placeholder keeps every attribute nullable:
+
+```json
+{
+  "type": "video",
+  "attrs": {
+    "src": null,
+    "poster": null,
+    "title": null
+  }
+}
+```
+
+Non-null `src` and `poster` values must be HTTP(S) URLs, and `title` is limited to 500 characters. The editor renders an atomic placeholder until a source is chosen; the frontend renderer then emits native controls without autoplay.
+
 Later media-provider nodes MAY store a provider URL or a stable media reference plus content metadata. For example, an ID-based provider may produce:
 
 ```json
@@ -242,7 +257,7 @@ Examples:
 
 - `columns` accepts one or more `column` children;
 - `column` accepts normal content blocks;
-- leaf blocks such as `image` accept no child content;
+- leaf blocks such as `image` and `video` accept no child content;
 - `list` accepts list-item children rather than arbitrary layout blocks.
 
 ## Content, design, and advanced settings
@@ -306,7 +321,7 @@ Unknown blocks MUST NOT be interpreted as raw HTML. The original JSON MUST remai
 
 ## Stable v1 names
 
-The initial node identifiers are `doc`, `text`, `paragraph`, `heading`, `bulletList`, `orderedList`, `listItem`, `blockquote`, `codeBlock`, and `image`. The first marks are `bold`, `italic`, `underline`, `strike`, `code`, `highlight`, `link`, `superscript`, `subscript`, and `keyboard`.
+The emitted v1 node identifiers are `doc`, `text`, `paragraph`, `heading`, `bulletList`, `orderedList`, `listItem`, `blockquote`, `codeBlock`, `image`, and `video`. The first marks are `bold`, `italic`, `underline`, `strike`, `code`, `highlight`, `link`, `superscript`, `subscript`, and `keyboard`.
 
 These lower-camel identifiers are persisted contract values, not localized labels or PHP class names. Changing an emitted name requires a forward document-schema transform.
 

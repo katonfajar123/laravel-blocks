@@ -17,6 +17,7 @@ return [
         \KatonFajar\LaravelBlocks\Blocks\Text\Quote::class,
         \KatonFajar\LaravelBlocks\Blocks\Text\Code::class,
         \KatonFajar\LaravelBlocks\Blocks\Media\Image::class,
+        \KatonFajar\LaravelBlocks\Blocks\Media\Video::class,
     ],
 
     'marks' => [
@@ -87,7 +88,7 @@ return [
 ];
 ```
 
-Testbench verifies merge behavior, serialization, default Paragraph/Heading/List/Quote/Code/Image and current editor mark registration, active document limits, renderer and asset behavior, media provider replacement/security/storage operations, installer idempotency, and publish groups. The `document.unknown_blocks` values/default and precompiled asset-loading boundary are frozen contracts.
+Testbench verifies merge behavior, serialization, default Paragraph/Heading/List/Quote/Code/Image/Video and current editor mark registration, active document limits, renderer and asset behavior, media provider replacement/security/storage operations, installer idempotency, and publish groups. The `document.unknown_blocks` values/default and precompiled asset-loading boundary are frozen contracts.
 
 ## Planned expanded configuration
 
@@ -224,6 +225,7 @@ The active `blocks` list registers package defaults and controls editor manifest
     Quote::class,
     Code::class,
     Image::class,
+    Video::class,
 ],
 ```
 

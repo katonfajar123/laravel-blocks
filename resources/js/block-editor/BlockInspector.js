@@ -1,5 +1,6 @@
 import { computed, h, ref, watch } from 'vue';
 import { Button, Icon } from '../ui/index.js';
+import { mediaContextForBlock } from '../media/context.js';
 
 import {
   blockManifestDefinition,
@@ -125,21 +126,25 @@ export const BlockInspector = {
     });
 
     function mediaControl() {
-      if (activeGroup.value !== 'content' || props.block.type !== 'image') {
+      const context = mediaContextForBlock(props.block);
+
+      if (activeGroup.value !== 'content' || !context) {
         return null;
       }
 
-      const label = props.block.attrs?.src ? 'Replace from Media Library' : 'Choose from Media Library';
+      const label = props.block.attrs?.src
+        ? `Replace ${context.noun} from Media Library`
+        : `Choose ${context.noun} from Media Library`;
 
       return h('div', {
         class: 'lb-block-inspector__media',
-        'data-laravel-blocks-inspector-media': '',
+        'data-laravel-blocks-inspector-media': context.blockType,
       }, [
         h(Button, {
           disabled: !props.mediaAvailable,
           onClick: (event) => emit('openMedia', props.block, event.currentTarget),
           variant: 'primary',
-        }, { default: () => [h(Icon, { name: 'image' }), label] }),
+        }, { default: () => [h(Icon, { name: context.icon }), label] }),
         !props.mediaAvailable
           ? h('small', {}, 'Media transport is disabled for this editor.')
           : null,

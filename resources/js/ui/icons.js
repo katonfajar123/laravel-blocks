@@ -21,6 +21,7 @@ export function blockIconName(type) {
     orderedList: 'list',
     paragraph: 'paragraph',
     quote: 'quote',
+    video: 'video',
   }[type] ?? 'paragraph';
 }
 

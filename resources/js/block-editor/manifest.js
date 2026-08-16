@@ -19,6 +19,10 @@ const supportedInsertPayloads = Object.freeze({
     type: 'image',
     attrs: { src: null, alt: null, title: null },
   }),
+  video: () => ({
+    type: 'video',
+    attrs: { src: null, poster: null, title: null },
+  }),
   orderedList: () => ({
     type: 'orderedList',
     attrs: { start: 1, type: null },
