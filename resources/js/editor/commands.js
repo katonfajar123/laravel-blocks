@@ -416,6 +416,91 @@ function setImageMedia(editor, payload = {}) {
   return true;
 }
 
+const galleryMimeTypes = Object.freeze(new Set([
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/avif',
+]));
+
+function normalizedGalleryImage(item) {
+  if (!item || typeof item !== 'object' || typeof item.url !== 'string') {
+    return null;
+  }
+
+  let url;
+
+  try {
+    url = new URL(item.url);
+  } catch {
+    return null;
+  }
+
+  const mimeType = String(item.mimeType ?? '').toLowerCase();
+
+  if (!['http:', 'https:'].includes(url.protocol) || !galleryMimeTypes.has(mimeType)) {
+    return null;
+  }
+
+  const width = Number.isInteger(item.width) && item.width >= 0 ? item.width : null;
+  const height = Number.isInteger(item.height) && item.height >= 0 ? item.height : null;
+
+  return {
+    src: item.url,
+    alt: safeProviderText(item.alt, 500),
+    title: null,
+    caption: safeProviderText(item.caption, 1000),
+    id: safeProviderText(item.id, 255),
+    mimeType,
+    width,
+    height,
+  };
+}
+
+function normalizedGalleryItems(items) {
+  if (!Array.isArray(items)) {
+    return null;
+  }
+
+  const images = items
+    .map((item) => normalizedGalleryImage(item))
+    .filter((item) => item !== null)
+    .slice(0, 50);
+
+  if (images.length === 0 || images.length !== items.length) {
+    return null;
+  }
+
+  return images;
+}
+
+function setGalleryMedia(editor, payload = {}) {
+  const target = topLevelBlock(editor, payload);
+
+  if (!target || target.node.type.name !== 'gallery') {
+    return false;
+  }
+
+  const nextImages = normalizedGalleryItems(payload.items ?? (payload.item ? [payload.item] : []));
+
+  if (!nextImages) {
+    return false;
+  }
+
+  editor.view.dispatch(closeHistory(editor.state.tr.setNodeMarkup(
+    target.block.from,
+    undefined,
+    {
+      ...target.node.attrs,
+      images: nextImages,
+    },
+    target.node.marks,
+  )));
+
+  return true;
+}
+
 function normalizedVideoMedia(item, currentAttrs = {}) {
   if (!item || typeof item !== 'object' || typeof item.url !== 'string') {
     return null;
@@ -769,6 +854,20 @@ const definitions = [
       );
     },
     (editor, payload) => setImageMedia(editor, payload),
+  ),
+  simpleCommand(
+    'setGalleryMedia',
+    'Choose gallery images',
+    (editor, payload) => {
+      const target = topLevelBlock(editor, payload);
+
+      return Boolean(
+        target
+        && target.node.type.name === 'gallery'
+        && normalizedGalleryItems(payload?.items ?? (payload?.item ? [payload.item] : [])),
+      );
+    },
+    (editor, payload) => setGalleryMedia(editor, payload),
   ),
   simpleCommand(
     'setVideoMedia',

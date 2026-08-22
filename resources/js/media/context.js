@@ -29,6 +29,22 @@ const contexts = Object.freeze({
       sourceAttribute: 'src',
     }),
   }),
+  gallery: Object.freeze({
+    primary: Object.freeze({
+      blockType: 'gallery',
+      commandName: 'setGalleryMedia',
+      guidance: 'Choose two or more images. Selection order becomes the Gallery order.',
+      icon: 'gallery',
+      mimePrefixes: Object.freeze([]),
+      mimeTypes: Object.freeze(['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif']),
+      multiple: true,
+      noun: 'image',
+      plural: 'images',
+      preview: 'image',
+      purpose: 'primary',
+      sourceAttribute: 'images',
+    }),
+  }),
   video: Object.freeze({
     primary: Object.freeze({
       blockType: 'video',

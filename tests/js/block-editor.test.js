@@ -332,6 +332,18 @@ describe('block editor helpers', () => {
     });
 
     expect(blockInsertPayload({
+      name: 'gallery',
+      supported: true,
+    })).toEqual({
+      node: {
+        type: 'gallery',
+        attrs: { images: [] },
+      },
+      reason: null,
+      valid: true,
+    });
+
+    expect(blockInsertPayload({
       name: 'file',
       supported: true,
     })).toEqual({

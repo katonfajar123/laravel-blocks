@@ -114,19 +114,19 @@ These adapters should live outside the core package when they require third-part
 
 ## Editor operations
 
-The default editor provides one package-owned provider-backed picker for Image sources, Video source, poster, captions purposes, and File downloads with:
+The default editor provides one package-owned provider-backed picker for Image sources, Gallery image lists, Video source, poster, captions purposes, and File downloads with:
 
 - browse and search;
 - upload and drag-and-drop upload;
 - selection and replacement;
-- URL assignment in one history transaction, with bounded provider alternative text applied for Image when available, safe language/label defaults applied for a selected caption track, and provider filename/type/byte metadata applied for File;
+- URL assignment in one history transaction, with bounded provider alternative text applied for Image when available, ordered image metadata applied for Gallery, safe language/label defaults applied for a selected caption track, and provider filename/type/byte metadata applied for File;
 - progress, cancellation, and clear failure states;
 - restrictions by accepted MIME family or exact type for each block purpose;
 - permission-aware actions, retry behavior, accessible focus restoration, alternative-text/poster guidance, accessible-title guidance for videos, and WebVTT language/label guidance.
 
-Deletion is not a normal block-edit operation. Removing an Image, Video, or File block must not automatically delete the underlying media object because it may be reused elsewhere.
+Deletion is not a normal block-edit operation. Removing an Image, Gallery, Video, or File block must not automatically delete the underlying media object because it may be reused elsewhere.
 
-The primary picker opens from the Image, Video, or File Inspector and contextual toolbar. The Video Inspector also opens poster and caption purposes. A private block-purpose mapping selects the matching command, source attribute, labels, preview, guidance, and MIME restrictions; provider results are filtered again before they can enter the document. Video posters accept image MIME types, caption tracks accept exact `text/vtt`, and File accepts exact `application/pdf`. Browse uses same-origin `fetch`; upload uses `XMLHttpRequest` so progress and cancellation remain observable. The modal traps focus, restores the invoking control after selection or dismissal, supports keyboard grid navigation, and adapts to narrow viewports. Gallery, Cover, provider metadata editing, multiple caption tracks, generic file MIME management, and stable media references remain later work.
+The primary picker opens from the Image, Gallery, Video, or File Inspector and contextual toolbar. The Video Inspector also opens poster and caption purposes. A private block-purpose mapping selects the matching command, source attribute, labels, preview, guidance, and MIME restrictions; provider results are filtered again before they can enter the document. Gallery uses image MIME filtering with multi-selection, preserves selection order in `attrs.images`, and can append one uploaded image to the current selection before applying it. Video posters accept image MIME types, caption tracks accept exact `text/vtt`, and File accepts exact `application/pdf`. Browse uses same-origin `fetch`; upload uses `XMLHttpRequest` so progress and cancellation remain observable. The modal traps focus, restores the invoking control after selection or dismissal, supports keyboard grid navigation, and adapts to narrow viewports. Cover, provider metadata editing, Gallery reordering/caption editing, multiple caption tracks, generic file MIME management, and stable media references remain later work.
 
 ## Browser transport and authorization
 
@@ -172,4 +172,4 @@ The package should expose reference discovery so an application can identify unu
 
 ## Missing media
 
-The implemented contract returns `null` from `find()` for a missing item and throws `media_not_found` when explicit deletion targets a missing item. The picker exposes deterministic browse/upload failure and retry states; rendered missing-media fallback and recovery beyond Image/Video/File remain later work.
+The implemented contract returns `null` from `find()` for a missing item and throws `media_not_found` when explicit deletion targets a missing item. The picker exposes deterministic browse/upload failure and retry states; rendered missing-media fallback and recovery beyond Image/Gallery/Video/File remain later work.

@@ -43,7 +43,7 @@ it('renders the editor component with assets, mount payload, and canonical hidde
         ->and($payload['media']['capabilities']['allowedMimeTypes'])
         ->toContain('image/png')
         ->and(array_column($payload['manifest']['blocks'], 'name'))
-        ->toBe(['paragraph', 'heading', 'bulletList', 'orderedList', 'listItem', 'blockquote', 'codeBlock', 'image', 'video', 'file'])
+        ->toBe(['paragraph', 'heading', 'bulletList', 'orderedList', 'listItem', 'blockquote', 'codeBlock', 'image', 'gallery', 'video', 'file'])
         ->and($payload['placeholder'])
         ->toBe('Start writing or type / to choose a block');
 });

@@ -55,6 +55,7 @@ describe('media client', () => {
 
   it('routes package media blocks through immutable MIME-specific contexts', () => {
     const imageContext = mediaContextForBlock({ type: 'image' });
+    const galleryContext = mediaContextForBlock({ type: 'gallery' });
     const videoContext = mediaContextForBlock({ type: 'video' });
     const posterContext = mediaContextForBlock({ type: 'video' }, 'poster');
     const captionsContext = mediaContextForBlock({ type: 'video' }, 'captions');
@@ -73,17 +74,28 @@ describe('media client', () => {
     };
 
     expect(imageContext).toMatchObject({ commandName: 'setImageMedia', noun: 'image' });
+    expect(galleryContext).toMatchObject({
+      commandName: 'setGalleryMedia',
+      multiple: true,
+      noun: 'image',
+      plural: 'images',
+      sourceAttribute: 'images',
+    });
     expect(videoContext).toMatchObject({ commandName: 'setVideoMedia', noun: 'video' });
     expect(posterContext).toMatchObject({ commandName: 'setVideoPosterMedia', noun: 'poster image' });
     expect(captionsContext).toMatchObject({ commandName: 'setVideoCaptionMedia', noun: 'caption track' });
     expect(fileContext).toMatchObject({ commandName: 'setFileMedia', noun: 'file' });
+    expect(mediaContextsForBlock({ type: 'gallery' })).toHaveLength(1);
     expect(mediaContextsForBlock({ type: 'video' })).toHaveLength(3);
     expect(mediaContextsForBlock({ type: 'file' })).toHaveLength(1);
     expect(mediaContextForBlock({ type: 'video' }, 'unknown')).toBeNull();
+    expect(mediaMimeTypes(galleryContext, transport.capabilities)).toEqual(['image/png']);
     expect(mediaMimeTypes(videoContext, transport.capabilities)).toEqual(['video/mp4', 'video/webm']);
     expect(mediaMimeTypes(posterContext, transport.capabilities)).toEqual(['image/png']);
     expect(mediaMimeTypes(captionsContext, transport.capabilities)).toEqual(['text/vtt']);
     expect(mediaMimeTypes(fileContext, transport.capabilities)).toEqual(['application/pdf']);
+    expect(mediaItemMatchesContext(item, galleryContext)).toBe(true);
+    expect(mediaItemMatchesContext(videoItem, galleryContext)).toBe(false);
     expect(mediaItemMatchesContext(videoItem, videoContext)).toBe(true);
     expect(mediaItemMatchesContext(item, videoContext)).toBe(false);
     expect(mediaItemMatchesContext(item, posterContext)).toBe(true);
@@ -91,6 +103,7 @@ describe('media client', () => {
     expect(mediaItemMatchesContext({ ...item, mimeType: 'text/plain' }, captionsContext)).toBe(false);
     expect(mediaItemMatchesContext(fileItem, fileContext)).toBe(true);
     expect(mediaItemMatchesContext(item, fileContext)).toBe(false);
+    expect(Object.isFrozen(galleryContext)).toBe(true);
     expect(Object.isFrozen(videoContext)).toBe(true);
     expect(Object.isFrozen(mediaContextsForBlock({ type: 'video' }))).toBe(true);
   });

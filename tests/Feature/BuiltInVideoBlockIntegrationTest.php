@@ -19,6 +19,7 @@ it('registers video from the default package configuration', function (): void {
             'blockquote',
             'codeBlock',
             'image',
+            'gallery',
             'video',
             'file',
         ]);

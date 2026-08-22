@@ -74,6 +74,14 @@ function commandState(registry, command, payload = {}) {
   };
 }
 
+function blockHasMedia(block, context) {
+  const source = block?.attrs?.[context?.sourceAttribute ?? 'src'];
+
+  return Array.isArray(source)
+    ? source.length > 0
+    : typeof source === 'string' && source !== '';
+}
+
 export const BlockToolbar = {
   name: 'LaravelBlocksBlockToolbar',
   props: {
@@ -740,7 +748,8 @@ export const BlockToolbar = {
         return null;
       }
 
-      const label = props.block.attrs?.src ? `Replace ${context.noun}` : `Choose ${context.noun}`;
+      const noun = context.multiple ? context.plural : context.noun;
+      const label = `${blockHasMedia(props.block, context) ? 'Replace' : 'Choose'} ${noun}`;
 
       return h(ToolbarGroup, {
         label: `${context.noun[0].toUpperCase()}${context.noun.slice(1)} media`,

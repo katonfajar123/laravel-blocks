@@ -169,6 +169,16 @@ const packageDefaultManifest = {
       supports: { inserter: true },
     },
     {
+      name: 'gallery',
+      label: 'Gallery',
+      description: 'Display a group of selected images.',
+      category: 'media',
+      icon: 'gallery',
+      fields: [],
+      keywords: ['gallery', 'images', 'photos', 'media'],
+      supports: { inserter: true },
+    },
+    {
       name: 'video',
       label: 'Video',
       description: 'Display an uploaded or remote video.',
@@ -400,6 +410,13 @@ test.beforeAll(async () => {
       return;
     }
 
+    if (url.pathname === '/fixture-detail.svg') {
+      response.writeHead(200, { 'content-type': 'image/svg+xml; charset=utf-8' });
+      response.end('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="350" viewBox="0 0 800 350"><rect width="800" height="350" fill="#ecfeff"/><rect x="70" y="70" width="260" height="210" rx="18" fill="#0f766e"/><rect x="380" y="95" width="300" height="42" rx="12" fill="#334155"/><rect x="380" y="160" width="230" height="32" rx="10" fill="#64748b"/><rect x="380" y="214" width="165" height="28" rx="10" fill="#14b8a6"/></svg>');
+
+      return;
+    }
+
     if (url.pathname === '/fixture-video.mp4') {
       response.writeHead(200, { 'content-type': 'video/mp4' });
       response.end(Buffer.from('browser video fixture'));
@@ -437,7 +454,7 @@ test.beforeAll(async () => {
 
       const items = [
         mediaItem('library-hero.png', `${origin}/fixture-image.svg`, 'Library hero', 18432),
-        mediaItem('library-detail.png', `${origin}/fixture-image.svg`, 'Product detail', 9216),
+        mediaItem('library-detail.png', `${origin}/fixture-detail.svg`, 'Product detail', 9216),
         mediaItem('library-video.mp4', `${origin}/fixture-video.mp4`, 'Product video', 32768, 'video/mp4'),
         mediaItem('library-captions.vtt', `${origin}/fixture-captions.vtt`, 'Product captions', 2048, 'text/vtt'),
         mediaItem('library-report.pdf', `${origin}/fixture-file.pdf`, 'Product report', 4096, 'application/pdf'),
@@ -470,7 +487,7 @@ test.beforeAll(async () => {
       }
 
       const body = Buffer.concat(chunks).toString('utf8');
-      const filename = ['retry.png', 'slow.png', 'drop.png', 'movie-upload.mp4', 'captions-upload.vtt', 'report-upload.pdf']
+      const filename = ['retry.png', 'slow.png', 'drop.png', 'gallery-upload.png', 'gallery-replace.png', 'movie-upload.mp4', 'captions-upload.vtt', 'report-upload.pdf']
         .find((candidate) => body.includes(candidate)) ?? 'uploaded.png';
 
       if (request.headers['x-csrf-token'] !== 'browser-fixture-csrf') {
@@ -511,7 +528,7 @@ test.beforeAll(async () => {
               ? `${origin}/fixture-file.pdf?upload=${encodeURIComponent(filename)}`
               : videoUpload
               ? `${origin}/fixture-video.mp4?upload=${encodeURIComponent(filename)}`
-              : `${origin}/fixture-image.svg`,
+              : `${origin}/fixture-image.svg?upload=${encodeURIComponent(filename)}`,
             captionUpload ? 'Uploaded captions' : fileUpload ? 'Uploaded report' : videoUpload ? 'Uploaded video' : 'Uploaded image',
             fileUpload ? 3072 : 1024,
             captionUpload ? 'text/vtt' : fileUpload ? 'application/pdf' : videoUpload ? 'video/mp4' : 'image/png',
@@ -692,6 +709,7 @@ test('executes editor mutations through the shared command API', async ({ page }
     'insertManifestBlock',
     'updateBlockAttrs',
     'setImageMedia',
+    'setGalleryMedia',
     'setVideoMedia',
     'setVideoPosterMedia',
     'setVideoCaptionMedia',
@@ -1758,7 +1776,7 @@ test('browses, searches, selects, uploads, and dismisses the image library acces
     type: 'image',
     attrs: {
       alt: 'Product detail',
-      src: `${baseUrl}/fixture-image.svg`,
+      src: `${baseUrl}/fixture-detail.svg`,
       title: null,
     },
   });
@@ -1830,6 +1848,208 @@ test('browses, searches, selects, uploads, and dismisses the image library acces
   await page.locator('[data-laravel-blocks-modal-backdrop]').click({ position: { x: 8, y: 8 } });
   await expect(modal).toHaveCount(0);
   await expect(openMedia).toBeFocused();
+});
+
+test('inserts, selects, replaces, and restores galleries through the multi-select media library', async ({ page }) => {
+  await page.goto(`${baseUrl}/default`);
+
+  const root = page.locator('#editor-null');
+  const canvas = root.locator('[data-laravel-blocks-canvas]');
+  const appender = root.locator('[data-laravel-blocks-block-appender]');
+  const inserter = root.locator('[data-laravel-blocks-block-inserter]');
+  const searchBlocks = root.locator('[data-laravel-blocks-block-search]');
+  const galleryItem = root.locator('[data-laravel-blocks-block-inserter-item="gallery"]');
+
+  await canvas.click();
+  await page.keyboard.type('Gallery seed');
+  await appender.click();
+  await expect(inserter).toBeVisible();
+  await searchBlocks.fill('gallery');
+  await expect(galleryItem).toBeVisible();
+  await expect(galleryItem).toHaveAttribute('aria-disabled', 'false');
+  await page.keyboard.press('Enter');
+
+  const placeholder = root.locator('[data-laravel-blocks-gallery-placeholder]');
+  const renderedGallery = root.locator('[data-laravel-blocks-gallery]');
+
+  await expect(inserter).toBeHidden();
+  await expect(canvas).toBeFocused();
+  await expect(placeholder).toBeVisible();
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1]).toEqual({
+    type: 'gallery',
+    attrs: { images: [] },
+  });
+
+  await root.locator('[data-laravel-blocks-inspector-toggle]').click();
+  await expect(root.locator('[data-laravel-blocks-inspector-title]')).toContainText('Gallery');
+  await expect(root.locator('[data-laravel-blocks-inspector-empty]')).toContainText('No content settings');
+
+  const openMedia = root.locator('[data-laravel-blocks-inspector-media="gallery"] button');
+  await openMedia.click();
+
+  const modal = page.locator('[data-laravel-blocks-modal]');
+  const searchMedia = page.locator('[data-laravel-blocks-media-search]');
+  const mediaGrid = page.locator('[data-laravel-blocks-media-grid]');
+  const mediaItems = page.locator('[data-laravel-blocks-media-item]');
+  const status = page.locator('[data-laravel-blocks-media-status]');
+  const useMedia = page.locator('[data-laravel-blocks-media-use]');
+  const uploadInput = page.locator('[data-laravel-blocks-media-upload-input]');
+
+  await expect(modal).toBeVisible();
+  await expect(modal.getByRole('heading', { name: 'Choose images' })).toBeVisible();
+  await expect(searchMedia).toBeFocused();
+  await expect(uploadInput).toHaveAttribute('accept', 'image/jpeg,image/png');
+  expect(lastBrowseMimeTypes).toEqual(['image/jpeg', 'image/png']);
+  await expect(mediaGrid).toHaveAttribute('aria-multiselectable', 'true');
+  await expect(mediaItems).toHaveCount(2);
+
+  await mediaItems.first().click();
+  await expect(mediaItems.first()).toHaveAttribute('aria-selected', 'true');
+  await expect(status).toContainText('1 image selected.');
+  await expect(useMedia).toContainText('Use 1 image');
+
+  await mediaItems.nth(1).click();
+  await expect(mediaItems.nth(1)).toHaveAttribute('aria-selected', 'true');
+  await expect(status).toContainText('2 images selected.');
+  await expect(useMedia).toContainText('Use 2 images');
+
+  await uploadInput.setInputFiles({
+    buffer: Buffer.from('gallery upload fixture'),
+    mimeType: 'image/png',
+    name: 'gallery-upload.png',
+  });
+  await expect(page.locator('[data-laravel-blocks-media-item="gallery-upload.png"]')).toBeVisible();
+  await expect(status).toContainText('gallery-upload.png uploaded and selected. 3 images selected.');
+  await expect(useMedia).toContainText('Use 3 images');
+  await useMedia.click();
+
+  await expect(modal).toHaveCount(0);
+  await expect(openMedia).toBeFocused();
+  await expect(renderedGallery).toBeVisible();
+  await expect(renderedGallery).toHaveAttribute('aria-label', '3 image gallery');
+  await expect(renderedGallery.locator('.lb-editor-gallery__thumb')).toHaveCount(3);
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1]).toEqual({
+    type: 'gallery',
+    attrs: {
+      images: [
+        {
+          src: `${baseUrl}/fixture-image.svg`,
+          alt: 'Library hero',
+          title: null,
+          caption: null,
+          id: 'library-hero.png',
+          mimeType: 'image/png',
+          width: 800,
+          height: 350,
+        },
+        {
+          src: `${baseUrl}/fixture-detail.svg`,
+          alt: 'Product detail',
+          title: null,
+          caption: null,
+          id: 'library-detail.png',
+          mimeType: 'image/png',
+          width: 800,
+          height: 350,
+        },
+        {
+          src: `${baseUrl}/fixture-image.svg?upload=gallery-upload.png`,
+          alt: 'Uploaded image',
+          title: null,
+          caption: null,
+          id: 'gallery-upload.png',
+          mimeType: 'image/png',
+          width: 800,
+          height: 350,
+        },
+      ],
+    },
+  });
+
+  expect(await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('undo'))).toMatchObject({ executed: true });
+  await expect(placeholder).toBeVisible();
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1].attrs.images)
+    .toEqual([]);
+
+  expect(await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('redo'))).toMatchObject({ executed: true });
+  await expect(renderedGallery).toBeVisible();
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1].attrs.images)
+    .toHaveLength(3);
+
+  await renderedGallery.click();
+  const toolbar = root.locator('[data-laravel-blocks-contextual-toolbar]');
+  await expect(toolbar).toBeVisible();
+  await expect(toolbar).toHaveAttribute('data-laravel-blocks-contextual-toolbar-mode', 'block');
+
+  const toolbarMedia = toolbar.locator('[data-laravel-blocks-open-media="gallery"]');
+  await toolbarMedia.click();
+  await expect(modal.getByRole('heading', { name: 'Replace images' })).toBeVisible();
+  await expect(searchMedia).toBeFocused();
+  await expect(mediaItems.first()).toHaveAttribute('aria-selected', 'true');
+  await expect(mediaItems.nth(1)).toHaveAttribute('aria-selected', 'true');
+
+  await mediaItems.first().click();
+  await expect(mediaItems.first()).toHaveAttribute('aria-selected', 'false');
+  await uploadInput.setInputFiles({
+    buffer: Buffer.from('gallery replace fixture'),
+    mimeType: 'image/png',
+    name: 'gallery-replace.png',
+  });
+  await expect(page.locator('[data-laravel-blocks-media-item="gallery-replace.png"]'))
+    .toHaveAttribute('aria-selected', 'true');
+  await expect(useMedia).toContainText('Use 2 images');
+  await useMedia.click();
+
+  await expect(modal).toHaveCount(0);
+  await expect(toolbarMedia).toBeFocused();
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1].attrs.images
+    .map((image) => image.id)).toEqual(['library-detail.png', 'gallery-replace.png']);
+
+  await page.setViewportSize({ height: 720, width: 390 });
+  const galleryBox = await renderedGallery.boundingBox();
+  expect(galleryBox).not.toBeNull();
+  expect(galleryBox.x).toBeGreaterThanOrEqual(0);
+  expect(galleryBox.x + galleryBox.width).toBeLessThanOrEqual(390);
+
+  await openMedia.click();
+  await expect(modal).toBeVisible();
+  const modalBox = await modal.boundingBox();
+  expect(modalBox).not.toBeNull();
+  expect(modalBox.x).toBeGreaterThanOrEqual(0);
+  expect(modalBox.y).toBeGreaterThanOrEqual(0);
+  expect(modalBox.x + modalBox.width).toBeLessThanOrEqual(390);
+  expect(modalBox.y + modalBox.height).toBeLessThanOrEqual(720);
+  await page.keyboard.press('Escape');
+  await expect(modal).toHaveCount(0);
+  await expect(openMedia).toBeFocused();
+
+  const currentBlock = await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .blockSelection());
+  expect(await page.evaluate((block) => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('insertBlockAfter', { block }), currentBlock)).toMatchObject({ executed: true });
+  await root.locator('[data-laravel-blocks-canvas] > p').last().click();
+  await page.keyboard.press('/');
+  await expect(root.locator('[data-laravel-blocks-slash-command]')).toBeVisible();
+  await page.keyboard.type('gallery');
+  await page.keyboard.press('Enter');
+  await expect(root.locator('[data-laravel-blocks-gallery-placeholder]')).toHaveCount(1);
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content
+    .filter((node) => node.type === 'gallery')).toHaveLength(2);
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content
+    .filter((node) => node.type === 'gallery').at(-1)).toEqual({
+    type: 'gallery',
+    attrs: { images: [] },
+  });
 });
 
 test('inserts, selects, replaces, and restores videos through the generic media library', async ({ page }) => {

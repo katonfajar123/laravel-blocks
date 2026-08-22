@@ -2,7 +2,7 @@
 
 ## Status
 
-The product scope contains 50 built-in blocks, delivered incrementally. Paragraph, Heading, Bullet List, Ordered List, structural List Item, Quote, Code, Image, Video, and File are implemented and registered by default. The remaining catalog blocks arrive in later batches.
+The product scope contains 50 built-in blocks, delivered incrementally. Paragraph, Heading, Bullet List, Ordered List, structural List Item, Quote, Code, Image, Gallery, Video, and File are implemented and registered by default. The remaining catalog blocks arrive in later batches.
 
 ## Catalog
 
@@ -72,6 +72,7 @@ Milestone assignments after `0.4` may move as the PHP extension APIs become conc
 | `blockquote` | Inserter block |
 | `codeBlock` | Inserter block |
 | `image` | Inserter block |
+| `gallery` | Inserter block |
 | `video` | Inserter block |
 | `file` | Inserter block |
 | `listItem` | Structural child, not an Inserter item |
@@ -90,14 +91,17 @@ The schema also reserves `doc` and `text`. These lower-camel identifiers are per
 | `blockquote` | `KatonFajar\LaravelBlocks\Blocks\Text\Quote` | `laravel-blocks::blocks.quote` | Text category, Inserter/slash enabled, one or more supported block children |
 | `codeBlock` | `KatonFajar\LaravelBlocks\Blocks\Text\Code` | `laravel-blocks::blocks.code` | Text category, Inserter/slash enabled, plain unmarked text with optional language metadata |
 | `image` | `KatonFajar\LaravelBlocks\Blocks\Media\Image` | `laravel-blocks::blocks.image` | Media category, Inserter/slash enabled, generated URL/alt/title Inspector fields |
+| `gallery` | `KatonFajar\LaravelBlocks\Blocks\Media\Gallery` | `laravel-blocks::blocks.gallery` | Media category, Inserter/slash enabled, no generated fields; image list comes from the Media Library |
 | `video` | `KatonFajar\LaravelBlocks\Blocks\Media\Video` | `laravel-blocks::blocks.video` | Media category, Inserter/slash enabled, generated source/poster/title/caption Inspector fields |
 | `file` | `KatonFajar\LaravelBlocks\Blocks\Media\File` | `laravel-blocks::blocks.file` | Media category, Inserter/slash enabled, generated source/title/filename/type/size Inspector fields |
 
 Paragraph allows top-level, list-item, and Quote placement; Heading and both List blocks allow top-level and Quote placement. Paragraph and Heading accept text children, the current editor marks (`bold`, `italic`, `highlight`, `link`), and optional empty `design` and `advanced` attribute objects. Heading requires `attrs.level` to be one of `1` through `6`. Bullet List and Ordered List require one or more `listItem` children; `listItem` is structural, may only appear inside lists, and currently accepts paragraph children only.
 
-Quote matches the bundled Tiptap `block+` structure for the currently supported catalog: it requires one or more Paragraph, Heading, Bullet List, Ordered List, Quote, Code, Image, Video, or File children. Code accepts only unmarked text, may be empty, and accepts an optional nullable `attrs.language` string of at most 100 characters. Its Blade renderer emits escaped `<pre><code>` output and an escaped `language-*` class when language metadata is present. The safe renderer emits supported inline marks as `<strong>`, `<em>`, `<mark>`, and `<a>`. Syntax highlighting, a language picker, citations, Quote variants, nested-block toolbar controls, relative/anchor link validation parity, and the complete built-in mark catalog remain separate follow-up work.
+Quote matches the bundled Tiptap `block+` structure for the currently supported catalog: it requires one or more Paragraph, Heading, Bullet List, Ordered List, Quote, Code, Image, Gallery, Video, or File children. Code accepts only unmarked text, may be empty, and accepts an optional nullable `attrs.language` string of at most 100 characters. Its Blade renderer emits escaped `<pre><code>` output and an escaped `language-*` class when language metadata is present. The safe renderer emits supported inline marks as `<strong>`, `<em>`, `<mark>`, and `<a>`. Syntax highlighting, a language picker, citations, Quote variants, nested-block toolbar controls, relative/anchor link validation parity, and the complete built-in mark catalog remain separate follow-up work.
 
 Image is a leaf block allowed at the document root or inside Quote. Its URL-only contract stores nullable `attrs.src`, `attrs.alt`, and `attrs.title`; non-null `src` must use HTTP or HTTPS, while alt/title strings are limited to 500 characters. `src: null` is a valid editor placeholder and renders no frontend `<img>`. A valid source renders escaped attributes, with empty alternative text when `alt` is absent. The MIME-filtered Media Library can browse, upload, select, and replace images in one undoable transaction. Provider references, captions, responsive sources, cropping, and presentation controls remain in later media and Field Engine milestones.
+
+Gallery is an atomic leaf block allowed at the document root or inside Quote. It stores ordered `attrs.images` entries with required HTTP(S) `src`, optional bounded alt/title/caption/id metadata, optional allowed image MIME type, and optional non-negative dimensions. An empty image list is a valid editor placeholder and emits no frontend element. A populated Gallery renders escaped image attributes inside a gallery figure and preserves optional captions. The Media Library uses a multi-select image mode, applies selection order as Gallery order, supports upload-to-selection, and writes the list in one undoable transaction. Reordering controls, per-image caption editing, layout variants, stable provider references, and responsive image sources remain later work.
 
 Video is an atomic leaf block allowed at the document root or inside Quote. It stores nullable HTTP(S) `attrs.src` and `attrs.poster` values, a nullable title of at most 500 characters, and one optional captions track through nullable HTTP(S) `attrs.captionSrc`, bounded `attrs.captionLanguage`, and bounded `attrs.captionLabel`. Existing documents without caption attributes remain valid. A placeholder with `src: null` remains visible in the editor and emits no frontend element. A valid source renders an escaped `<video>` with native controls, `playsinline`, `preload="metadata"`, and no autoplay attribute; a caption URL adds one default `<track kind="captions">` with `und` and `Captions` fallbacks. The Media Library uses purpose-specific video, image-poster, and exact-WebVTT filters, applying each selection as one undoable transaction. Multiple caption tracks, semantic language-tag validation, provider references, and presentation controls remain later work.
 
@@ -115,6 +119,7 @@ use KatonFajar\LaravelBlocks\Blocks\Text\ListItem;
 use KatonFajar\LaravelBlocks\Blocks\Text\OrderedList;
 use KatonFajar\LaravelBlocks\Blocks\Text\Paragraph;
 use KatonFajar\LaravelBlocks\Blocks\Text\Quote;
+use KatonFajar\LaravelBlocks\Blocks\Media\Gallery;
 use KatonFajar\LaravelBlocks\Blocks\Media\Image;
 use KatonFajar\LaravelBlocks\Blocks\Media\Video;
 use KatonFajar\LaravelBlocks\Blocks\Media\File;
@@ -129,6 +134,7 @@ return [
         Quote::class,
         Code::class,
         Image::class,
+        Gallery::class,
         Video::class,
         File::class,
     ],

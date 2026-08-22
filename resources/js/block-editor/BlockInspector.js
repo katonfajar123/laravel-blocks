@@ -10,6 +10,14 @@ import {
   inspectorGroups,
 } from './fields.js';
 
+function blockHasMedia(block, context) {
+  const source = block?.attrs?.[context?.sourceAttribute ?? 'src'];
+
+  return Array.isArray(source)
+    ? source.length > 0
+    : typeof source === 'string' && source !== '';
+}
+
 function controlForField(field, value, update) {
   const common = {
     'aria-label': field.label,
@@ -144,9 +152,7 @@ export const BlockInspector = {
           variant: 'primary',
         }, { default: () => [
           h(Icon, { name: context.icon }),
-          props.block.attrs?.[context.sourceAttribute]
-            ? `Replace ${context.noun} from Media Library`
-            : `Choose ${context.noun} from Media Library`,
+          `${blockHasMedia(props.block, context) ? 'Replace' : 'Choose'} ${context.multiple ? context.plural : context.noun} from Media Library`,
         ] }),
         !props.mediaAvailable
           ? h('small', {}, 'Media transport is disabled for this editor.')

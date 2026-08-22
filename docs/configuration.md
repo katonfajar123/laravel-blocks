@@ -90,7 +90,7 @@ return [
 ];
 ```
 
-Testbench verifies merge behavior, serialization, default Paragraph/Heading/List/Quote/Code/Image/Video and current editor mark registration, active document limits, renderer and asset behavior, media provider replacement/security/storage operations, installer idempotency, and publish groups. The `document.unknown_blocks` values/default and precompiled asset-loading boundary are frozen contracts.
+Testbench verifies merge behavior, serialization, default Paragraph/Heading/List/Quote/Code/Image/Gallery/Video/File and current editor mark registration, active document limits, renderer and asset behavior, media provider replacement/security/storage operations, installer idempotency, and publish groups. The `document.unknown_blocks` values/default and precompiled asset-loading boundary are frozen contracts.
 
 ## Planned expanded configuration
 

@@ -24,6 +24,26 @@ function humanBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function blockHasMedia(block, context) {
+  const source = block?.attrs?.[context?.sourceAttribute ?? 'src'];
+
+  return Array.isArray(source)
+    ? source.length > 0
+    : typeof source === 'string' && source !== '';
+}
+
+function sameMediaItem(first, second) {
+  if (!first || !second) {
+    return false;
+  }
+
+  if (first.id && second.id) {
+    return first.id === second.id;
+  }
+
+  return first.url === second.url;
+}
+
 export const MediaLibrary = {
   name: 'LaravelBlocksMediaLibrary',
   props: {
@@ -60,6 +80,7 @@ export const MediaLibrary = {
     const hasMore = ref(false);
     const query = ref('');
     const selected = shallowRef(null);
+    const selectedItems = shallowRef([]);
     const status = ref('');
     const uploadProgress = ref(null);
     const uploadInput = ref(null);
@@ -69,10 +90,13 @@ export const MediaLibrary = {
 
     const acceptedMimeTypes = computed(() => mediaMimeTypes(context.value, capabilities.value));
     const accept = computed(() => acceptedMimeTypes.value.join(','));
+    const multiple = computed(() => Boolean(context.value?.multiple));
+    const selectedCount = computed(() => (multiple.value ? selectedItems.value.length : (selected.value ? 1 : 0)));
     const dialogTitle = computed(() => {
-      const source = props.block?.attrs?.[context.value?.sourceAttribute ?? 'src'];
+      const activeContext = context.value;
+      const label = activeContext?.multiple ? activeContext.plural : activeContext?.noun ?? 'media';
 
-      return `${source ? 'Replace' : 'Choose'} ${context.value?.noun ?? 'media'}`;
+      return `${blockHasMedia(props.block, activeContext) ? 'Replace' : 'Choose'} ${label}`;
     });
 
     function setError(next, retry = null) {
@@ -87,7 +111,30 @@ export const MediaLibrary = {
     }
 
     function chooseExistingItem() {
-      const source = props.block?.attrs?.[context.value?.sourceAttribute ?? 'src'];
+      const activeContext = context.value;
+
+      if (activeContext?.multiple) {
+        if (selectedItems.value.length > 0) {
+          return;
+        }
+
+        const current = Array.isArray(props.block?.attrs?.[activeContext.sourceAttribute])
+          ? props.block.attrs[activeContext.sourceAttribute]
+          : [];
+        const byUrl = new Map(items.value.map((item) => [item.url, item]));
+        const existing = current
+          .map((image) => byUrl.get(image?.src))
+          .filter((item) => item && mediaItemMatchesContext(item, activeContext));
+
+        if (existing.length > 0) {
+          selectedItems.value = existing;
+          selected.value = existing.at(-1) ?? null;
+        }
+
+        return;
+      }
+
+      const source = props.block?.attrs?.[activeContext?.sourceAttribute ?? 'src'];
       selected.value = items.value.find((item) => item.url === source) ?? selected.value;
     }
 
@@ -104,7 +151,7 @@ export const MediaLibrary = {
       browseController = new AbortController();
       loading.value = true;
       clearError();
-      status.value = append ? 'Loading more media…' : 'Loading media library…';
+      status.value = append ? 'Loading more media...' : 'Loading media library...';
       const requestedPage = append ? page.value + 1 : 1;
 
       try {
@@ -137,21 +184,64 @@ export const MediaLibrary = {
     }
 
     function selectItem(item) {
+      if (multiple.value) {
+        const exists = selectedItems.value.some((candidate) => sameMediaItem(candidate, item));
+
+        selectedItems.value = exists
+          ? selectedItems.value.filter((candidate) => !sameMediaItem(candidate, item))
+          : [...selectedItems.value, item];
+        selected.value = selectedItems.value.at(-1) ?? null;
+        status.value = selectedItems.value.length === 0
+          ? `No ${context.value?.plural ?? 'media'} selected.`
+          : `${selectedItems.value.length} ${selectedItems.value.length === 1 ? context.value.noun : context.value.plural} selected.`;
+
+        return;
+      }
+
       selected.value = item;
       status.value = `${itemLabel(item)} selected.`;
     }
 
+    function itemSelected(item) {
+      if (multiple.value) {
+        return selectedItems.value.some((candidate) => sameMediaItem(candidate, item));
+      }
+
+      return sameMediaItem(selected.value, item);
+    }
+
+    function mediaActionLabel(activeContext) {
+      if (activeContext?.multiple) {
+        const count = selectedCount.value;
+
+        return count === 1
+          ? `Use 1 ${activeContext.noun}`
+          : `Use ${count} ${activeContext.plural}`;
+      }
+
+      return `Use ${activeContext?.noun ?? 'media'}`;
+    }
+
     function useSelected() {
       const requestedContext = context.value;
+      const selection = requestedContext?.multiple
+        ? selectedItems.value.filter((item) => mediaItemMatchesContext(item, requestedContext))
+        : selected.value;
 
-      if (!selected.value || !mediaItemMatchesContext(selected.value, requestedContext)) {
+      if (requestedContext?.multiple && selection.length === 0) {
         return;
       }
 
-      const result = props.commandRegistry?.run?.(requestedContext.commandName, {
-        block: props.block,
-        item: selected.value,
-      }) ?? { executed: false };
+      if (!requestedContext?.multiple && (!selection || !mediaItemMatchesContext(selection, requestedContext))) {
+        return;
+      }
+
+      const result = props.commandRegistry?.run?.(
+        requestedContext.commandName,
+        requestedContext.multiple
+          ? { block: props.block, items: selection }
+          : { block: props.block, item: selection },
+      ) ?? { executed: false };
 
       if (!result.executed) {
         setError(new MediaClientError(
@@ -162,7 +252,7 @@ export const MediaLibrary = {
         return;
       }
 
-      emit('selected', selected.value);
+      emit('selected', selection);
       close('selected');
     }
 
@@ -189,7 +279,7 @@ export const MediaLibrary = {
       uploadController = new AbortController();
       uploadProgress.value = 0;
       clearError();
-      status.value = `Uploading ${file.name}…`;
+      status.value = `Uploading ${file.name}...`;
 
       try {
         const item = await client.upload(file, {
@@ -208,8 +298,17 @@ export const MediaLibrary = {
         }
 
         items.value = [item, ...items.value.filter((candidate) => candidate.id !== item.id)];
-        selected.value = item;
-        status.value = `${file.name} uploaded and selected.`;
+
+        if (multiple.value) {
+          selectedItems.value = selectedItems.value
+            .filter((candidate) => !sameMediaItem(candidate, item))
+            .concat(item);
+          selected.value = item;
+          status.value = `${file.name} uploaded and selected. ${selectedItems.value.length} ${selectedItems.value.length === 1 ? requestedContext.noun : requestedContext.plural} selected.`;
+        } else {
+          selected.value = item;
+          status.value = `${file.name} uploaded and selected.`;
+        }
       } catch (failure) {
         if (failure?.code === 'media_request_cancelled') {
           status.value = 'Upload cancelled.';
@@ -260,6 +359,7 @@ export const MediaLibrary = {
         hasMore.value = false;
         query.value = '';
         selected.value = null;
+        selectedItems.value = [];
         load();
       } else {
         browseController?.abort();
@@ -305,20 +405,25 @@ export const MediaLibrary = {
 
       return h('div', {
         'aria-label': `Available ${activeContext.plural}`,
+        'aria-multiselectable': activeContext.multiple ? 'true' : undefined,
         class: 'lb-media-library__grid',
         'data-laravel-blocks-media-grid': '',
         onKeydown: handleGridKeydown,
         role: 'listbox',
       }, items.value.map((item) => h('button', {
         'aria-label': itemLabel(item),
-        'aria-selected': selected.value?.id === item.id ? 'true' : 'false',
+        'aria-selected': itemSelected(item) ? 'true' : 'false',
         class: [
           'lb-media-library__item',
-          selected.value?.id === item.id ? 'lb-media-library__item--selected' : null,
+          itemSelected(item) ? 'lb-media-library__item--selected' : null,
         ].filter(Boolean),
         'data-laravel-blocks-media-item': item.id,
         onClick: () => selectItem(item),
         onDblclick: () => {
+          if (multiple.value) {
+            return;
+          }
+
           selectItem(item);
           useSelected();
         },
@@ -328,7 +433,7 @@ export const MediaLibrary = {
         itemPreview(item),
         h('span', { class: 'lb-media-library__item-copy' }, [
           h('strong', {}, itemLabel(item)),
-          h('small', {}, `${item.mimeType} · ${humanBytes(item.bytes)}`),
+          h('small', {}, `${item.mimeType} / ${humanBytes(item.bytes)}`),
         ]),
       ])));
     }
@@ -466,11 +571,11 @@ export const MediaLibrary = {
           h('div', { class: 'lb-media-library__actions' }, [
             h(Button, { onClick: () => close('cancel'), variant: 'ghost' }, { default: () => 'Cancel' }),
             h(Button, {
-              disabled: !selected.value,
+              disabled: selectedCount.value === 0,
               'data-laravel-blocks-media-use': '',
               onClick: useSelected,
               variant: 'primary',
-            }, { default: () => props.block?.attrs?.src ? `Replace ${activeContext.noun}` : `Use ${activeContext.noun}` }),
+            }, { default: () => mediaActionLabel(activeContext) }),
           ]),
         ]),
         ],

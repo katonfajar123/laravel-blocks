@@ -51,6 +51,72 @@ const LaravelBlocksImage = Image.extend({
   },
 });
 
+function galleryImages(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter((image) => image && typeof image === 'object' && typeof image.src === 'string' && image.src !== '')
+    .slice(0, 50);
+}
+
+function galleryImageSpec(image) {
+  const attributes = {
+    alt: typeof image.alt === 'string' ? image.alt : '',
+    class: 'lb-editor-gallery__thumb',
+    loading: 'lazy',
+    src: image.src,
+  };
+
+  if (typeof image.title === 'string' && image.title !== '') {
+    attributes.title = image.title;
+  }
+
+  return ['img', attributes];
+}
+
+const LaravelBlocksGallery = Node.create({
+  name: 'gallery',
+  group: 'block',
+  atom: true,
+  draggable: true,
+  selectable: true,
+  addAttributes() {
+    return {
+      images: { default: [] },
+    };
+  },
+  parseHTML() {
+    return [{ tag: '[data-laravel-blocks-gallery]' }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    const images = galleryImages(HTMLAttributes.images);
+
+    if (images.length === 0) {
+      return ['div', {
+        'aria-label': 'Empty gallery block',
+        'data-laravel-blocks-gallery-placeholder': '',
+        role: 'group',
+      }, 'Gallery'];
+    }
+
+    const children = images.slice(0, 4).map(galleryImageSpec);
+
+    if (images.length > children.length) {
+      children.push(['span', {
+        class: 'lb-editor-gallery__summary',
+      }, `+${images.length - children.length}`]);
+    }
+
+    return ['div', {
+      'aria-label': `${images.length} image gallery`,
+      'data-laravel-blocks-gallery': '',
+      role: 'group',
+    }, ...children];
+  },
+});
+
 const LaravelBlocksVideo = Node.create({
   name: 'video',
   group: 'block',
@@ -626,6 +692,7 @@ export const EditorShell = {
         LaravelBlocksImage.configure({
           allowBase64: false,
         }),
+        LaravelBlocksGallery,
         LaravelBlocksVideo,
         LaravelBlocksFile,
         Link.configure({

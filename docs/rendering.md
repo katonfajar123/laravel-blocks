@@ -2,9 +2,9 @@
 
 ## Status
 
-The core renderer is implemented for registered block nodes, escaped text, deterministic unknown-block policies, typed view failures, package-owned Paragraph, Heading, Bullet List, Ordered List, List Item, Quote, Code, Image, Video, and File views, default validation schemas for the current editor marks, `LaravelBlocks::render(...)`, and `<x-laravel-blocks::content>`.
+The core renderer is implemented for registered block nodes, escaped text, deterministic unknown-block policies, typed view failures, package-owned Paragraph, Heading, Bullet List, Ordered List, List Item, Quote, Code, Image, Gallery, Video, and File views, default validation schemas for the current editor marks, `LaravelBlocks::render(...)`, and `<x-laravel-blocks::content>`.
 
-The Image renderer emits an escaped `<img>` only for a validated HTTP(S) source and uses empty alternative text when `alt` is absent. The Video renderer emits an escaped `<video>` with native controls, inline playback, metadata preload, optional poster/title, and no autoplay. The File renderer emits an escaped download link for a validated HTTP(S) PDF source, optional filename, and provider size/type metadata. Valid `src: null` editor placeholders emit no frontend element. The remaining built-in block views, mark-specific rich-text HTML output, provider-reference media resolution, dynamic block authorization, and render caching remain later milestone work.
+The Image renderer emits an escaped `<img>` only for a validated HTTP(S) source and uses empty alternative text when `alt` is absent. The Gallery renderer emits escaped image figures from a validated ordered image list and omits empty placeholders. The Video renderer emits an escaped `<video>` with native controls, inline playback, metadata preload, optional poster/title, and no autoplay. The File renderer emits an escaped download link for a validated HTTP(S) PDF source, optional filename, and provider size/type metadata. Valid `src: null` editor placeholders emit no frontend element. The remaining built-in block views, mark-specific rich-text HTML output, provider-reference media resolution, dynamic block authorization, and render caching remain later milestone work.
 
 ## Principle
 

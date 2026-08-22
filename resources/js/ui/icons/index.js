@@ -6,6 +6,7 @@ import { captionsIcon } from './captions.js';
 import { codeIcon } from './code.js';
 import { dragHandleIcon } from './drag-handle.js';
 import { fileIcon } from './file.js';
+import { galleryIcon } from './gallery.js';
 import { headingIcon } from './heading.js';
 import { highlighterIcon } from './highlighter.js';
 import { imageIcon } from './image.js';
@@ -34,6 +35,7 @@ export const iconDefinitions = Object.freeze({
   code: codeIcon,
   dragHandle: dragHandleIcon,
   file: fileIcon,
+  gallery: galleryIcon,
   heading: headingIcon,
   highlighter: highlighterIcon,
   image: imageIcon,

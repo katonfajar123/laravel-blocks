@@ -1,6 +1,7 @@
 <?php
 
 use KatonFajar\LaravelBlocks\Blocks\Media\File;
+use KatonFajar\LaravelBlocks\Blocks\Media\Gallery;
 use KatonFajar\LaravelBlocks\Blocks\Media\Image;
 use KatonFajar\LaravelBlocks\Blocks\Media\Video;
 use KatonFajar\LaravelBlocks\Blocks\Text\BulletList;
@@ -22,6 +23,7 @@ return [
         Quote::class,
         Code::class,
         Image::class,
+        Gallery::class,
         Video::class,
         File::class,
     ],

@@ -2,6 +2,7 @@
 
 use KatonFajar\LaravelBlocks\Assets\AssetManifest;
 use KatonFajar\LaravelBlocks\Blocks\Media\File;
+use KatonFajar\LaravelBlocks\Blocks\Media\Gallery;
 use KatonFajar\LaravelBlocks\Blocks\Media\Image;
 use KatonFajar\LaravelBlocks\Blocks\Media\Video;
 use KatonFajar\LaravelBlocks\Blocks\Text\BulletList;
@@ -58,6 +59,7 @@ it('merges serializable configuration and registers its publish group', function
             Quote::class,
             Code::class,
             Image::class,
+            Gallery::class,
             Video::class,
             File::class,
         ])
