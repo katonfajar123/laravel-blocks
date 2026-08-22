@@ -118,6 +118,7 @@ describe('editor command registry', () => {
         'setVideoMedia',
         'setVideoPosterMedia',
         'setVideoCaptionMedia',
+        'setFileMedia',
         'setParagraph',
         'setHeading',
         'setBlockquote',

@@ -561,6 +561,72 @@ function setVideoCaptionMedia(editor, payload = {}) {
   return true;
 }
 
+function safeProviderText(value, maximumLength) {
+  if (typeof value !== 'string' || value.length > maximumLength || /[\u0000-\u001f\u007f]/.test(value)) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+
+  return trimmed === '' ? null : trimmed;
+}
+
+function normalizedFileMedia(item, currentAttrs = {}) {
+  if (!item || typeof item !== 'object' || typeof item.url !== 'string') {
+    return null;
+  }
+
+  let url;
+
+  try {
+    url = new URL(item.url);
+  } catch {
+    return null;
+  }
+
+  if (!['http:', 'https:'].includes(url.protocol) || String(item.mimeType ?? '').toLowerCase() !== 'application/pdf') {
+    return null;
+  }
+
+  const filename = safeProviderText(item.originalName, 255) ?? safeProviderText(item.id, 255);
+  const currentTitle = safeProviderText(currentAttrs.title, 500);
+  const bytes = Number.isInteger(item.bytes) && item.bytes >= 0
+    ? item.bytes
+    : null;
+
+  return {
+    ...currentAttrs,
+    bytes,
+    filename: filename ?? currentAttrs.filename ?? null,
+    mimeType: 'application/pdf',
+    src: item.url,
+    title: currentTitle ?? filename ?? 'Download file',
+  };
+}
+
+function setFileMedia(editor, payload = {}) {
+  const target = topLevelBlock(editor, payload);
+
+  if (!target || target.node.type.name !== 'file') {
+    return false;
+  }
+
+  const nextAttrs = normalizedFileMedia(payload.item, target.node.attrs ?? {});
+
+  if (!nextAttrs) {
+    return false;
+  }
+
+  editor.view.dispatch(closeHistory(editor.state.tr.setNodeMarkup(
+    target.block.from,
+    undefined,
+    nextAttrs,
+    target.node.marks,
+  )));
+
+  return true;
+}
+
 const definitions = [
   simpleCommand(
     'focus',
@@ -745,6 +811,20 @@ const definitions = [
       );
     },
     (editor, payload) => setVideoCaptionMedia(editor, payload),
+  ),
+  simpleCommand(
+    'setFileMedia',
+    'Choose file',
+    (editor, payload) => {
+      const target = topLevelBlock(editor, payload);
+
+      return Boolean(
+        target
+        && target.node.type.name === 'file'
+        && normalizedFileMedia(payload?.item, target.node.attrs ?? {}),
+      );
+    },
+    (editor, payload) => setFileMedia(editor, payload),
   ),
   simpleCommand(
     'setParagraph',

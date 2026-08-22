@@ -1,4 +1,19 @@
 const contexts = Object.freeze({
+  file: Object.freeze({
+    primary: Object.freeze({
+      blockType: 'file',
+      commandName: 'setFileMedia',
+      guidance: 'Choose a PDF file. Confirm clear link text before publishing the document.',
+      icon: 'file',
+      mimePrefixes: Object.freeze([]),
+      mimeTypes: Object.freeze(['application/pdf']),
+      noun: 'file',
+      plural: 'files',
+      preview: 'icon',
+      purpose: 'primary',
+      sourceAttribute: 'src',
+    }),
+  }),
   image: Object.freeze({
     primary: Object.freeze({
       blockType: 'image',

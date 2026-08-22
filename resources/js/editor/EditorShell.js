@@ -110,6 +110,58 @@ const LaravelBlocksVideo = Node.create({
   },
 });
 
+const LaravelBlocksFile = Node.create({
+  name: 'file',
+  group: 'block',
+  atom: true,
+  draggable: true,
+  selectable: true,
+  addAttributes() {
+    return {
+      src: { default: null },
+      title: { default: null },
+      filename: { default: null },
+      mimeType: { default: null },
+      bytes: { default: null },
+    };
+  },
+  parseHTML() {
+    return [{ tag: '[data-laravel-blocks-file]' }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    const label = HTMLAttributes.title || HTMLAttributes.filename || 'Download file';
+
+    if (!HTMLAttributes.src) {
+      return ['div', {
+        'aria-label': 'Empty file block',
+        'data-laravel-blocks-file-placeholder': '',
+        role: 'group',
+      }, 'File'];
+    }
+
+    const metadata = [
+      HTMLAttributes.mimeType,
+      Number.isInteger(HTMLAttributes.bytes) && HTMLAttributes.bytes >= 0
+        ? `${HTMLAttributes.bytes} bytes`
+        : null,
+    ].filter(Boolean);
+
+    const children = [
+      ['span', { class: 'lb-editor-file__title' }, label],
+    ];
+
+    if (metadata.length > 0) {
+      children.push(['small', { class: 'lb-editor-file__meta' }, metadata.join(' / ')]);
+    }
+
+    return ['div', {
+      'aria-label': label,
+      'data-laravel-blocks-file': '',
+      role: 'link',
+    }, ...children];
+  },
+});
+
 function syncHiddenInputValue(value, input) {
   input.value = typeof value === 'string' ? value : JSON.stringify(value);
   input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -298,6 +350,14 @@ export const EditorShell = {
       );
     }
 
+    function hasAtomBlockSelection() {
+      return Boolean(
+        blockSelection.value.active
+        && selection.value?.type === 'NodeSelection'
+        && !keyboardSuppressionActive(),
+      );
+    }
+
     function updateHoveredBlock(event) {
       if (keyboardSuppressionActive() || hasTextSelection() || slash.value.open) {
         clearHoveredBlock();
@@ -344,6 +404,13 @@ export const EditorShell = {
         return {
           block: blockSelection.value,
           mode: 'inline',
+        };
+      }
+
+      if (hasAtomBlockSelection()) {
+        return {
+          block: blockSelection.value,
+          mode: 'block',
         };
       }
 
@@ -560,6 +627,7 @@ export const EditorShell = {
           allowBase64: false,
         }),
         LaravelBlocksVideo,
+        LaravelBlocksFile,
         Link.configure({
           autolink: false,
           linkOnPaste: false,

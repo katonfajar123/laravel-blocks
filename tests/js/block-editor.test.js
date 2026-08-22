@@ -332,6 +332,24 @@ describe('block editor helpers', () => {
     });
 
     expect(blockInsertPayload({
+      name: 'file',
+      supported: true,
+    })).toEqual({
+      node: {
+        type: 'file',
+        attrs: {
+          src: null,
+          title: null,
+          filename: null,
+          mimeType: null,
+          bytes: null,
+        },
+      },
+      reason: null,
+      valid: true,
+    });
+
+    expect(blockInsertPayload({
       name: 'video',
       supported: true,
     })).toEqual({

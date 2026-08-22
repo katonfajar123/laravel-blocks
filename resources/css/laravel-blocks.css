@@ -138,6 +138,8 @@
 
 .lb-editor-shell__prosemirror [data-laravel-blocks-image],
 .lb-editor-shell__prosemirror [data-laravel-blocks-image-placeholder],
+.lb-editor-shell__prosemirror [data-laravel-blocks-file],
+.lb-editor-shell__prosemirror [data-laravel-blocks-file-placeholder],
 .lb-editor-shell__prosemirror [data-laravel-blocks-video],
 .lb-editor-shell__prosemirror [data-laravel-blocks-video-placeholder] {
   display: block;
@@ -156,7 +158,37 @@
   width: 100%;
 }
 
+.lb-editor-shell__prosemirror [data-laravel-blocks-file] {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #d4d4d8;
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.25rem;
+  min-height: 4.25rem;
+  padding: 0.875rem 1rem;
+}
+
+.lb-editor-file__title {
+  color: #111827;
+  font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lb-editor-file__meta {
+  color: #64748b;
+  font-size: 0.8125rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .lb-editor-shell__prosemirror [data-laravel-blocks-image-placeholder],
+.lb-editor-shell__prosemirror [data-laravel-blocks-file-placeholder],
 .lb-editor-shell__prosemirror [data-laravel-blocks-video-placeholder] {
   align-items: center;
   aspect-ratio: 16 / 7;
@@ -175,6 +207,8 @@
 
 .lb-editor-shell__prosemirror [data-laravel-blocks-image-placeholder].ProseMirror-selectednode,
 .lb-editor-shell__prosemirror [data-laravel-blocks-image].ProseMirror-selectednode,
+.lb-editor-shell__prosemirror [data-laravel-blocks-file-placeholder].ProseMirror-selectednode,
+.lb-editor-shell__prosemirror [data-laravel-blocks-file].ProseMirror-selectednode,
 .lb-editor-shell__prosemirror [data-laravel-blocks-video-placeholder].ProseMirror-selectednode,
 .lb-editor-shell__prosemirror [data-laravel-blocks-video].ProseMirror-selectednode {
   outline: 2px solid var(--lb-active);

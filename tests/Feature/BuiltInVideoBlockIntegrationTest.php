@@ -20,6 +20,7 @@ it('registers video from the default package configuration', function (): void {
             'codeBlock',
             'image',
             'video',
+            'file',
         ]);
 });
 

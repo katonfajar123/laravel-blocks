@@ -15,6 +15,16 @@ const supportedInsertPayloads = Object.freeze({
     type: 'heading',
     attrs: { level: 2 },
   }),
+  file: () => ({
+    type: 'file',
+    attrs: {
+      src: null,
+      title: null,
+      filename: null,
+      mimeType: null,
+      bytes: null,
+    },
+  }),
   image: () => ({
     type: 'image',
     attrs: { src: null, alt: null, title: null },

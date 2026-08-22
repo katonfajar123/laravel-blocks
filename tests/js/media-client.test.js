@@ -23,7 +23,7 @@ const transport = {
     upload: true,
     delete: false,
     maxUploadBytes: 1024,
-    allowedMimeTypes: ['image/png', 'video/mp4', 'video/webm', 'text/vtt'],
+    allowedMimeTypes: ['image/png', 'video/mp4', 'video/webm', 'text/vtt', 'application/pdf'],
   },
 };
 
@@ -58,28 +58,39 @@ describe('media client', () => {
     const videoContext = mediaContextForBlock({ type: 'video' });
     const posterContext = mediaContextForBlock({ type: 'video' }, 'poster');
     const captionsContext = mediaContextForBlock({ type: 'video' }, 'captions');
+    const fileContext = mediaContextForBlock({ type: 'file' });
     const videoItem = {
       ...item,
       id: 'movie.mp4',
       mimeType: 'video/mp4',
       url: 'https://media.example.test/movie.mp4',
     };
+    const fileItem = {
+      ...item,
+      id: 'report.pdf',
+      mimeType: 'application/pdf',
+      url: 'https://media.example.test/report.pdf',
+    };
 
     expect(imageContext).toMatchObject({ commandName: 'setImageMedia', noun: 'image' });
     expect(videoContext).toMatchObject({ commandName: 'setVideoMedia', noun: 'video' });
     expect(posterContext).toMatchObject({ commandName: 'setVideoPosterMedia', noun: 'poster image' });
     expect(captionsContext).toMatchObject({ commandName: 'setVideoCaptionMedia', noun: 'caption track' });
+    expect(fileContext).toMatchObject({ commandName: 'setFileMedia', noun: 'file' });
     expect(mediaContextsForBlock({ type: 'video' })).toHaveLength(3);
-    expect(mediaContextForBlock({ type: 'file' })).toBeNull();
+    expect(mediaContextsForBlock({ type: 'file' })).toHaveLength(1);
     expect(mediaContextForBlock({ type: 'video' }, 'unknown')).toBeNull();
     expect(mediaMimeTypes(videoContext, transport.capabilities)).toEqual(['video/mp4', 'video/webm']);
     expect(mediaMimeTypes(posterContext, transport.capabilities)).toEqual(['image/png']);
     expect(mediaMimeTypes(captionsContext, transport.capabilities)).toEqual(['text/vtt']);
+    expect(mediaMimeTypes(fileContext, transport.capabilities)).toEqual(['application/pdf']);
     expect(mediaItemMatchesContext(videoItem, videoContext)).toBe(true);
     expect(mediaItemMatchesContext(item, videoContext)).toBe(false);
     expect(mediaItemMatchesContext(item, posterContext)).toBe(true);
     expect(mediaItemMatchesContext({ ...item, mimeType: 'text/vtt' }, captionsContext)).toBe(true);
     expect(mediaItemMatchesContext({ ...item, mimeType: 'text/plain' }, captionsContext)).toBe(false);
+    expect(mediaItemMatchesContext(fileItem, fileContext)).toBe(true);
+    expect(mediaItemMatchesContext(item, fileContext)).toBe(false);
     expect(Object.isFrozen(videoContext)).toBe(true);
     expect(Object.isFrozen(mediaContextsForBlock({ type: 'video' }))).toBe(true);
   });

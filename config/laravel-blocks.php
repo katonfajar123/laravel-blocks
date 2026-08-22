@@ -1,5 +1,6 @@
 <?php
 
+use KatonFajar\LaravelBlocks\Blocks\Media\File;
 use KatonFajar\LaravelBlocks\Blocks\Media\Image;
 use KatonFajar\LaravelBlocks\Blocks\Media\Video;
 use KatonFajar\LaravelBlocks\Blocks\Text\BulletList;
@@ -22,6 +23,7 @@ return [
         Code::class,
         Image::class,
         Video::class,
+        File::class,
     ],
 
     'marks' => [

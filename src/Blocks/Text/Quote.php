@@ -60,6 +60,7 @@ final class Quote extends Block
                 'codeBlock',
                 'image',
                 'video',
+                'file',
             ],
             minimumChildren: 1,
             maximumChildren: null,

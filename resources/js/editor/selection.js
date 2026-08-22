@@ -1,3 +1,5 @@
+import { NodeSelection } from '@tiptap/pm/state';
+
 export function createSelectionState(editor) {
   if (!editor?.state?.selection) {
     return Object.freeze({
@@ -15,9 +17,12 @@ export function createSelectionState(editor) {
   const text = selection.empty
     ? ''
     : editor.state.doc.textBetween(selection.from, selection.to, ' ');
+  const type = selection instanceof NodeSelection
+    ? 'NodeSelection'
+    : selection.constructor?.name || 'Selection';
 
   return Object.freeze({
-    type: selection.constructor?.name || 'Selection',
+    type,
     empty: Boolean(selection.empty),
     from: selection.from,
     to: selection.to,

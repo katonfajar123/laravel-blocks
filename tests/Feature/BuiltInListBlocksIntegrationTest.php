@@ -16,7 +16,7 @@ it('registers list blocks from the default package configuration', function (): 
         ->and($blocks['listItem'])
         ->toBeInstanceOf(ListItem::class)
         ->and(array_keys($blocks))
-        ->toBe(['paragraph', 'heading', 'bulletList', 'orderedList', 'listItem', 'blockquote', 'codeBlock', 'image', 'video']);
+        ->toBe(['paragraph', 'heading', 'bulletList', 'orderedList', 'listItem', 'blockquote', 'codeBlock', 'image', 'video', 'file']);
 });
 
 it('validates and renders package-owned bullet and ordered list documents', function (): void {
@@ -156,7 +156,7 @@ it('exposes list metadata through the manifest while hiding structural list item
     $blocks = collect($manifest['blocks'])->keyBy('name');
 
     expect($blocks->keys()->all())
-        ->toBe(['paragraph', 'heading', 'bulletList', 'orderedList', 'listItem', 'blockquote', 'codeBlock', 'image', 'video'])
+        ->toBe(['paragraph', 'heading', 'bulletList', 'orderedList', 'listItem', 'blockquote', 'codeBlock', 'image', 'video', 'file'])
         ->and($blocks['bulletList'])
         ->toMatchArray([
             'name' => 'bulletList',

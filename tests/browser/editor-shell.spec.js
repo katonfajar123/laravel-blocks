@@ -10,7 +10,7 @@ let lastBrowseMimeTypes = [];
 let retryUploadAttempts = 0;
 
 const mediaCapabilities = {
-  allowedMimeTypes: ['image/jpeg', 'image/png', 'video/mp4', 'video/webm', 'text/vtt'],
+  allowedMimeTypes: ['image/jpeg', 'image/png', 'video/mp4', 'video/webm', 'text/vtt', 'application/pdf'],
   browse: true,
   delete: false,
   maxUploadBytes: 5 * 1024 * 1024,
@@ -263,6 +263,84 @@ const packageDefaultManifest = {
       keywords: ['video', 'movie', 'media', 'mp4', 'webm'],
       supports: { inserter: true },
     },
+    {
+      name: 'file',
+      label: 'File',
+      description: 'Link to a downloadable PDF file.',
+      category: 'media',
+      icon: 'file',
+      fields: [
+        {
+          constraints: {
+            allowedSchemes: ['https', 'http'],
+            maxLength: 2048,
+            nullable: true,
+          },
+          default: null,
+          group: 'content',
+          help: 'HTTP or HTTPS URL for a downloadable PDF.',
+          label: 'File URL',
+          name: 'src',
+          path: 'attrs.src',
+          required: false,
+          type: 'url',
+          ui: {},
+        },
+        {
+          constraints: { maxLength: 500, nullable: true },
+          default: null,
+          group: 'content',
+          help: 'Text shown for the download link.',
+          label: 'Link text',
+          name: 'title',
+          path: 'attrs.title',
+          required: false,
+          type: 'text',
+          ui: {},
+        },
+        {
+          constraints: { maxLength: 255, nullable: true },
+          default: null,
+          group: 'content',
+          help: 'Suggested download filename from the media provider.',
+          label: 'Filename',
+          name: 'filename',
+          path: 'attrs.filename',
+          required: false,
+          type: 'text',
+          ui: {},
+        },
+        {
+          constraints: {
+            allowedValues: ['application/pdf'],
+            nullable: true,
+          },
+          default: null,
+          group: 'content',
+          help: 'The first built-in File contract accepts PDFs only.',
+          label: 'File type',
+          name: 'mimeType',
+          path: 'attrs.mimeType',
+          required: false,
+          type: 'select',
+          ui: {},
+        },
+        {
+          constraints: { min: 0, nullable: true },
+          default: null,
+          group: 'content',
+          help: 'Byte size reported by the media provider.',
+          label: 'File size',
+          name: 'bytes',
+          path: 'attrs.bytes',
+          required: false,
+          type: 'number',
+          ui: {},
+        },
+      ],
+      keywords: ['file', 'download', 'pdf', 'document'],
+      supports: { inserter: true },
+    },
   ],
 };
 
@@ -336,6 +414,13 @@ test.beforeAll(async () => {
       return;
     }
 
+    if (url.pathname === '/fixture-file.pdf') {
+      response.writeHead(200, { 'content-type': 'application/pdf' });
+      response.end(Buffer.from('%PDF-1.4\nbrowser file fixture\n'));
+
+      return;
+    }
+
     if (url.pathname === '/media' && request.method === 'GET') {
       const origin = `http://${request.headers.host}`;
       const search = (url.searchParams.get('search') ?? '').toLowerCase();
@@ -355,6 +440,7 @@ test.beforeAll(async () => {
         mediaItem('library-detail.png', `${origin}/fixture-image.svg`, 'Product detail', 9216),
         mediaItem('library-video.mp4', `${origin}/fixture-video.mp4`, 'Product video', 32768, 'video/mp4'),
         mediaItem('library-captions.vtt', `${origin}/fixture-captions.vtt`, 'Product captions', 2048, 'text/vtt'),
+        mediaItem('library-report.pdf', `${origin}/fixture-file.pdf`, 'Product report', 4096, 'application/pdf'),
       ].filter((item) => (
         lastBrowseMimeTypes.length === 0 || lastBrowseMimeTypes.includes(item.mimeType)
       ) && `${item.alt} ${item.originalName}`.toLowerCase().includes(effectiveSearch));
@@ -384,7 +470,7 @@ test.beforeAll(async () => {
       }
 
       const body = Buffer.concat(chunks).toString('utf8');
-      const filename = ['retry.png', 'slow.png', 'drop.png', 'movie-upload.mp4', 'captions-upload.vtt']
+      const filename = ['retry.png', 'slow.png', 'drop.png', 'movie-upload.mp4', 'captions-upload.vtt', 'report-upload.pdf']
         .find((candidate) => body.includes(candidate)) ?? 'uploaded.png';
 
       if (request.headers['x-csrf-token'] !== 'browser-fixture-csrf') {
@@ -414,18 +500,21 @@ test.beforeAll(async () => {
       const origin = `http://${request.headers.host}`;
       const videoUpload = filename.endsWith('.mp4');
       const captionUpload = filename.endsWith('.vtt');
+      const fileUpload = filename.endsWith('.pdf');
       sendJson(response, 201, {
         data: {
           item: mediaItem(
             filename,
             captionUpload
               ? `${origin}/fixture-captions.vtt?upload=${encodeURIComponent(filename)}`
+              : fileUpload
+              ? `${origin}/fixture-file.pdf?upload=${encodeURIComponent(filename)}`
               : videoUpload
               ? `${origin}/fixture-video.mp4?upload=${encodeURIComponent(filename)}`
               : `${origin}/fixture-image.svg`,
-            captionUpload ? 'Uploaded captions' : videoUpload ? 'Uploaded video' : 'Uploaded image',
-            1024,
-            captionUpload ? 'text/vtt' : videoUpload ? 'video/mp4' : 'image/png',
+            captionUpload ? 'Uploaded captions' : fileUpload ? 'Uploaded report' : videoUpload ? 'Uploaded video' : 'Uploaded image',
+            fileUpload ? 3072 : 1024,
+            captionUpload ? 'text/vtt' : fileUpload ? 'application/pdf' : videoUpload ? 'video/mp4' : 'image/png',
           ),
         },
       });
@@ -606,6 +695,7 @@ test('executes editor mutations through the shared command API', async ({ page }
     'setVideoMedia',
     'setVideoPosterMedia',
     'setVideoCaptionMedia',
+    'setFileMedia',
     'setParagraph',
     'setHeading',
     'setBlockquote',
@@ -1965,6 +2055,179 @@ test('inserts, selects, replaces, and restores videos through the generic media 
   await page.keyboard.press('Escape');
   await expect(modal).toHaveCount(0);
   await expect(openCaptions).toBeFocused();
+});
+
+test('inserts, selects, replaces, and restores files through the PDF media library', async ({ page }) => {
+  await page.goto(`${baseUrl}/default`);
+
+  const root = page.locator('#editor-null');
+  const canvas = root.locator('[data-laravel-blocks-canvas]');
+  const appender = root.locator('[data-laravel-blocks-block-appender]');
+  const inserter = root.locator('[data-laravel-blocks-block-inserter]');
+  const searchBlocks = root.locator('[data-laravel-blocks-block-search]');
+  const fileItem = root.locator('[data-laravel-blocks-block-inserter-item="file"]');
+
+  await canvas.click();
+  await page.keyboard.type('File seed');
+  await appender.click();
+  await expect(inserter).toBeVisible();
+  await searchBlocks.fill('file');
+  await expect(fileItem).toBeVisible();
+  await expect(fileItem).toHaveAttribute('aria-disabled', 'false');
+  await page.keyboard.press('Enter');
+
+  const placeholder = root.locator('[data-laravel-blocks-file-placeholder]');
+  await expect(inserter).toBeHidden();
+  await expect(canvas).toBeFocused();
+  await expect(placeholder).toBeVisible();
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1]).toEqual({
+    type: 'file',
+    attrs: {
+      src: null,
+      title: null,
+      filename: null,
+      mimeType: null,
+      bytes: null,
+    },
+  });
+
+  await root.locator('[data-laravel-blocks-inspector-toggle]').click();
+  await expect(root.locator('[data-laravel-blocks-inspector-title]')).toContainText('File');
+  await expect(root.locator('[data-laravel-blocks-inspector-field="src"]')).toHaveAttribute('type', 'url');
+  await expect(root.locator('[data-laravel-blocks-inspector-field="title"]')).toBeVisible();
+  await expect(root.locator('[data-laravel-blocks-inspector-field="filename"]')).toBeVisible();
+  await expect(root.locator('[data-laravel-blocks-inspector-field="mimeType"]')).toBeVisible();
+  await expect(root.locator('[data-laravel-blocks-inspector-field="bytes"]')).toHaveAttribute('type', 'number');
+
+  const openMedia = root.locator('[data-laravel-blocks-inspector-media="file"] button');
+  await openMedia.click();
+
+  const modal = page.locator('[data-laravel-blocks-modal]');
+  const searchMedia = page.locator('[data-laravel-blocks-media-search]');
+  const mediaItems = page.locator('[data-laravel-blocks-media-item]');
+  const uploadInput = page.locator('[data-laravel-blocks-media-upload-input]');
+
+  await expect(modal).toBeVisible();
+  await expect(modal.getByRole('heading', { name: 'Choose file' })).toBeVisible();
+  await expect(searchMedia).toBeFocused();
+  await expect(uploadInput).toHaveAttribute('accept', 'application/pdf');
+  expect(lastBrowseMimeTypes).toEqual(['application/pdf']);
+  await expect(mediaItems).toHaveCount(1);
+  await expect(mediaItems.first()).toHaveAttribute('data-laravel-blocks-media-item', 'library-report.pdf');
+  await expect(mediaItems.first().locator('.lb-media-library__item-preview--icon')).toContainText('application/pdf');
+
+  await mediaItems.first().click();
+  await page.locator('[data-laravel-blocks-media-use]').click();
+
+  const renderedFile = root.locator('[data-laravel-blocks-file]');
+  await expect(modal).toHaveCount(0);
+  await expect(openMedia).toBeFocused();
+  await expect(renderedFile).toBeVisible();
+  await expect(renderedFile).toContainText('library-report.pdf');
+  await expect(renderedFile).toContainText('application/pdf / 4096 bytes');
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1]).toEqual({
+    type: 'file',
+    attrs: {
+      src: `${baseUrl}/fixture-file.pdf`,
+      title: 'library-report.pdf',
+      filename: 'library-report.pdf',
+      mimeType: 'application/pdf',
+      bytes: 4096,
+    },
+  });
+
+  expect(await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('undo'))).toMatchObject({ executed: true });
+  await expect(placeholder).toBeVisible();
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1].attrs.src)
+    .toBeNull();
+
+  expect(await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('redo'))).toMatchObject({ executed: true });
+  await expect(renderedFile).toBeVisible();
+
+  await renderedFile.click();
+  const toolbar = root.locator('[data-laravel-blocks-contextual-toolbar]');
+  await expect(toolbar).toBeVisible();
+  await expect(toolbar).toHaveAttribute('data-laravel-blocks-contextual-toolbar-mode', 'block');
+  const toolbarMedia = toolbar.locator('[data-laravel-blocks-open-media="file"]');
+  await toolbarMedia.click();
+  await expect(modal.getByRole('heading', { name: 'Replace file' })).toBeVisible();
+  await expect(searchMedia).toBeFocused();
+  await uploadInput.setInputFiles({
+    buffer: Buffer.from('%PDF-1.4 browser upload fixture'),
+    mimeType: 'application/pdf',
+    name: 'report-upload.pdf',
+  });
+  await expect(page.locator('[data-laravel-blocks-media-item="report-upload.pdf"]')).toBeVisible();
+  await expect(page.locator('[data-laravel-blocks-media-status]'))
+    .toContainText('report-upload.pdf uploaded and selected.');
+  await page.locator('[data-laravel-blocks-media-use]').click();
+
+  await expect(modal).toHaveCount(0);
+  await expect(toolbarMedia).toBeFocused();
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1].attrs).toMatchObject({
+    bytes: 3072,
+    filename: 'report-upload.pdf',
+    mimeType: 'application/pdf',
+    src: `${baseUrl}/fixture-file.pdf?upload=report-upload.pdf`,
+    title: 'library-report.pdf',
+  });
+
+  await root.locator('[data-laravel-blocks-inspector-field="title"]').fill('Download report');
+  await expect(renderedFile).toContainText('Download report');
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content[1].attrs.title)
+    .toBe('Download report');
+
+  await page.setViewportSize({ height: 720, width: 390 });
+  const fileBox = await renderedFile.boundingBox();
+  expect(fileBox).not.toBeNull();
+  expect(fileBox.x).toBeGreaterThanOrEqual(0);
+  expect(fileBox.x + fileBox.width).toBeLessThanOrEqual(390);
+
+  await openMedia.click();
+  await expect(modal).toBeVisible();
+  const modalBox = await modal.boundingBox();
+  expect(modalBox).not.toBeNull();
+  expect(modalBox.x).toBeGreaterThanOrEqual(0);
+  expect(modalBox.y).toBeGreaterThanOrEqual(0);
+  expect(modalBox.x + modalBox.width).toBeLessThanOrEqual(390);
+  expect(modalBox.y + modalBox.height).toBeLessThanOrEqual(720);
+  await page.keyboard.press('Escape');
+  await expect(modal).toHaveCount(0);
+  await expect(openMedia).toBeFocused();
+
+  const currentBlock = await page.evaluate(() => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .blockSelection());
+  expect(await page.evaluate((block) => document
+    .querySelector('#editor-null')
+    .__laravelBlocksEditor
+    .runCommand('insertBlockAfter', { block }), currentBlock)).toMatchObject({ executed: true });
+  await root.locator('[data-laravel-blocks-canvas] > p').last().click();
+  await page.keyboard.press('/');
+  await expect(root.locator('[data-laravel-blocks-slash-command]')).toBeVisible();
+  await page.keyboard.type('file');
+  await page.keyboard.press('Enter');
+  await expect(root.locator('[data-laravel-blocks-file-placeholder]')).toHaveCount(1);
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content
+    .filter((node) => node.type === 'file')).toHaveLength(2);
+  await expect.poll(async () => (await editorDocument(page, '#editor-null')).content
+    .filter((node) => node.type === 'file').at(-1)).toEqual({
+    type: 'file',
+    attrs: {
+      src: null,
+      title: null,
+      filename: null,
+      mimeType: null,
+      bytes: null,
+    },
+  });
 });
 
 test('replaces an empty text block through slash commands', async ({ page }) => {

@@ -15,6 +15,7 @@ export function blockIconName(type) {
     blockquote: 'blockquote',
     bulletList: 'list',
     codeBlock: 'code',
+    file: 'file',
     heading: 'heading',
     image: 'image',
     list: 'list',
